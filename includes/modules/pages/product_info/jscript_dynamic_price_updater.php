@@ -6,7 +6,7 @@
 * @version 3.0
 * @licence This module is released under the GNU/GPL licence
 */
-
+if (DPU_STATUS == 'true'){
 $load = true; // if any of the PHP conditions fail this will be set to false and DPU won't be fired up
 $pid = (!empty($_GET['products_id']) ? intval($_GET['products_id']) : 0);
 if (0==$pid)
@@ -36,7 +36,7 @@ var DPURequest = [];
 var _sidebox = '<?php echo DPU_SIDEBOX_ELEMENT_ID; ?>';
 var objSB = false; // this holds the sidebox object
 
-<?php if (DPU_SHOW_LOADING_IMAGE == true) { // create the JS object for the loading image ?>
+<?php if (DPU_SHOW_LOADING_IMAGE) { // create the JS object for the loading image ?>
 var loadImg = document.createElement('img');
 loadImg.src = '<?php echo DIR_WS_IMAGES; ?>ajax-loader.gif';
 loadImg.id = 'DPULoaderImage';
@@ -331,4 +331,4 @@ try { // the IE event registration model
 } finally {
   window.onload = init;
 }
-// ]]></script><?php } ?>
+// ]]></script><?php }} ?>
