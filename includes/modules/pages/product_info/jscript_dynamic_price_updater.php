@@ -1,11 +1,10 @@
 <?php
 /**
 * @package Dynamic Price Updater
-* @copyright Dan Parry (Chrome)
-* @author Dan Parry (Chrome)
-* @version 2.0a (roughly)
-* @contact admin@chrome.me.uk
-* @licence This module is released under the GNU/GPL licence... Really... Go look it up
+* @copyright Dan Parry (Chrome) / Erik Kerkhoven (Design75)
+* @original author Dan Parry (Chrome)
+* @version 3.0
+* @licence This module is released under the GNU/GPL licence
 */
 
 $load = true; // if any of the PHP conditions fail this will be set to false and DPU won't be fired up
@@ -257,7 +256,7 @@ $show_dynamic_price_updater_sidebox = true;
     { // create the sidebox for the attributes info display
       if (!(document.getElementById('dynamicpriceupdatersidebox')))
       {
-        var tempC = document.createElement('DIV');
+        var tempC = document.createElement('div');
         tempC.id = 'dynamicpriceupdatersideboxContent';
         tempC.className = 'sideBoxContent';
         tempC.innerHTML = 'If you can read this Chrome has broken something';
