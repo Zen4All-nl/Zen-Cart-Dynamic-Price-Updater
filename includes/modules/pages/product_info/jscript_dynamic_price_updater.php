@@ -36,7 +36,7 @@ var DPURequest = [];
 var _sidebox = '<?php echo DPU_SIDEBOX_ELEMENT_ID; ?>';
 var objSB = false; // this holds the sidebox object
 
-<?php if (DPU_SHOW_LOADING_IMAGE) { // create the JS object for the loading image ?>
+<?php if (DPU_SHOW_LOADING_IMAGE == 'true') { // create the JS object for the loading image ?>
 var loadImg = document.createElement('img');
 loadImg.src = '<?php echo DIR_WS_IMAGES; ?>ajax-loader.gif';
 loadImg.id = 'DPULoaderImage';
@@ -127,7 +127,7 @@ objXHR.prototype.responseHandler = function (theFunction) { // redirect response
 }
 
 objXHR.prototype.getPrice = function () {
-    <?php if (DPU_SHOW_LOADING_IMAGE) { ?>
+    <?php if (DPU_SHOW_LOADING_IMAGE == 'true') { ?>
     document.getElementById('<?php echo DPU_PRICE_ELEMENT_ID; ?>').appendChild(loadImg);
     loadImg.style.display = 'block';
     if (document.getElementById('dynamicpriceupdatersidebox')) {

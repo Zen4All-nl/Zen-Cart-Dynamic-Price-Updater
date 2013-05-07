@@ -83,14 +83,14 @@ class DPU {
     global $currencies,$db;
     $this->_responseText['priceTotal'] = UPDATER_PREFIX_TEXT;
     $product_check = $db->Execute("select products_tax_class_id from " . TABLE_PRODUCTS . " where products_id = '" . (int)$_POST['products_id'] . "'" . " limit 1");
-    if (false == DPU_SHOW_CURRENCY_SYMBOLS) {
+    if (DPU_SHOW_CURRENCY_SYMBOLS == 'false') {
       $this->_responseText['priceTotal'] .= number_format($this->_shoppingCart->total, 2);
     } else {
       $this->_responseText['priceTotal'] .= $currencies->display_price($this->_shoppingCart->total, 0);
     }
 
     $this->_responseText['weight'] = (string)$this->_shoppingCart->weight;
-    if (DPU_SHOW_QUANTITY) {
+    if (DPU_SHOW_QUANTITY == 'true') {
       $this->_responseText['quantity'] = sprintf(DPU_SHOW_QUANTITY_FRAME, $this->_shoppingCart->contents[$_POST['products_id']]['qty']);
     }
   }
