@@ -11,7 +11,7 @@ This is an (IMHO) an improved version of DPU 2.
 Installation
 ------------
 
-Simply upload the files included (they are in the correct folder structure) and job done!  For reference the file paths are:
+Simply upload the files included (they are in the correct folder structure) and job done! For reference the file paths are:
 
 dpu_ajax.php
 includes/classes/dynamic_price_updater.php
@@ -25,7 +25,7 @@ NOTE: If you have an earlier version of Updater installed please remove the file
 Settings
 --------
 
-the module is now set through the admin, more instructions to be added later
+The module is now set through the admin, more instructions to be added later
 
 Support
 -------
