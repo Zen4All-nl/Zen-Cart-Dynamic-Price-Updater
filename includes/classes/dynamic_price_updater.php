@@ -1,41 +1,42 @@
 <?php
-/**
-* Dynamic Price Updater V2.1
-* (c) D Parry (Chrome) 2009 (admin@chrome.me.uk)
-* This module is released under the GNU/GPL licence... Really... Go look it up
-*/
+/*
+ * Dynamic Price Updater V3.0
+ * @copyright Dan Parry (Chrome) / Erik Kerkhoven (Design75)
+ * @original author Dan Parry (Chrome)
+ * This module is released under the GNU/GPL licence
+ */
 if (!defined('IS_ADMIN_FLAG')) {
   die('Illegal Access');
 }
 
 class DPU {
   
-  /**
-  * Local instantiation of the shopping cart
-  *
-  * @var object
-  */
+  /*
+   * Local instantiation of the shopping cart
+   *
+   * @var object
+   */
   var $_shoppingCart;
-  /**
-  * The type of message being sent (error or success)
-  *
-  * @var string
-  */
+  /*
+   * The type of message being sent (error or success)
+   *
+   * @var string
+   */
   var $_responseType = 'success';
-  /**
-  * Array of lines to be sent back.  The key of the array provides the attribute to identify it at the client side
-  * The array value is the text to be inserted into the node
-  *
-  * @var array
-  */
+  /*
+   * Array of lines to be sent back.  The key of the array provides the attribute to identify it at the client side
+   * The array value is the text to be inserted into the node
+   *
+   * @var array
+   */
   var $_responseText = array();
 
-  /**
-  * Constructor
-  *
-  * @param obj The Zen Cart database class
-  * @return DPU
-  */
+  /*
+   * Constructor
+   *
+   * @param obj The Zen Cart database class
+   * @return DPU
+   */
   function __construct() {
     global $db;
     // grab the shopping cart class and instantiate it
@@ -43,44 +44,41 @@ class DPU {
     $this->_shoppingCart = new shoppingCart();
   }
 
-  /**
-  * PHP4 constructor
-  *
-  * @param obj ZC DB object
-  * @return DPU
-  */
+  /*
+   * @param obj ZC DB object
+   * @return DPU
+   */
   function DPU() {
     global $db;
   }
-  /**
-  * Wrapper to call all methods to generate the output
-  *
-  * @return void
-  */
+  /*
+   * Wrapper to call all methods to generate the output
+   *
+   * @return void
+   */
   function getDetails() {
     $this->insertProduct();
     $this->_shoppingCart->calculate();
     $show_dynamic_price_updater_sidebox = true;
-        if ($show_dynamic_price_updater_sidebox == true)   $this->getSideboxContent();
-
+      if ($show_dynamic_price_updater_sidebox == true) $this->getSideboxContent();
     $this->prepareOutput();
     $this->dumpOutput();
   }
 
-  /**
-  * Wrapper to call all methods relating to returning multiple prices for category pages etc.
-  *
-  * @return void
-  */
+  /*
+   * Wrapper to call all methods relating to returning multiple prices for category pages etc.
+   *
+   * @return void
+   */
   function getMulti() {
     $this->insertProducts();
   }
 
-  /**
-  * Prepares the shoppingCart contents for transmission
-  *
-  * @return void
-  */
+  /*
+   * Prepares the shoppingCart contents for transmission
+   *
+   * @return void
+   */
   function prepareOutput() {
     global $currencies,$db;
     $this->_responseText['priceTotal'] = UPDATER_PREFIX_TEXT;
@@ -97,11 +95,11 @@ class DPU {
     }
   }
 
-  /**
-  * Inserts multiple non-attributed products into the shopping cart
-  *
-  * @return void
-  */
+  /*
+   * Inserts multiple non-attributed products into the shopping cart
+   *
+   * @return void
+   */
   function insertProducts() {
     foreach ($_POST['products_id'] as $id => $qty) {
       $this->_shoppingCart->contents[] = array($id);
@@ -112,11 +110,11 @@ class DPU {
     die();
   }
 
-  /**
-  * Inserts the product into the shoppingCart content array
-  *
-  * @returns void
-  */
+  /*
+   * Inserts the product into the shoppingCart content array
+   *
+   * @returns void
+   */
   function insertProduct() {
         $this->_shoppingCart->contents[$_POST['products_id']] = array('qty' => (float)$_POST['cart_quantity']);
         $attributes = array();
@@ -164,10 +162,10 @@ class DPU {
       // $this->_shoppingCart->cleanup();
   }
 
-    /**
-    * Prepares the output for the Updater's sidebox display
-    *
-    */
+    /*
+     * Prepares the output for the Updater's sidebox display
+     *
+     */
     function getSideboxContent() {
         global $currencies,$db;
 
@@ -194,12 +192,9 @@ class DPU {
                                       and options_id = '" . (int)$option . "'
                                       and options_values_id = '" . (int)$value . "'");
 
-            $data = $db->Execute("SELECT
-                    `products_options_values_name`
-                FROM
-                    ".TABLE_PRODUCTS_OPTIONS_VALUES."
-                WHERE
-                    `products_options_values_id` = $value");
+            $data = $db->Execute("select products_options_values_name
+                           from ".TABLE_PRODUCTS_OPTIONS_VALUES."
+                           where products_options_values_id = $value");
             $name = $data->fields['products_options_values_name'];
 
             $new_attributes_price = 0;
@@ -224,7 +219,7 @@ class DPU {
                     } else {
                         $total -= $qty * zen_add_tax($attribute_price->fields['options_values_price'], $products_tax);
                     }
-                    $total = '-'.$total;
+                    $total = $total;
                 } else {
                     // appears to confuse products priced by attributes
                     if ($product->fields['product_is_always_free_shipping'] == '1' or $product->fields['products_virtual'] == '1') {
@@ -256,11 +251,11 @@ class DPU {
         $this->_responseText['sideboxContent'] = implode('', $out);
     }
 
-  /**
-  * Performs an error dump
-  *
-  * @param mixed $errorMsg
-  */
+  /*
+   * Performs an error dump
+   *
+   * @param mixed $errorMsg
+   */
   function throwError($errorMsg) {
     $this->_responseType = 'error';
     $this->_responseText[] = $errorMsg;
@@ -268,12 +263,12 @@ class DPU {
     $this->dumpOutput();
   }
 
-  /**
-  * Formats the response and flushes with the appropriate headers
-  * This should be called last as it issues an exit
-  *
-  * @return void
-  */
+  /*
+   * Formats the response and flushes with the appropriate headers
+   * This should be called last as it issues an exit
+   *
+   * @return void
+   */
   function dumpOutput() {
     // output the header for XML
     header ("content-type: text/xml");
