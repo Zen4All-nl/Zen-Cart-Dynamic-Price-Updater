@@ -57,7 +57,13 @@ if(!$result->EOF) {
   $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, '','DPU_WEIGHT_ELEMENT_ID', 'productWeight', 'this is the ID where your weight is displayed', '".$dpu_configuration_id."', 40, NULL, now(), NULL, NULL)";
   $db->Execute($sql);
   $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'show a small loading graphic','DPU_SHOW_LOADING_IMAGE', 'true', 'true to show a small loading graphic so the user knows something is happening', '".$dpu_configuration_id."', 50, NULL, now(), NULL, 'zen_cfg_select_option(array(''true'', ''false''),')";
-	$db->Execute($sql);
+  $db->Execute($sql);
+  $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, '','DPU_SHOW_CURRENCY_SYMBOLS', 'true', '', '".$dpu_configuration_id."', 60, NULL, now(), NULL, 'zen_cfg_select_option(array(''true'', ''false''),')";
+  $db->Execute($sql);
+  $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, '','DPU_SHOW_QUANTITY', 'true', '', '".$dpu_configuration_id."', 70, NULL, now(), NULL, 'zen_cfg_select_option(array(''true'', ''false''),')";
+  $db->Execute($sql);
+  $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, '','DPU_SECOND_PRICE', 'cartAdd', '', '".$dpu_configuration_id."', 80, NULL, now(), NULL, NULL)";
+  $db->Execute($sql);
   
 }
 else {
