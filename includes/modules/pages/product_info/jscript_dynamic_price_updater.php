@@ -1,27 +1,29 @@
 <?php
 /**
-* @package Dynamic Price Updater
-* @copyright Dan Parry (Chrome) / Erik Kerkhoven (Design75)
-* @original author Dan Parry (Chrome)
-* @version 3.0
-* @licence This module is released under the GNU/GPL licence
-*/
-if (DPU_STATUS == 'true'){
-$load = true; // if any of the PHP conditions fail this will be set to false and DPU won't be fired up
-$pid = (!empty($_GET['products_id']) ? intval($_GET['products_id']) : 0);
-if (0==$pid)
-{
-  $load = false;
-}
-elseif (zen_get_products_price_is_call($pid) || zen_get_products_price_is_free($pid) || STORE_STATUS > 0)
-{
-  $load = false;
-}
- $pidp = zen_get_products_display_price($pid);
- if (empty($pidp))  $load = false;
+ * @package Dynamic Price Updater
+ * @copyright Dan Parry (Chrome) / Erik Kerkhoven (Design75)
+ * @original author Dan Parry (Chrome)
+ * @version 3.0
+ * @licence This module is released under the GNU/GPL licence
+ */
 
-if ($load)
+if (DPU_STATUS == 'true')
 {
+  $load = true; // if any of the PHP conditions fail this will be set to false and DPU won't be fired up
+  $pid = (!empty($_GET['products_id']) ? intval($_GET['products_id']) : 0);
+  if (0==$pid)
+  {
+    $load = false;
+  }
+  elseif (zen_get_products_price_is_call($pid) || zen_get_products_price_is_free($pid) || STORE_STATUS > 0)
+  {
+    $load = false;
+  }
+  $pidp = zen_get_products_display_price($pid);
+  if (empty($pidp))  $load = false;
+
+  if ($load)
+  {
 ?>
 <script language="javascript" type="text/javascript">
 // <![CDATA[
@@ -33,7 +35,6 @@ var _secondPrice = '<?php echo DPU_SECOND_PRICE; ?>';
 var objSP = false; // please don't adjust this
 var DPURequest = [];
 // Updater sidebox settings
-var _sidebox = '<?php echo DPU_SIDEBOX_ELEMENT_ID; ?>';
 var objSB = false; // this holds the sidebox object
 
 <?php if (DPU_SHOW_LOADING_IMAGE == 'true') { // create the JS object for the loading image ?>
@@ -306,15 +307,15 @@ function init() {
     }
   }
 
-    $show_dynamic_price_updater_sidebox = true;
-
 <?php
+  $show_dynamic_price_updater_sidebox = true;
+
     if ($show_dynamic_price_updater_sidebox == true)
     {
 ?>
     createSB();
 <?php
-      }
+    }
 ?>
   xhr.getPrice();
 }

@@ -22,14 +22,14 @@ class DPU {
    *
    * @var string
    */
-  var $_responseType = 'success';
+  var $responseType = 'success';
   /*
    * Array of lines to be sent back.  The key of the array provides the attribute to identify it at the client side
    * The array value is the text to be inserted into the node
    *
    * @var array
    */
-  var $_responseText = array();
+  var $responseText = array();
 
   /*
    * Constructor
@@ -81,17 +81,17 @@ class DPU {
    */
   function prepareOutput() {
     global $currencies,$db;
-    $this->_responseText['priceTotal'] = UPDATER_PREFIX_TEXT;
+    $this->responseText['priceTotal'] = UPDATER_PREFIX_TEXT;
     $product_check = $db->Execute("select products_tax_class_id from " . TABLE_PRODUCTS . " where products_id = '" . (int)$_POST['products_id'] . "'" . " limit 1");
     if (DPU_SHOW_CURRENCY_SYMBOLS == 'false') {
-      $this->_responseText['priceTotal'] .= number_format($this->shoppingCart->total, 2);
+      $this->responseText['priceTotal'] .= number_format($this->shoppingCart->total, 2);
     } else {
-      $this->_responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, 0);
+      $this->responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, 0);
     }
 
-    $this->_responseText['weight'] = (string)$this->shoppingCart->weight;
+    $this->responseText['weight'] = (string)$this->shoppingCart->weight;
     if (DPU_SHOW_QUANTITY == 'true') {
-      $this->_responseText['quantity'] = sprintf(DPU_SHOW_QUANTITY_FRAME, $this->shoppingCart->contents[$_POST['products_id']]['qty']);
+      $this->responseText['quantity'] = sprintf(DPU_SHOW_QUANTITY_FRAME, $this->shoppingCart->contents[$_POST['products_id']]['qty']);
     }
   }
 
@@ -248,7 +248,7 @@ class DPU {
         $total = sprintf(DPU_SIDEBOX_PRICE_FRAME, $currencies->display_price($this->shoppingCart->total-$global_total, 0));
         array_unshift($out, sprintf(DPU_SIDEBOX_FRAME, DPU_BASE_PRICE, $total, $qty2));
 
-        $this->_responseText['sideboxContent'] = implode('', $out);
+        $this->responseText['sideboxContent'] = implode('', $out);
     }
 
   /*
@@ -257,8 +257,8 @@ class DPU {
    * @param mixed $errorMsg
    */
   function throwError($errorMsg) {
-    $this->_responseType = 'error';
-    $this->_responseText[] = $errorMsg;
+    $this->responseType = 'error';
+    $this->responseText[] = $errorMsg;
 
     $this->dumpOutput();
   }
@@ -275,9 +275,9 @@ class DPU {
     // set the XML file DOCTYPE
     echo '<?xml version="1.0" encoding="UTF-8" ?>'."\n";
     // set the responseType
-    echo '<root>'."\n".'<responseType>'.$this->_responseType.'</responseType>'."\n";
+    echo '<root>'."\n".'<responseType>'.$this->responseType.'</responseType>'."\n";
     // now loop through the responseText nodes
-    foreach ($this->_responseText as $key => $val) {
+    foreach ($this->responseText as $key => $val) {
       echo '<responseText'.(!is_numeric($key) && !empty($key) ? ' type="'.$key.'"' : '').'><![CDATA['.$val.']]></responseText>'."\n";
     }
 

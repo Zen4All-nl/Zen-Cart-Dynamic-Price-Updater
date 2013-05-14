@@ -5,7 +5,7 @@
 * This module is released under the GNU/GPL licence... Really... Go look it up
 */
 
-require('includes/application_top.php');
+require_once('includes/application_top.php');
 require(DIR_WS_CLASSES.'dynamic_price_updater.php');
 
 $stat = (empty($_POST['stat']) ? (empty($_GET['stat']) ? 'main' : $_GET['stat']) : $_POST['stat']);
