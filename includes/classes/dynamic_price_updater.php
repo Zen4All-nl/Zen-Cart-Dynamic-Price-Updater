@@ -16,7 +16,7 @@ class DPU {
    *
    * @var object
    */
-  var $_shoppingCart;
+  var $shoppingCart;
   /*
    * The type of message being sent (error or success)
    *
@@ -41,7 +41,7 @@ class DPU {
     global $db;
     // grab the shopping cart class and instantiate it
     require_once(DIR_WS_CLASSES.'shopping_cart.php');
-    $this->_shoppingCart = new shoppingCart();
+    $this->shoppingCart = new shoppingCart();
   }
 
   /*
@@ -58,7 +58,7 @@ class DPU {
    */
   function getDetails() {
     $this->insertProduct();
-    $this->_shoppingCart->calculate();
+    $this->shoppingCart->calculate();
     $show_dynamic_price_updater_sidebox = true;
       if ($show_dynamic_price_updater_sidebox == true) $this->getSideboxContent();
     $this->prepareOutput();
@@ -84,14 +84,14 @@ class DPU {
     $this->_responseText['priceTotal'] = UPDATER_PREFIX_TEXT;
     $product_check = $db->Execute("select products_tax_class_id from " . TABLE_PRODUCTS . " where products_id = '" . (int)$_POST['products_id'] . "'" . " limit 1");
     if (DPU_SHOW_CURRENCY_SYMBOLS == 'false') {
-      $this->_responseText['priceTotal'] .= number_format($this->_shoppingCart->total, 2);
+      $this->_responseText['priceTotal'] .= number_format($this->shoppingCart->total, 2);
     } else {
-      $this->_responseText['priceTotal'] .= $currencies->display_price($this->_shoppingCart->total, 0);
+      $this->_responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, 0);
     }
 
-    $this->_responseText['weight'] = (string)$this->_shoppingCart->weight;
+    $this->_responseText['weight'] = (string)$this->shoppingCart->weight;
     if (DPU_SHOW_QUANTITY == 'true') {
-      $this->_responseText['quantity'] = sprintf(DPU_SHOW_QUANTITY_FRAME, $this->_shoppingCart->contents[$_POST['products_id']]['qty']);
+      $this->_responseText['quantity'] = sprintf(DPU_SHOW_QUANTITY_FRAME, $this->shoppingCart->contents[$_POST['products_id']]['qty']);
     }
   }
 
@@ -102,11 +102,11 @@ class DPU {
    */
   function insertProducts() {
     foreach ($_POST['products_id'] as $id => $qty) {
-      $this->_shoppingCart->contents[] = array($id);
-      $this->_shoppingCart->contents[$id] = array('qty' => (float)$qty);
+      $this->shoppingCart->contents[] = array($id);
+      $this->shoppingCart->contents[$id] = array('qty' => (float)$qty);
     }
 
-    var_dump($this->_shoppingCart);
+    var_dump($this->shoppingCart);
     die();
   }
 
@@ -116,7 +116,7 @@ class DPU {
    * @returns void
    */
   function insertProduct() {
-        $this->_shoppingCart->contents[$_POST['products_id']] = array('qty' => (float)$_POST['cart_quantity']);
+        $this->shoppingCart->contents[$_POST['products_id']] = array('qty' => (float)$_POST['cart_quantity']);
         $attributes = array();
 
         foreach ($_POST as $key => $val) {
@@ -142,7 +142,7 @@ class DPU {
                     $option = substr($option, strlen(TEXT_PREFIX));
               $attr_value = stripslashes($value);
               $value = PRODUCTS_OPTIONS_VALUES_TEXT_ID;
-                $this->_shoppingCart->contents[$_POST['products_id']]['attributes_values'][$option] = $attr_value;
+                $this->shoppingCart->contents[$_POST['products_id']]['attributes_values'][$option] = $attr_value;
                 }
               }
 
@@ -150,10 +150,10 @@ class DPU {
                 if (is_array($value) ) {
                     reset($value);
                     while (list($opt, $val) = each($value)) {
-                      $this->_shoppingCart->contents[$_POST['products_id']]['attributes'][$option.'_chk'.$val] = $val;
+                      $this->shoppingCart->contents[$_POST['products_id']]['attributes'][$option.'_chk'.$val] = $val;
                     }
                 } else {
-                    $this->_shoppingCart->contents[$_POST['products_id']]['attributes'][$option] = $value;
+                    $this->shoppingCart->contents[$_POST['products_id']]['attributes'][$option] = $value;
                 }
               }
           }
@@ -182,8 +182,8 @@ class DPU {
         $qty = $_POST['cart_quantity'];
         $out = array();
         $global_total;
-        reset($this->_shoppingCart->contents[$_POST['products_id']]['attributes']);
-        while (list($option, $value) = each($this->_shoppingCart->contents[$_POST['products_id']]['attributes'])) {
+        reset($this->shoppingCart->contents[$_POST['products_id']]['attributes']);
+        while (list($option, $value) = each($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
             $adjust_downloads ++;
 
             $attribute_price = $db->Execute("select *
@@ -242,10 +242,10 @@ class DPU {
             $out[] = sprintf(DPU_SIDEBOX_FRAME, $name, $total, $qty2);
         }
 
-        $out[] = sprintf('<hr />' . DPU_SIDEBOX_TOTAL_FRAME, $currencies->display_price($this->_shoppingCart->total, 0));
+        $out[] = sprintf('<hr />' . DPU_SIDEBOX_TOTAL_FRAME, $currencies->display_price($this->shoppingCart->total, 0));
 
         $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', $_POST['cart_quantity']);
-        $total = sprintf(DPU_SIDEBOX_PRICE_FRAME, $currencies->display_price($this->_shoppingCart->total-$global_total, 0));
+        $total = sprintf(DPU_SIDEBOX_PRICE_FRAME, $currencies->display_price($this->shoppingCart->total-$global_total, 0));
         array_unshift($out, sprintf(DPU_SIDEBOX_FRAME, DPU_BASE_PRICE, $total, $qty2));
 
         $this->_responseText['sideboxContent'] = implode('', $out);
