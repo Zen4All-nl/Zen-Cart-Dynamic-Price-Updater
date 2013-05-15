@@ -40,17 +40,9 @@ class DPU {
   function __construct() {
     global $db;
     // grab the shopping cart class and instantiate it
-    require_once(DIR_WS_CLASSES.'shopping_cart.php');
-    $this->shoppingCart = new shoppingCart();
+    $this->shoppingCart = $_SESSION['cart'];
   }
 
-  /*
-   * @param obj ZC DB object
-   * @return DPU
-   */
-  function DPU() {
-    global $db;
-  }
   /*
    * Wrapper to call all methods to generate the output
    *
