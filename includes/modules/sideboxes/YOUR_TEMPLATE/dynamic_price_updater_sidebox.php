@@ -12,7 +12,7 @@
 if (DPU_STATUS == 'true'){
   $show_dynamic_price_updater_sidebox = true;
 
-  if ($current_page_base == ('product_info') && $show_dynamic_price_updater_sidebox == true)
+  if (($current_page_base == ('product_info') && $show_dynamic_price_updater_sidebox == true) or ($current_page_base == ('product_music_info') && $show_dynamic_price_updater_sidebox == true))
   {
     require($template->get_template_dir('tpl_dynamic_price_updater_sidebox.php',DIR_WS_TEMPLATE, $current_page_base,'sideboxes'). '/tpl_dynamic_price_updater_sidebox.php');
     $title =  BOX_HEADING_DYNAMIC_PRICE_UPDATER_SIDEBOX;

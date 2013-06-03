@@ -1,11 +1,9 @@
 <?php
 /**
 * @package Dynamic Price Updater
-* @copyright Dan Parry (Chrome)
-* @author Dan Parry (Chrome)
-* @version 2.0a (roughly)
-* @contact admin@chrome.me.uk
-* @licence This module is released under the GNU/GPL licence... Really... Go look it up
+* @author Design75
+* @version 3.0
+* @licence This module is released under the GNU/GPL licence
 */
 
 define('BOX_HEADING_DYNAMIC_PRICE_UPDATER_SIDEBOX', 'Price Breakdown'); // the heading that shows in the Updater sidebox

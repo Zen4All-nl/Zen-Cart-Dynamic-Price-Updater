@@ -46,7 +46,7 @@ if(!$result->EOF) {
 	$db->Execute($sql);
 
 	//-- DYNAMIC PRICE UPDATER VERSION
-	$sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'Dynamic Price Updater Status', 'DPU_STATUS', 'true', 'Enable Dynamic Price Updater?', '".$dpu_configuration_id."', 5, NOW(), NOW(), NULL, 'zen_cfg_select_option(array(''true'', ''false''),')";
+  $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'Dynamic Price Updater Status', 'DPU_STATUS', 'true', 'Enable Dynamic Price Updater?', '".$dpu_configuration_id."', 5, NOW(), NOW(), NULL, 'zen_cfg_select_option(array(''true'', ''false''),')";
   $db->Execute($sql);
   $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'Dynamic Price Updater Version', 'DPU_VERSION', '3.0', 'Dynamic Price Updater version', '".$dpu_configuration_id."', 10, NULL, now(), NULL, 'trim(')";
   $db->Execute($sql);
@@ -64,7 +64,6 @@ if(!$result->EOF) {
   $db->Execute($sql);
   $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, '','DPU_SECOND_PRICE', 'cartAdd', '', '".$dpu_configuration_id."', 80, NULL, now(), NULL, NULL)";
   $db->Execute($sql);
-  
 }
 else {
 	$messageStack->add('Database Error: Unable to access configuration_group_id in table' . TABLE_CONFIGURATION_GROUP, 'error');

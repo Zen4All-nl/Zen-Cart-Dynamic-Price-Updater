@@ -10,9 +10,6 @@
 
   $content = '';
   $content .= '<div id="' . str_replace('_', '-', $box_id . 'Content') . '" class="sideBoxContent">';
-
   $content .= '';
-  
-
   $content .= '</div>';
 ?>
