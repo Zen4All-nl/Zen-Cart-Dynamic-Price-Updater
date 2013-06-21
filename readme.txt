@@ -31,6 +31,7 @@ NOTE: If you have an earlier version of Updater installed please remove the file
 
 4. Log in to your webshop's admin panel, and the module will install automatically. There are no seperate sql files needed.
 5. Installation is now complete.
+6. By default DPU is disabled. Go to configuration=>Dynamic Price Updater set de status to true to enable DPU
 
 NOTE: If you have an earlier version of Updater installed please remove the files first
 
