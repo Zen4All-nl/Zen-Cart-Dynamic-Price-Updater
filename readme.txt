@@ -14,7 +14,7 @@ NOTE: If you have an earlier version of Updater installed please remove the file
 
 1. Rename the YOUR_ADMIN folder to the name of your secret foldername.
 2. Rename the YOUR_TEMPLATE folders to the name of your cutom template folder name.
-3. upload the files included (they are in the correct folder structure). For reference the file paths are:
+3. upload the files included in the "Installation files" folder (they are in the correct folder structure). For reference the file paths are:
 
   dpu_ajax.php
   YOUR_ADMIN/includes/auto_loaders/config.dpu.php
