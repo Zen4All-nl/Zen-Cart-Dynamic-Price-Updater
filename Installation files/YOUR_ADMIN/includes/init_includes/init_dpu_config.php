@@ -48,13 +48,13 @@ if(!$result->EOF) {
 	//-- DYNAMIC PRICE UPDATER VERSION
   $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'Dynamic Price Updater Status', 'DPU_STATUS', 'false', 'Enable Dynamic Price Updater?', '".$dpu_configuration_id."', 10, NOW(), NOW(), NULL, 'zen_cfg_select_option(array(''true'', ''false''),')";
   $db->Execute($sql);
-  $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'Dynamic Price Updater Version', 'DPU_VERSION', '3.0', 'Dynamic Price Updater version', '".$dpu_configuration_id."', 20, NULL, now(), NULL, 'trim(')";
+  $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'Dynamic Price Updater Version', 'DPU_VERSION', '3.1', 'Dynamic Price Updater version', '".$dpu_configuration_id."', 20, NULL, now(), NULL, 'trim(')";
   $db->Execute($sql);
-  $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'Where to display the price','DPU_PRICE_ELEMENT_ID', 'productPrices', 'this is the ID of the element where your price is displayed', '".$dpu_configuration_id."', 30, NULL, now(), NULL, NULL)";
+  $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'Where to display the price','DPU_PRICE_ELEMENT_ID', 'productPrices', 'This is the ID of the element where your price is displayed.<br /><strong>default => productPrices</strong>', '".$dpu_configuration_id."', 30, NULL, now(), NULL, NULL)";
   $db->Execute($sql);
-  $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, '','DPU_PRODUCT_FORM', 'cart_quantity', 'this should never change', '".$dpu_configuration_id."', 40, NULL, now(), NULL, NULL)";
+  $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'Define used to set a variable for this script','DPU_PRODUCT_FORM', 'cart_quantity', 'This should never change<br /><strong>default => cart_quantity</strong>', '".$dpu_configuration_id."', 40, NULL, now(), NULL, NULL)";
   $db->Execute($sql);
-  $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'Where to display the weight','DPU_WEIGHT_ELEMENT_ID', 'productWeight', 'this is the ID where your weight is displayed', '".$dpu_configuration_id."', 50, NULL, now(), NULL, NULL)";
+  $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'Where to display the weight','DPU_WEIGHT_ELEMENT_ID', 'productWeight', 'This is the ID where your weight is displayed.<br /><strong>default => productWeight</strong>', '".$dpu_configuration_id."', 50, NULL, now(), NULL, NULL)";
   $db->Execute($sql);
   $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'show a small loading graphic','DPU_SHOW_LOADING_IMAGE', 'true', 'true to show a small loading graphic so the user knows something is happening', '".$dpu_configuration_id."', 60, NULL, now(), NULL, 'zen_cfg_select_option(array(''true'', ''false''),')";
   $db->Execute($sql);
@@ -62,7 +62,7 @@ if(!$result->EOF) {
   $db->Execute($sql);
   $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'Show product quantity','DPU_SHOW_QUANTITY', 'false', '', '".$dpu_configuration_id."', 80, NULL, now(), NULL, 'zen_cfg_select_option(array(''true'', ''false''),')";
   $db->Execute($sql);
-  $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'Where to display the second price','DPU_SECOND_PRICE', 'cartAdd', '', '".$dpu_configuration_id."', 90, NULL, now(), NULL, NULL)";
+  $sql = "INSERT INTO ".DB_PREFIX."configuration VALUES (NULL, 'Where to display the second price','DPU_SECOND_PRICE', 'cartAdd', '<strong>default => cartAdd</strong>', '".$dpu_configuration_id."', 90, NULL, now(), NULL, NULL)";
   $db->Execute($sql);
 }
 else {
@@ -94,4 +94,4 @@ if(file_exists(DIR_FS_ADMIN . DIR_WS_INCLUDES . 'auto_loaders/config.dpu.php'))
 	}
 }
 
-if(!$failed) $messageStack->add('Dynamic Price Updater v3.0 install completed!','success');
+if(!$failed) $messageStack->add('Dynamic Price Updater v3.1 install completed!','success');
