@@ -40,7 +40,7 @@ class DPU {
   function __construct() {
     global $db;
     // grab the shopping cart class and instantiate it
-    $this->shoppingCart = $_SESSION['cart'];
+    $this->shoppingCart = new shoppingCart();
   }
 
   /*
