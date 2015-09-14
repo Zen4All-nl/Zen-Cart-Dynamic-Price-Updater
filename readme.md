@@ -1,4 +1,4 @@
-Dynamic Price Updater v3.0
+Dynamic Price Updater v3.1
 -=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 This is (IMHO) an improved version of DPU 2
@@ -50,7 +50,7 @@ http://www.zen-cart.com/forum/showthread.php?t=70577
 
 Credits
 -------
-This update (V3.0) : Erik Kerkhoven (Design75) http://zen4all.nl
+This update (V3.1) : Erik Kerkhoven (Design75) http://zen4all.nl
 
 Original author : Dan Parry (Chrome) http://chrpme.me.uk
 
