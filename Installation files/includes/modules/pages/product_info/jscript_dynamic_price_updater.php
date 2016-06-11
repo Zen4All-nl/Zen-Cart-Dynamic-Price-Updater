@@ -295,14 +295,14 @@ function init() {
     switch (theForm.elements[i].type) {
       case 'select':
       case 'select-one':
-        theForm.elements[i].onchange = function () { xhr.getPrice(); }
+        theForm.elements[i].addEventListener("change", function () { xhr.getPrice(); });
         break;
       case 'text':
-        theForm.elements[i].onkeyup = function () { xhr.getPrice(); }
+        theForm.elements[i].addEventListener("keyup", function () { xhr.getPrice(); });
         break;
       case 'checkbox':
       case 'radio':
-        theForm.elements[i].onclick = function () { xhr.getPrice(); }
+        theForm.elements[i].addEventListener("click", function () { xhr.getPrice(); });
         break;
     }
   }
