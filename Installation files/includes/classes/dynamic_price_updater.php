@@ -253,18 +253,18 @@ class DPU {
     $this->responseText['sideboxContent'] = implode('', $out);
   }
 
-  /*
+  /**
+   * DEPRECATED -- Seriously? For the love of all that's normal WHY THROW AN ERROR AGAIN?!?!
    * Performs an error dump
    *
    * @param mixed $errorMsg
    */
-
-  function throwError($errorMsg) {
+  /* function throwError($errorMsg) {
     $this->responseType = 'error';
     $this->responseText[] = $errorMsg;
 
     $this->dumpOutput();
-  }
+  } */
 
   /*
    * Formats the response and flushes with the appropriate headers
