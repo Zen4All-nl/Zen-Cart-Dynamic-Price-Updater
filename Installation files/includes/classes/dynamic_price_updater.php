@@ -185,7 +185,7 @@ class DPU {
     if (isset($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
       reset($this->shoppingCart->contents[$_POST['products_id']]['attributes']);
     }
-    while (list($option, $value) = each($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
+    while (isset($this->shoppingCart->contents[$_POST['products_id']]['attributes']) && list($option, $value) = each($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
       $adjust_downloads ++;
 
       $attribute_price = $db->Execute("SELECT *
