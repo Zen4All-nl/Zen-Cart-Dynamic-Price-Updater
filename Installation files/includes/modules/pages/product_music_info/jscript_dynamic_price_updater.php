@@ -148,12 +148,12 @@ objXHR.prototype.getPrice = function () {
       case 'select-one':
       case 'text':
       case 'hidden':
-        temp += el.name+'='+escape(el.value)+'&';
+        temp += el.name+'='+encodeURIComponent(el.value)+'&';
 
         break;
       case 'checkbox':
       case 'radio':
-        if (true == el.checked) temp += el.name+'='+escape(el.value)+'&';
+        if (true == el.checked) temp += el.name+'='+encodeURIComponent(el.value)+'&';
         break;
     }
   }
