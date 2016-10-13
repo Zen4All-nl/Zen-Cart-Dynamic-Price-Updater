@@ -35,7 +35,12 @@ var _secondPrice = '<?php echo DPU_SECOND_PRICE; ?>';
 var objSP = false; // please don't adjust this
 var DPURequest = [];
 // Updater sidebox settings
-var objSB = false; // this holds the sidebox object
+var objSB = false; // this holds the sidebox object // IE. Left sidebox false should become document.getElementById('leftBoxContainer');
+// For right sidebox, this should equal document.getElementById('rightBoxContainer');
+// Perhaps this could be added as an additional admin configuration key.  The result should end up being that a new SideBox is added
+// before whatever is described in this "search".  So this may actually need to be a div within the left or right boxes instead of the
+// left or right side box.
+//   May also be that this it is entirely unnecessary to create a sidebox when one could already exist based on the file structure.
 
 <?php if (DPU_SHOW_LOADING_IMAGE == 'true') { // create the JS object for the loading image ?>
 var loadImg = document.createElement('img');
@@ -148,6 +153,7 @@ objXHR.prototype.getPrice = function () {
       case 'select-one':
       case 'text':
       case 'hidden':
+      case 'number':
         temp += el.name+'='+encodeURIComponent(el.value)+'&';
 
         break;
@@ -255,7 +261,7 @@ $show_dynamic_price_updater_sidebox = true;
 ?>
     function createSB()
     { // create the sidebox for the attributes info display
-      if (!(document.getElementById('dynamicpriceupdatersidebox')))
+      if (!(document.getElementById('dynamicpriceupdatersidebox')) && objSB)
       {
         var tempC = document.createElement('div');
         tempC.id = 'dynamicpriceupdatersideboxContent';
@@ -295,14 +301,19 @@ function init() {
     switch (theForm.elements[i].type) {
       case 'select':
       case 'select-one':
-        theForm.elements[i].onchange = function () { xhr.getPrice(); }
+        theForm.elements[i].addEventListener("change", function () { xhr.getPrice(); });
         break;
       case 'text':
-        theForm.elements[i].onkeyup = function () { xhr.getPrice(); }
+        theForm.elements[i].addEventListener("keyup", function () { xhr.getPrice(); });
         break;
       case 'checkbox':
       case 'radio':
-        theForm.elements[i].onclick = function () { xhr.getPrice(); }
+        theForm.elements[i].addEventListener("click", function () { xhr.getPrice(); });
+        break;
+      case 'number':
+        theForm.elements[i].addEventListener("change", function () { xhr.getPrice(); });
+        theForm.elements[i].addEventListener("keyup", function () { xhr.getPrice(); });
+        theForm.elements[i].addEventListener("input", function () { xhr.getPrice(); });
         break;
     }
   }

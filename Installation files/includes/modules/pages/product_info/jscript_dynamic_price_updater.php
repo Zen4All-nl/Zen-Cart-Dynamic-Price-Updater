@@ -152,6 +152,7 @@ objXHR.prototype.getPrice = function () {
       case 'select':
       case 'select-one':
       case 'text':
+      case 'number':
       case 'hidden':
         temp += el.name+'='+encodeURIComponent(el.value)+'&';
 
@@ -308,6 +309,11 @@ function init() {
       case 'checkbox':
       case 'radio':
         theForm.elements[i].addEventListener("click", function () { xhr.getPrice(); });
+        break;
+      case 'number':
+        theForm.elements[i].addEventListener("change", function () { xhr.getPrice(); });
+        theForm.elements[i].addEventListener("keyup", function () { xhr.getPrice(); });
+        theForm.elements[i].addEventListener("input", function () { xhr.getPrice(); });
         break;
     }
   }
