@@ -169,7 +169,9 @@ objXHR.prototype.getPrice = function () {
 
 objXHR.prototype.handlePrice = function () {
   var thePrice = document.getElementById('<?php echo DPU_PRICE_ELEMENT_ID; ?>');
-  thePrice.removeChild(loadImg);
+  if (loadImg !== undefined && loadImg.parentNode != null && loadImg.parentNode.id == thePrice.id) {
+    thePrice.removeChild(loadImg);
+  }
   
   // use the spans to see if there is a discount occuring up in this here house
   var test = thePrice.getElementsByTagName('span');
@@ -336,13 +338,13 @@ function init() {
 // I know this type of event registration is technically deprecated but I decided to use it because I haven't before
 // There shouldn't be any fallout from the downsides of this method as only a single function is registered (and in the bubbling phase of each model)
 // For backwards compatibility I've included the traditional DOM registration method ?>
-try { // the IE event registration model
+<?php /*try { // the IE event registration model
   window.attachEvent('onload', init);
 } catch (e) { // W3C event registration model
   window.addEventListener('load', init, false);
 } finally {
   window.onload = init;
-}
+}*/ ?>
 // ]]></script>
 <?php
 }
