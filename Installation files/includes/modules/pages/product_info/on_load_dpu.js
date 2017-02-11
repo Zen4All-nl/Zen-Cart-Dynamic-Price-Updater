@@ -1,1 +1,1 @@
-init();
+try { init(); } catch(err) { }
