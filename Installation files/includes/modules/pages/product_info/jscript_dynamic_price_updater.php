@@ -31,7 +31,7 @@ if (DPU_STATUS == 'true')
 var theFormName = '<?php echo DPU_PRODUCT_FORM; ?>';
 var theForm = false;
 var theURL = '<?php echo DIR_WS_CATALOG; ?>dpu_ajax.php';
-var _secondPrice = '<?php echo DPU_SECOND_PRICE; ?>';
+var _secondPrice = <?php echo (DPU_SECOND_PRICE != '' ? '\'' . DPU_SECOND_PRICE . '\'' : 'false'); ?>;
 var objSP = false; // please don't adjust this
 var DPURequest = [];
 // Updater sidebox settings

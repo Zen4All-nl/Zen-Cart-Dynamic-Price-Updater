@@ -78,7 +78,7 @@ if(!$result->EOF) {
   $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('Show product quantity','DPU_SHOW_QUANTITY', 'false', '', :dpu_configuration_id:, 80, now(), NULL, 'zen_cfg_select_option(array(''true'', ''false''),')";
   $sql = $db->bindVars($sql, ':dpu_configuration_id:', $dpu_configuration_id, 'integer');
   $db->Execute($sql);
-  $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('Where to display the second price','DPU_SECOND_PRICE', 'cartAdd', '<strong>default => cartAdd</strong>', :dpu_configuration_id:, 90, now(), NULL, NULL)";
+  $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('Where to display the second price','DPU_SECOND_PRICE', 'cartAdd', 'Leave blank to not display<strong>default => cartAdd</strong>', :dpu_configuration_id:, 90, now(), NULL, NULL)";
   $sql = $db->bindVars($sql, ':dpu_configuration_id:', $dpu_configuration_id, 'integer');
   $db->Execute($sql);
 }
