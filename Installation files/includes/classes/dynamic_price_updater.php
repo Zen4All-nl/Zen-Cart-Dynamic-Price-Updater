@@ -83,9 +83,10 @@ class DPU {
     $this->responseText['priceTotal'] = UPDATER_PREFIX_TEXT;
     $product_check = $db->Execute("SELECT products_tax_class_id FROM " . TABLE_PRODUCTS . " WHERE products_id = '" . (int)$_POST['products_id'] . "'" . " LIMIT 1");
     if (DPU_SHOW_CURRENCY_SYMBOLS == 'false') {
-      $this->responseText['priceTotal'] .= number_format($this->shoppingCart->total, 2);
+      $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
+      $this->responseText['priceTotal'] .= number_format($this->shoppingCart->total, $decimal_places);
     } else {
-      $this->responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, 0);
+      $this->responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, zen_get_tax_rate($product_check->fields['products_tax_class_id'])/* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
     }
 
     $this->responseText['weight'] = (string)$this->shoppingCart->weight;
@@ -128,9 +129,10 @@ class DPU {
       }
     }
 
-    if (is_array($attributes)) {
-      reset($attributes);
-      while (list($option, $value) = each($attributes)) {
+    if (is_array($attributes)/* && sizeof($attributes)*/) {
+//      reset($attributes);
+//      while (list($option, $value) = each($attributes)) {
+      foreach ($attributes as $option => $value) {
         //CLR 020606 check if input was from text box.  If so, store additional attribute information
         //CLR 020708 check if text input is blank, if so do not add to attribute lists
         //CLR 030228 add htmlspecialchars processing.  This handles quotes and other special chars in the user input.
@@ -149,8 +151,9 @@ class DPU {
 
         if (!$blank_value) {
           if (is_array($value)) {
-            reset($value);
-            while (list($opt, $val) = each($value)) {
+//            reset($value);
+//            while (list($opt, $val) = each($value)) {
+            foreach ($value as $opt => $val) {
               $this->shoppingCart->contents[$_POST['products_id']]['attributes'][$option . '_chk' . $val] = $val;
             }
           } else {
@@ -182,10 +185,12 @@ class DPU {
     $qty = $_POST['cart_quantity'];
     $out = array();
     $global_total;
-    if (isset($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
+/*    if (isset($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
       reset($this->shoppingCart->contents[$_POST['products_id']]['attributes']);
-    }
-    while (isset($this->shoppingCart->contents[$_POST['products_id']]['attributes']) && list($option, $value) = each($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
+    }*/
+    if (is_array($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
+//    while (isset($this->shoppingCart->contents[$_POST['products_id']]['attributes']) && list($option, $value) = each($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
+    foreach ($this->shoppingCart->contents[$_POST['products_id']]['attributes'] as $option => $value) {
       $adjust_downloads ++;
 
       $attribute_price = $db->Execute("SELECT *
@@ -196,7 +201,7 @@ class DPU {
 
       $data = $db->Execute("SELECT products_options_values_name
                      FROM " . TABLE_PRODUCTS_OPTIONS_VALUES . "
-                     WHERE products_options_values_id = $value");
+                     WHERE products_options_values_id = " . (int)$value);
       $name = $data->fields['products_options_values_name'];
 
       $new_attributes_price = 0;
@@ -240,8 +245,9 @@ class DPU {
       }
       $global_total += $total;
       $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', $_POST['cart_quantity']);
-      $total = sprintf(DPU_SIDEBOX_PRICE_FRAME, $currencies->display_price($total, 0));
+      $total = sprintf(DPU_SIDEBOX_PRICE_FRAME, $currencies->display_price($total, 0 /* ?? Should this tax be applied? zen_get_tax_rate($product_check->fields['products_tax_class_id'])*/));
       $out[] = sprintf(DPU_SIDEBOX_FRAME, $name, $total, $qty2);
+    }
     }
 
     $out[] = sprintf('<hr />' . DPU_SIDEBOX_TOTAL_FRAME, $currencies->display_price($this->shoppingCart->total, 0));
