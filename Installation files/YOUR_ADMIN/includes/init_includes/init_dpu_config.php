@@ -57,7 +57,7 @@ if(!$result->EOF) {
   $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('Dynamic Price Updater Status', 'DPU_STATUS', 'false', 'Enable Dynamic Price Updater?', :dpu_configuration_id:, 10, NOW(), NULL, 'zen_cfg_select_option(array(''true'', ''false''),')";
   $sql = $db->bindVars($sql, ':dpu_configuration_id:', $dpu_configuration_id, 'integer');
   $db->Execute($sql);
-  $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('Dynamic Price Updater Version', 'DPU_VERSION', '3.1', 'Dynamic Price Updater version', :dpu_configuration_id:, 20, now(), NULL, 'trim(')";
+  $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('Dynamic Price Updater Version', 'DPU_VERSION', '3.0.4', 'Dynamic Price Updater version', :dpu_configuration_id:, 20, now(), NULL, 'trim(')";
   $sql = $db->bindVars($sql, ':dpu_configuration_id:', $dpu_configuration_id, 'integer');
   $db->Execute($sql);
   $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('Where to display the price','DPU_PRICE_ELEMENT_ID', 'productPrices', 'This is the ID of the element where your price is displayed.<br /><strong>default => productPrices</strong>', :dpu_configuration_id:, 30, now(), NULL, NULL)";
@@ -111,4 +111,4 @@ if(file_exists(DIR_FS_ADMIN . DIR_WS_INCLUDES . 'auto_loaders/config.dpu.php'))
 	}
 }
 
-if(!$failed) $messageStack->add('Dynamic Price Updater v3.1 install completed!','success');
+if(!$failed) $messageStack->add('Dynamic Price Updater v3.0.4 install completed!','success');

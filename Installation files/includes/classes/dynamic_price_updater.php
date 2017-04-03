@@ -1,5 +1,4 @@
 <?php
-
 /*
  * Dynamic Price Updater V3.0
  * @copyright Dan Parry (Chrome) / Erik Kerkhoven (Design75)
@@ -11,12 +10,12 @@ if (!defined('IS_ADMIN_FLAG')) {
 }
 
 class DPU {
+
   /*
    * Local instantiation of the shopping cart
    *
    * @var object
    */
-
   var $shoppingCart;
   /*
    * The type of message being sent (error or success)
@@ -38,7 +37,6 @@ class DPU {
    * @param obj The Zen Cart database class
    * @return DPU
    */
-
   function __construct() {
     global $db;
     // grab the shopping cart class and instantiate it
@@ -50,7 +48,6 @@ class DPU {
    *
    * @return void
    */
-
   function getDetails() {
     $this->insertProduct();
     $this->shoppingCart->calculate();
@@ -67,7 +64,6 @@ class DPU {
    *
    * @return void
    */
-
   function getMulti() {
     $this->insertProducts();
   }
@@ -77,7 +73,6 @@ class DPU {
    *
    * @return void
    */
-
   function prepareOutput() {
     global $currencies, $db;
     $this->responseText['priceTotal'] = UPDATER_PREFIX_TEXT;
@@ -100,7 +95,6 @@ class DPU {
    *
    * @return void
    */
-
   function insertProducts() {
     foreach ($_POST['products_id'] as $id => $qty) {
       $this->shoppingCart->contents[] = array($id);
@@ -116,7 +110,6 @@ class DPU {
    *
    * @returns void
    */
-
   function insertProduct() {
     $this->shoppingCart->contents[$_POST['products_id']] = array('qty' => (float)$_POST['cart_quantity']);
     $attributes = array();
@@ -168,7 +161,6 @@ class DPU {
    * Prepares the output for the Updater's sidebox display
    *
    */
-
   function getSideboxContent() {
     global $currencies, $db;
 
@@ -278,7 +270,6 @@ class DPU {
    *
    * @return void
    */
-
   function dumpOutput() {
     // output the header for XML
     header("content-type: text/xml");
@@ -293,5 +284,4 @@ class DPU {
 
     die('</root>');
   }
-
 }
