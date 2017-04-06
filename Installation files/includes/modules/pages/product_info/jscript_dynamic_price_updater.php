@@ -32,7 +32,8 @@ if (DPU_STATUS == 'true')
 // Set some global vars
 var theFormName = "<?php echo DPU_PRODUCT_FORM; ?>";
 var theForm = false;
-var theURL = "<?php echo DIR_WS_CATALOG; ?>dpu_ajax.php";
+var theURL = "<?php echo DIR_WS_CATALOG; ?>ajax.php";
+// var theURL = "<?php echo DIR_WS_CATALOG; ?>dpu_ajax.php";
 var _secondPrice = <?php echo (DPU_SECOND_PRICE != '' ? '"' . DPU_SECOND_PRICE . '"' : 'false'); ?>;
 var objSP = false; // please don't adjust this
 var DPURequest = [];
@@ -118,9 +119,10 @@ objXHR.prototype.getData = function(strMode, resFunc, _data) { // send a DPURequ
         }
       }
     };
-    this.XHR.open(strMode.toLowerCase(), this.url+(strMode.toLowerCase() == "get" ? "?" + this.compileRequest() : ""), true);
+    this.XHR.open(strMode.toLowerCase(), this.url+"?act=DPU_Ajax&method=dpu_update"+(strMode.toLowerCase() == "get" ? "&" + this.compileRequest() : ""), true);
     if (strMode.toLowerCase() == "post") {
       this.XHR.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+      this.XHR.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     }
     this.XHR.send(_data);
   } else {
@@ -201,7 +203,7 @@ objXHR.prototype.getPrice = function () {
         break;
     }
   }
-  temp += "pspClass="+pspClass;
+  temp += "pspClass="+encodeURIComponent(pspClass);
   //temp = temp.substr(0, temp.length - 1)
   this.getData("post", "handlePrice", temp);
 };
