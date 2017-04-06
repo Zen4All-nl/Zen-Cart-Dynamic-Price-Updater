@@ -162,8 +162,9 @@ objXHR.prototype.getPrice = function () {
     if (psp && imgLoc == "replace") {
       if (thePrice) {
         loadImg.style.display = "inline"; //'block';
-        loadImg.style.height = "23px"; // Maintains the height so that there is not a vertical shift of the content.
         var pspClass = psp.className;
+        var pspStyle = psp.currentStyle || window.getComputedStyle(psp);
+        loadImg.style.height = pspStyle.lineHeight; // Maintains the height so that there is not a vertical shift of the content.
         psp.innerHTML = loadImg.outerHTML;
       }
 
