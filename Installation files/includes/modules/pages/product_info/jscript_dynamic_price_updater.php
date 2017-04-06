@@ -163,6 +163,7 @@ objXHR.prototype.getPrice = function () {
       if (thePrice) {
         loadImg.style.display = "inline"; //'block';
         loadImg.style.height = "23px"; // Maintains the height so that there is not a vertical shift of the content.
+        var pspClass = psp.className;
         psp.innerHTML = loadImg.outerHTML;
       }
 
@@ -199,7 +200,8 @@ objXHR.prototype.getPrice = function () {
         break;
     }
   }
-  temp = temp.substr(0, temp.length - 1)
+  temp += "pspClass="+pspClass;
+  //temp = temp.substr(0, temp.length - 1)
   this.getData("post", "handlePrice", temp);
 };
 
