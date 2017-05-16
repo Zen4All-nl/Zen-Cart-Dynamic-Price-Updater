@@ -148,6 +148,7 @@ objXHR.prototype.responseHandler = function (theFunction) { // redirect response
 };
 
 objXHR.prototype.getPrice = function () {
+    var pspClass = false;
     <?php if (DPU_SHOW_LOADING_IMAGE == 'true') { ?>
 
     var psp = false;
@@ -164,7 +165,7 @@ objXHR.prototype.getPrice = function () {
     if (psp && imgLoc == "replace") {
       if (thePrice) {
         loadImg.style.display = "inline"; //'block';
-        var pspClass = psp.className;
+        pspClass = psp.className;
         var pspStyle = psp.currentStyle || window.getComputedStyle(psp);
         loadImg.style.height = pspStyle.lineHeight; // Maintains the height so that there is not a vertical shift of the content.
         psp.innerHTML = loadImg.outerHTML;
@@ -203,14 +204,16 @@ objXHR.prototype.getPrice = function () {
         break;
     }
   }
-  temp += "pspClass="+encodeURIComponent(pspClass);
+  if (pspClass) {
+    temp += "pspClass="+encodeURIComponent(pspClass);
+  }
   //temp = temp.substr(0, temp.length - 1)
   this.getData("post", "handlePrice", temp);
 };
 
 objXHR.prototype.handlePrice = function () {
   var thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
-  if (loadImg !== undefined && loadImg.parentNode != null && loadImg.parentNode.id == thePrice.id && imgLoc != "replace") {
+  if (typeof(loadImg) !== "undefined" && loadImg.parentNode != null && loadImg.parentNode.id == thePrice.id && imgLoc != "replace") {
     thePrice.removeChild(loadImg);
   }
 
