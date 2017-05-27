@@ -9,20 +9,20 @@ if (!defined('IS_ADMIN_FLAG')) {
   die('Illegal Access');
 }
 
-class DPU {
+class DPU extends base {
 
   /*
    * Local instantiation of the shopping cart
    *
    * @var object
    */
-  var $shoppingCart;
+  protected $shoppingCart;
   /*
    * The type of message being sent (error or success)
    *
    * @var string
    */
-  var $responseType = 'success';
+  protected $responseType = 'success';
   /*
    * Array of lines to be sent back.  The key of the array provides the attribute to identify it at the client side
    * The array value is the text to be inserted into the node
@@ -37,7 +37,7 @@ class DPU {
    * @param obj The Zen Cart database class
    * @return DPU
    */
-  function __construct() {
+  public function __construct() {
     global $db;
     // grab the shopping cart class and instantiate it
     $this->shoppingCart = new shoppingCart();
@@ -48,7 +48,7 @@ class DPU {
    *
    * @return void
    */
-  function getDetails() {
+  public function getDetails($outputType = "XML") {
     $this->insertProduct();
     $this->shoppingCart->calculate();
     $show_dynamic_price_updater_sidebox = true;
@@ -56,7 +56,7 @@ class DPU {
       $this->getSideboxContent();
     }
     $this->prepareOutput();
-    $this->dumpOutput();
+    $this->dumpOutput($outputType);
   }
 
   /*
@@ -64,7 +64,7 @@ class DPU {
    *
    * @return void
    */
-  function getMulti() {
+  public function getMulti() {
     $this->insertProducts();
   }
 
@@ -73,8 +73,8 @@ class DPU {
    *
    * @return void
    */
-  function prepareOutput() {
-    global $currencies, $db, $zco_notifier;
+  protected function prepareOutput() {
+    global $currencies, $db;
     $prefix = '';
     switch (true) {
         case (!isset($_POST['pspClass'])):
@@ -104,7 +104,7 @@ class DPU {
         default:
             $prefix = UPDATER_PREFIX_TEXT;
             // Add a notifier to allow updating this prefix if the ones above do not exist.
-            $zco_notifier->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_PREPARE_OUTPUT_PSP_CLASS');
+            $this->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_PREPARE_OUTPUT_PSP_CLASS');
         break;
     }
     $this->responseText['priceTotal'] = $prefix;
@@ -131,7 +131,7 @@ class DPU {
    *
    * @return void
    */
-  function insertProducts() {
+  protected function insertProducts() {
     foreach ($_POST['products_id'] as $id => $qty) {
       $this->shoppingCart->contents[] = array((int)$id);
       $this->shoppingCart->contents[(int)$id] = array('qty' => (float)$qty);
@@ -146,7 +146,7 @@ class DPU {
    *
    * @returns void
    */
-  function insertProduct() {
+  protected function insertProduct() {
 //    $this->shoppingCart->contents[$_POST['products_id']] = array('qty' => (float)$_POST['cart_quantity']);
     $attributes = array();
 
@@ -199,7 +199,7 @@ class DPU {
    * Prepares the output for the Updater's sidebox display
    *
    */
-  function getSideboxContent() {
+  protected function getSideboxContent() {
     global $currencies, $db;
 
     $product_check = $db->Execute("SELECT products_tax_class_id FROM " . TABLE_PRODUCTS . " WHERE products_id = '" . (int)$_POST['products_id'] . "'" . " LIMIT 1");
@@ -215,9 +215,7 @@ class DPU {
     $qty = (float)$_POST['cart_quantity'];
     $out = array();
     $global_total;
-/*    if (isset($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
-      reset($this->shoppingCart->contents[$_POST['products_id']]['attributes']);
-    }*/
+
     if (is_array($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
 //    while (isset($this->shoppingCart->contents[$_POST['products_id']]['attributes']) && list($option, $value) = each($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
     foreach ($this->shoppingCart->contents[$_POST['products_id']]['attributes'] as $option => $value) {
@@ -308,7 +306,8 @@ class DPU {
    *
    * @return void
    */
-  function dumpOutput() {
+  protected function dumpOutput($outputType = "XML") {
+    if ($outputType == "XML") {
     // output the header for XML
     header("content-type: text/xml");
     // set the XML file DOCTYPE
@@ -321,5 +320,25 @@ class DPU {
     }
 
     die('</root>');
+    } elseif ($outputType == "JSON") {
+      $data = array();
+
+      // output the header for JSON
+      header('Content-Type: application/json');
+
+      // DO NOT set a JSON file DOCTYPE as there is none to be included.
+//      echo '<?xml version="1.0" encoding="UTF-8" ' . "\n";
+
+      // set the responseType
+      $data['responseType'] = $this->responseType;
+      // now loop through the responseText nodes
+      foreach ($this->responseText as $key => $val) {
+          if (!is_numeric($key) && !empty($key)) {
+            $data['data'][$key] = $val;
+          }
+      }
+
+      die(json_encode($data));
+    }
   }
 }

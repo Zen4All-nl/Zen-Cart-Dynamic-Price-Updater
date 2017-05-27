@@ -48,6 +48,7 @@ var objSB = false; // this holds the sidebox object // IE. Left sidebox false sh
 <?php if (DPU_SHOW_LOADING_IMAGE == 'true') { // create the JS object for the loading image ?>
 var imgLoc = "replace"; // Options are "replace" or , "" (empty)
 
+var origPrice;  
 var loadImg = document.createElement("img");
 loadImg.src = "<?php echo DIR_WS_IMAGES; ?>ajax-loader.gif";
 loadImg.id = "DPULoaderImage";
@@ -64,8 +65,8 @@ function objXHR()
   var url; // URL to send HTTP DPURequests to
   var timer; // timer for timing things
   var XHR; // XMLHttpDPURequest object
-  var _responseXML; // holds XML formed responses from the server
-  var _responseText; // holds any textual response from the server
+  var responseXML; // holds XML formed responses from the server
+  var responseText; // holds any textual response from the server
   // var DPURequest = []; // associative array to hold DPURequests to be sent
 
   // DPURequest = new Array();
@@ -101,30 +102,72 @@ objXHR.prototype.createXHR = function () { // this code has been modified from t
     }
 };
 
-objXHR.prototype.getData = function(strMode, resFunc, _data) { // send a DPURequest to the server in either GET or POST
+objXHR.prototype.getData = function(strMode, resFunc, combinedData) { // send a DPURequest to the server in either GET or POST
   strMode = (strMode.toLowerCase() == "post" ? "post" : "get");
   var _this = this; // scope resolution
-  this.createXHR();
 
-  if (this.XHR) {
-    this.XHR.onreadystatechange = function () {
-      if (_this.XHR.readyState == 4) {
-      // only if "OK"
-        if (_this.XHR.status == 200) {
-          _this.responseXML = _this.XHR.responseXML;
-          _this.responseText = _this.XHR.responseText;
-          _this.responseHandler(resFunc);
-        } else {
-          alert("Status returned - " + _this.XHR.statusText);
+  if (((typeof zcJS == "undefined" || !zcJS) ? this.XHR : zcJS)) {
+    if (typeof zcJS == "undefined" || !zcJS) {
+      this.createXHR();
+      
+      this.XHR.onreadystatechange = function () {
+        if (_this.XHR.readyState == 4) {
+        // only if "OK"
+          if (_this.XHR.status == 200) {
+            _this.responseXML = _this.XHR.responseXML;
+            _this.responseText = _this.XHR.responseText;
+            _this.responseHandler(resFunc, _this);
+          } else {
+            alert("Status returned - " + _this.XHR.statusText);
+          }
         }
+      };
+      this.XHR.open(strMode.toLowerCase(), this.url+"?act=DPU_Ajax&method=dpu_update"+(strMode.toLowerCase() == "get" ? "&" + this.compileRequest() : ""), true);
+      if (strMode.toLowerCase() == "post") {
+        this.XHR.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+        this.XHR.setRequestHeader("X-Requested-With", "XMLHttpRequest");
       }
-    };
-    this.XHR.open(strMode.toLowerCase(), this.url+"?act=DPU_Ajax&method=dpu_update"+(strMode.toLowerCase() == "get" ? "&" + this.compileRequest() : ""), true);
-    if (strMode.toLowerCase() == "post") {
-      this.XHR.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
-      this.XHR.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+      this.XHR.send(combinedData["XML"]);
+    } else {
+      var option = { url : theURL+"?act=DPU_Ajax&method=dpu_update",
+                    data : combinedData["JSON"],
+                     timeout : 30000,
+                   };
+      zcJS.ajax(option).done(
+          function (response,textStatus,jqXHR) { 
+            _this.responseJSON = jqXHR.responseJSON;
+            _this.responseText = jqXHR.responseText;
+            _this.responseHandler(resFunc, _this);
+          }
+        ).fail( function(jqXHR,textStatus,errorThrown) {
+           <?php if (DPU_SHOW_LOADING_IMAGE == 'true') { ?>
+            var thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
+            var test = thePrice.getElementsByTagName("span");
+            var psp = false;
+
+            for (var a=0,b=test.length; a<b; a++) {
+              if (test[a].className == "productSpecialPrice" || test[a].className == "productSalePrice" || test[a].className == "productSpecialPriceSale") {
+                psp = test[a];
+              }
+            }
+
+            if (typeof(loadImg) !== "undefined" && loadImg.parentNode != null && loadImg.parentNode.id == thePrice.id && imgLoc != "replace") {
+              if (psp) {
+                psp.removeChild(loadImg);
+              } else {
+                thePrice.removeChild(loadImg);
+              }
+            } else if (typeof(loadImg) !== "undefined" && imgLoc == "replace") {
+              _this.updateInnerHTML(origPrice, psp, thePrice);
+            }
+            if (_secondPrice !== false) {
+              _this.updSP();
+            }
+
+           <?php } ?>
+            //alert("Status returned - " + textStatus);
+        });
     }
-    this.XHR.send(_data);
   } else {
     var mess = "I couldn't contact the server!\n\nIf you use IE please allow ActiveX objects to run";
     alert (mess);
@@ -142,9 +185,9 @@ objXHR.prototype.compileRequest = function () {
   return (ret.substr(0, ret.length - 1));
 };
 
-objXHR.prototype.responseHandler = function (theFunction) { // redirect responses from the server to the right function
+objXHR.prototype.responseHandler = function (theFunction, results) { // redirect responses from the server to the right function
   DPURequest = new Array();
-  this[theFunction](); // Eliminates concern of improper evaluation; however, does limit the response value(s)
+  this[theFunction](results); // Eliminates concern of improper evaluation; however, does limit the response value(s)
 };
 
 objXHR.prototype.getPrice = function () {
@@ -161,6 +204,9 @@ objXHR.prototype.getPrice = function () {
           psp = test[a];
         }
       }
+      if (!psp) {
+        psp = thePrice;
+      }
     }
     if (psp && imgLoc == "replace") {
       if (thePrice) {
@@ -168,7 +214,8 @@ objXHR.prototype.getPrice = function () {
         pspClass = psp.className;
         var pspStyle = psp.currentStyle || window.getComputedStyle(psp);
         loadImg.style.height = pspStyle.lineHeight; // Maintains the height so that there is not a vertical shift of the content.
-        psp.innerHTML = loadImg.outerHTML;
+        origPrice = psp.innerHTML;
+        this.updateInnerHTML(loadImg.outerHTML, false, psp, true);
       }
 
     } else {
@@ -177,7 +224,8 @@ objXHR.prototype.getPrice = function () {
 
     if (document.getElementById("dynamicpriceupdatersidebox")) {
         var theSB = document.getElementById("dynamicpriceupdatersideboxContent");
-        theSB.innerHTML = "";
+//        theSB.innerHTML = "";
+        this.updateInnerHTML("", false, theSB, true);
         theSB.style.textAlign = "center";
         theSB.appendChild(loadImgSB);
     }
@@ -185,33 +233,77 @@ objXHR.prototype.getPrice = function () {
   this.url = theURL;
   var n=theForm.elements.length;
   var temp = "";
+  var jsonData = {};
+  var combinedData = {};
+  
   for (var i=0; i<n; i++) {
     var el = theForm.elements[i];
-    switch (el.type) { <?php // I'm not sure this even needed as a switch; testing needed ?>
+    switch (el.type) { <?php /* I'm not sure this even needed as a switch; testing needed*/ ?>
       case "select":
       case "select-one":
       case "text":
       case "number":
       case "hidden":
         temp += el.name+"="+encodeURIComponent(el.value)+"&";
-
+        if (!(el.name in jsonData)) { // Ensure not to replace an existing value. I.e. drop a duplicate value.
+          jsonData[el.name] = el.value;
+        }
         break;
       case "checkbox":
       case "radio":
         if (true == el.checked) {
           temp += el.name+"="+encodeURIComponent(el.value)+"&";
+          if (!(el.name in jsonData)) { // Ensure not to replace an existing value. I.e. drop a duplicate value.
+            jsonData[el.name] = el.value;
+          }
         }
         break;
     }
   }
   if (pspClass) {
-    temp += "pspClass="+encodeURIComponent(pspClass);
+    temp += "pspClass="+encodeURIComponent(pspClass)+"&";
+    jsonData["pspClass"] = pspClass;
   }
+  
+  temp += "stat=main&";
+  jsonData["stat"] = "main";
+  
+  temp += "outputType=XML&";
+  jsonData["outputType"] = "JSON";
+  temp = temp.substr(0, temp.length - 1);
+
+  combinedData["XML"] = temp;
+  combinedData["JSON"] = jsonData;
+
+  this.getData("post", "handlePrice", combinedData);
+  
   //temp = temp.substr(0, temp.length - 1)
-  this.getData("post", "handlePrice", temp);
+  //this.getData("post", "handlePrice", temp);
 };
 
-objXHR.prototype.handlePrice = function () {
+objXHR.prototype.updateInnerHTML = function (storeVal, psp, obj, replace = true) {
+  if (storeVal != "") {
+          if (psp) {
+            if (replace) {
+              psp.innerHTML = storeVal;
+            } else {
+              psp.innerHTML += storeVal;
+            }
+          } else {
+            if (replace) {
+              obj.innerHTML = storeVal;
+            } else {
+              obj.innerHTML += storeVal;
+            }
+          }
+  
+          if (_secondPrice !== false) {
+            this.updSP();
+          }
+  }
+};
+  
+objXHR.prototype.handlePrice = function (results) {
   var thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
   if (typeof(loadImg) !== "undefined" && loadImg.parentNode != null && loadImg.parentNode.id == thePrice.id && imgLoc != "replace") {
     thePrice.removeChild(loadImg);
@@ -227,7 +319,13 @@ objXHR.prototype.handlePrice = function () {
     }
   }
 
-  var type = this.responseXML.getElementsByTagName("responseType")[0].childNodes[0].nodeValue;
+//  var type = this.responseXML.getElementsByTagName("responseType")[0].childNodes[0].nodeValue;
+  if (results.responseXML) {
+    var type = results.responseXML.getElementsByTagName("responseType")[0].childNodes[0].nodeValue;
+  } else if (results.responseJSON) {
+    var type = results.responseJSON.responseType;
+  }
+
     if (document.getElementById("dynamicpriceupdatersidebox")) {
         var theSB = document.getElementById("dynamicpriceupdatersideboxContent");
         theSB.style.textAlign = "left";
@@ -239,23 +337,41 @@ objXHR.prototype.handlePrice = function () {
   if (type == "error") {
     this.showErrors();
   } else {
-    var temp = this.responseXML.getElementsByTagName("responseText");
-    for(var i=0, n=temp.length; i<n; i++) {
-      var type = temp[i].getAttribute("type");
+//    var temp = this.responseXML.getElementsByTagName("responseText");
+    if (results.responseXML) {
+      var temp = results.responseXML.getElementsByTagName("responseText");
+    } else if (results.responseJSON) {
+      var temp = results.responseJSON.data;
+    }
+
+/*    for(var i=0, n=temp.length; i<n; i++) {
+      var type = temp[i].getAttribute("type");*/
+    for(var i in temp) {
+      if (results.responseXML) {
+        if (!(temp.hasOwnProperty(i))) {
+          continue;
+        }
+        var type = temp[i].getAttribute("type");
+        var storeVal = temp[i].childNodes[0].nodeValue;
+      } else if (results.responseJSON) {
+        var type = i;
+        var storeVal = temp[i];
+      }
 
       switch (type) {<?php // the 'type' attribute defines what type of information is being provided ?>
         case "priceTotal":
-          if (psp) {
+          /*if (psp) {
             psp.innerHTML = temp[i].childNodes[0].nodeValue;
           } else {
             thePrice.innerHTML = temp[i].childNodes[0].nodeValue;
           }
           if (_secondPrice !== false) {
             this.updSP();
-          }
+          }*/
+          this.updateInnerHTML(storeVal, psp, thePrice, true);
           break;
         case "quantity":
-          with (temp[i].childNodes[0]) {
+/*          with (temp[i].childNodes[0]) {
             if (nodeValue != "") {
               if (psp) {
                 psp.innerHTML += nodeValue;
@@ -265,24 +381,28 @@ objXHR.prototype.handlePrice = function () {
 
               this.updSP();
             }
-          }
+          }*/
+          this.updateInnerHTML(storeVal, psp, thePrice, false);
           break;
         case "weight":
           var theWeight = document.getElementById("<?php echo DPU_WEIGHT_ELEMENT_ID; ?>");
           if (theWeight) {
-            theWeight.innerHTML = temp[i].childNodes[0].nodeValue;
+//            theWeight.innerHTML = temp[i].childNodes[0].nodeValue;
+            this.updateInnerHTML(storeVal, false, theWeight, true);
           }
           break;
         case "sideboxContent":
           if (updateSidebox) {
-            sbContent += temp[i].childNodes[0].nodeValue;
+//            sbContent += temp[i].childNodes[0].nodeValue;
+            sbContent += storeVal;
           }
           break;
       }
     }
   }
   if (updateSidebox) {
-    theSB.innerHTML = sbContent;
+//    theSB.innerHTML = sbContent;
+    this.updateInnerHTML(sbContent, false, theSB, true);
   }
 };
 
@@ -294,6 +414,7 @@ objXHR.prototype.updSP = function () {
     var centre = document.getElementById("productGeneral");
     var temp = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
     var itemp = document.getElementById(_secondPrice);
+    var flag = false;
 
     if (objSP === false) { // create the second price object
       if (!temp || !itemp) {
@@ -332,11 +453,27 @@ $show_dynamic_price_updater_sidebox = true;
   }
 ?>
 objXHR.prototype.showErrors = function () {
-  var errorText = this.responseXML.getElementsByTagName("responseText");
+//  var errorText = this.responseXML.getElementsByTagName("responseText");
   var alertText = "";
-  var n=errorText.length;
-  for (var i=0; i<n; i++) {
-    alertText += "\n- "+errorText[i].childNodes[0].nodeValue;
+  var errVal;
+
+  if (typeof zcJS == "undefined" || !zcJS) { 
+    var errorText = this.responseXML.getElementsByTagName("responseText");
+  } else {
+    var errorText = this.responseJSON.responseText;
+  }
+  //var n=errorText.length;
+  
+  for (var i in errorText/*var i=0; i<n; i++*/) {
+    if (!(errorText.hasOwnProperty(i))) {
+      continue;
+    }
+    if (typeof zcJS == "undefined" || !zcJS) {
+      errVal = errorText[i].childNodes[0].nodeValue;
+    } else {
+      errVal = i;
+    }
+    alertText += "\n- "+errVal;
   }
   alert ("Error! Message reads:\n\n"+alertText);
 };
