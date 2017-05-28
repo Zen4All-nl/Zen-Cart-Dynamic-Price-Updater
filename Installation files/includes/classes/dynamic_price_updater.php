@@ -118,7 +118,11 @@ class DPU {
 
     $this->responseText['weight'] = (string)$this->shoppingCart->weight;
     if (DPU_SHOW_QUANTITY == 'true') {
-      $this->responseText['quantity'] = sprintf(DPU_SHOW_QUANTITY_FRAME, $this->shoppingCart->contents[$_POST['products_id']]['qty']);
+      foreach ($this->shoppingCart->contents as $key => $value) {
+        if ($_SESSION['cart']->contents[$key]['qty'] > 0) { // Hides quantity if the selected variant/options are not in the existing cart.
+          $this->responseText['quantity'] = sprintf(DPU_SHOW_QUANTITY_FRAME, (float)$_SESSION['cart']->contents[$key]['qty']);
+        }
+      }
     }
   }
 
@@ -129,8 +133,8 @@ class DPU {
    */
   function insertProducts() {
     foreach ($_POST['products_id'] as $id => $qty) {
-      $this->shoppingCart->contents[] = array($id);
-      $this->shoppingCart->contents[$id] = array('qty' => (float)$qty);
+      $this->shoppingCart->contents[] = array((int)$id);
+      $this->shoppingCart->contents[(int)$id] = array('qty' => (float)$qty);
     }
 
     var_dump($this->shoppingCart);
@@ -143,7 +147,7 @@ class DPU {
    * @returns void
    */
   function insertProduct() {
-    $this->shoppingCart->contents[$_POST['products_id']] = array('qty' => (float)$_POST['cart_quantity']);
+//    $this->shoppingCart->contents[$_POST['products_id']] = array('qty' => (float)$_POST['cart_quantity']);
     $attributes = array();
 
     foreach ($_POST as $key => $val) {
@@ -154,9 +158,10 @@ class DPU {
       }
     }
 
-    if (is_array($attributes)/* && sizeof($attributes)*/) {
-//      reset($attributes);
-//      while (list($option, $value) = each($attributes)) {
+    if (is_array($attributes) && sizeof($attributes)) {
+      $products_id = zen_get_uprid((int)$_POST['products_id'], $attributes);
+      $this->shoppingCart->contents[$products_id] = array('qty' => (float)$_POST['cart_quantity']);
+
       foreach ($attributes as $option => $value) {
         //CLR 020606 check if input was from text box.  If so, store additional attribute information
         //CLR 020708 check if text input is blank, if so do not add to attribute lists
@@ -170,19 +175,20 @@ class DPU {
             $option = substr($option, strlen(TEXT_PREFIX));
             $attr_value = stripslashes($value);
             $value = PRODUCTS_OPTIONS_VALUES_TEXT_ID;
-            $this->shoppingCart->contents[$_POST['products_id']]['attributes_values'][$option] = $attr_value;
+//            $product_info['attributes_values'][$option] = $attr_value;
+            $this->shoppingCart->contents[$products_id]['attributes_values'][$option] = $attr_value;
           }
         }
 
         if (!$blank_value) {
           if (is_array($value)) {
-//            reset($value);
-//            while (list($opt, $val) = each($value)) {
             foreach ($value as $opt => $val) {
-              $this->shoppingCart->contents[$_POST['products_id']]['attributes'][$option . '_chk' . $val] = $val;
+//              $product_info['attributes'][$option . '_chk' . $val] = $val;
+              $this->shoppingCart->contents[$products_id]['attributes'][$option . '_chk' . $val] = $val;
             }
           } else {
-            $this->shoppingCart->contents[$_POST['products_id']]['attributes'][$option] = $value;
+//            $product_info['attributes'][$option] = $value;
+            $this->shoppingCart->contents[$products_id]['attributes'][$option] = $value;
           }
         }
       }
@@ -206,7 +212,7 @@ class DPU {
     $prid = $product->fields['products_id'];
     $products_tax = zen_get_tax_rate(0);
     $products_price = $product->fields['products_price'];
-    $qty = $_POST['cart_quantity'];
+    $qty = (float)$_POST['cart_quantity'];
     $out = array();
     $global_total;
 /*    if (isset($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
