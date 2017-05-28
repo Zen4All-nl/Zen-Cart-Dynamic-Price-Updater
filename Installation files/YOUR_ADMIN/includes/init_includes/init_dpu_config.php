@@ -1,114 +1,134 @@
 <?php
-$failed = false;
-
-$dpu_menu_title = 'Dynamic Price Updater';
-$dpu_menu_text = 'Settings for Dynamic Price Updater';
-
-/* find if Dynamic Price Updater Configuration Group Exists */
-$sql = "SELECT * FROM ".TABLE_CONFIGURATION_GROUP." WHERE configuration_group_title = '".$dpu_menu_title."'";
-$original_config = $db->Execute($sql);
-
-if(!$original_config->EOF)
-{
-	// if exists updating the existing Dynamic Price Updater configuration group entry
-	$sql = "UPDATE ".TABLE_CONFIGURATION_GROUP." SET
-		configuration_group_description = :dpu_menu_text:
-		WHERE configuration_group_title = :dpu_menu_title:";
-	$sql = $db->bindVars($sql, ':dpu_menu_text:', $dpu_menu_text, 'string');
-	$sql = $db->bindVars($sql, ':dpu_menu_title:', $dpu_menu_title, 'string');
-	$db->Execute($sql);
-	$sort = $original_config->fields['sort_order'];
-
-}
-else {
-	/* Find max sort order in the configuation group table */
-	$sort_query = "SELECT MAX(sort_order) as max_sort FROM `".TABLE_CONFIGURATION_GROUP."`";
-	$max_sort = $db->Execute($sort_query);
-	if(!$max_sort->EOF) {
-		$max_sort = $max_sort->fields['max_sort'] + 1;
-
-		/* Create Dynamic Price Updater configuration group */
-		$sql = "INSERT INTO ".TABLE_CONFIGURATION_GROUP." (configuration_group_title, configuration_group_description, sort_order, visible) VALUES (:dpu_menu_title:, :dpu_menu_text:, :max_sort:, '1')";
-		$sql = $db->bindVars($sql, ':dpu_menu_title:', $dpu_menu_title,'string');
-		$sql = $db->bindVars($sql, ':dpu_menu_text:', $dpu_menu_text, 'string');
-		$sql = $db->bindVars($sql, ':max_sort:', $max_sort, 'integer');
-		$db->Execute($sql);
-	}
-	else {
-		$messageStack->add('Database Error: Unable to access sort_order in table' . TABLE_CONFIGURATION_GROUP, 'error');
-		$failed = true;
-	}
+/**
+ * @package functions
+ * @copyright Copyright 2003-2014 Zen Cart Development Team
+ * @copyright Portions Copyright 2003 osCommerce
+ * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
+ * @version $Id: $
+ */
+if (!defined('IS_ADMIN_FLAG')) {
+    die('Illegal Access');
 }
 
-/* Find configuation group ID of Dynamic Price Updater */
-$sql = "SELECT configuration_group_id FROM ".TABLE_CONFIGURATION_GROUP." WHERE configuration_group_title=:dpu_menu_title: LIMIT 1";
-$sql = $db->bindVars($sql, ':dpu_menu_title:', $dpu_menu_title, 'string');
-$result = $db->Execute($sql);
-if(!$result->EOF) {
-	$dpu_configuration_id = $result->fields['configuration_group_id'];
+$module_constant = 'DPU'; // This should be a UNIQUE name followed by _VERSION for convention
+$module_installer_directory = DIR_FS_ADMIN . 'includes/installers/dpu'; // This is the directory your installer is in, usually this is lower case
+$module_name = "Dynamic Price Updater"; // This should be a plain English or Other in a user friendly way
+$admin_page = 'DynamicPriceUpdater';
+$zencart_com_plugin_id = 1301; // from zencart.com plugins - Leave Zero not to check
+//Just change the stuff above... Nothing down here should need to change
 
-	/* Remove Dynamic Price Updater items from the configuration table */
-	$sql = "DELETE FROM ".TABLE_CONFIGURATION." WHERE configuration_group_id = :dpu_configuration_id:";
-	$sql = $db->bindVars($sql, ':dpu_configuration_id:', $dpu_configuration_id, 'integer');
-	$db->Execute($sql);
 
-	//-- DYNAMIC PRICE UPDATER VERSION
+$configuration_group_id = '';
+if (defined($module_constant . '_VERSION')) {
+    // Version information exists, therefore use that information as the current version.
+    $current_version = constant($module_constant . '_VERSION');
+    // Should collect the configuration information here before moving down/further
+    $installed = $db->Execute("SELECT configuration_group_id FROM " . TABLE_CONFIGURATION . " WHERE configuration_key = '" . $module_constant . "_VERSION'");
+    $configuration_group_id = $installed->fields['configuration_group_id'];
+//    $configuration_group_id_is_new = false;
+} else {
+    // Version information does not exist, begin with version 0.0.0.
+    $current_version = "0.0.0";
 
-  $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('Dynamic Price Updater Status', 'DPU_STATUS', 'false', 'Enable Dynamic Price Updater?', :dpu_configuration_id:, 10, NOW(), NULL, 'zen_cfg_select_option(array(''true'', ''false''),')";
-  $sql = $db->bindVars($sql, ':dpu_configuration_id:', $dpu_configuration_id, 'integer');
-  $db->Execute($sql);
-  $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('Dynamic Price Updater Version', 'DPU_VERSION', '3.0.4', 'Dynamic Price Updater version', :dpu_configuration_id:, 20, now(), NULL, 'trim(')";
-  $sql = $db->bindVars($sql, ':dpu_configuration_id:', $dpu_configuration_id, 'integer');
-  $db->Execute($sql);
-  $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('Where to display the price','DPU_PRICE_ELEMENT_ID', 'productPrices', 'This is the ID of the element where your price is displayed.<br /><strong>default => productPrices</strong>', :dpu_configuration_id:, 30, now(), NULL, NULL)";
-  $sql = $db->bindVars($sql, ':dpu_configuration_id:', $dpu_configuration_id, 'integer');
-  $db->Execute($sql);
-  $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('Define used to set a variable for this script','DPU_PRODUCT_FORM', 'cart_quantity', 'This should never change<br /><strong>default => cart_quantity</strong>', :dpu_configuration_id:, 40, now(), NULL, NULL)";
-  $sql = $db->bindVars($sql, ':dpu_configuration_id:', $dpu_configuration_id, 'integer');
-  $db->Execute($sql);
-  $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('Where to display the weight','DPU_WEIGHT_ELEMENT_ID', 'productWeight', 'This is the ID where your weight is displayed.<br /><strong>default => productWeight</strong>', :dpu_configuration_id:, 50, now(), NULL, NULL)";
-  $sql = $db->bindVars($sql, ':dpu_configuration_id:', $dpu_configuration_id, 'integer');
-  $db->Execute($sql);
-  $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('show a small loading graphic','DPU_SHOW_LOADING_IMAGE', 'true', 'true to show a small loading graphic so the user knows something is happening', :dpu_configuration_id:, 60, now(), NULL, 'zen_cfg_select_option(array(''true'', ''false''),')";
-  $sql = $db->bindVars($sql, ':dpu_configuration_id:', $dpu_configuration_id, 'integer');
-  $db->Execute($sql);
-  $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('Show currency symbols','DPU_SHOW_CURRENCY_SYMBOLS', 'true', '', :dpu_configuration_id:, 70, now(), NULL, 'zen_cfg_select_option(array(''true'', ''false''),')";
-  $sql = $db->bindVars($sql, ':dpu_configuration_id:', $dpu_configuration_id, 'integer');
-  $db->Execute($sql);
-  $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('Show product quantity','DPU_SHOW_QUANTITY', 'false', '', :dpu_configuration_id:, 80, now(), NULL, 'zen_cfg_select_option(array(''true'', ''false''),')";
-  $sql = $db->bindVars($sql, ':dpu_configuration_id:', $dpu_configuration_id, 'integer');
-  $db->Execute($sql);
-  $sql = "INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES ('Where to display the second price','DPU_SECOND_PRICE', 'cartAdd', 'Leave blank to not display<strong>default => cartAdd</strong>', :dpu_configuration_id:, 90, now(), NULL, NULL)";
-  $sql = $db->bindVars($sql, ':dpu_configuration_id:', $dpu_configuration_id, 'integer');
-  $db->Execute($sql);
-}
-else {
-	$messageStack->add('Database Error: Unable to access configuration_group_id in table ' . TABLE_CONFIGURATION_GROUP, 'error');
-	$failed = true;
+    // Check to see if the configuration group is in the database/plugin has been installed.
+    $installed = $db->Execute("SELECT configuration_group_id FROM " . TABLE_CONFIGURATION_GROUP . " WHERE configuration_group_title = '" . $module_name . " Config'");
+    if ($installed->EOF || $installed->RecordCount() == 0)
+    {
+      // The configuration group does not exist, so add it to the database and establish the configuration_group_id.
+      $db->Execute("INSERT INTO " . TABLE_CONFIGURATION_GROUP . " (configuration_group_title, configuration_group_description, sort_order, visible) VALUES ('" . $module_name . " Config', 'Set " . $module_name . " Configuration Options', '1', '1');");
+      $configuration_group_id = $db->Insert_ID();
+    } else {
+      // Configuration group exists in database, so get the configuration_group_id.
+      $configuration_group_id = $installed->fields['configuration_group_id'];
+    }
+
+    // Set the sort order of the configuration group to be equal to the configuration_group_id, idea being that each new group will be added to the end.
+    $db->Execute("UPDATE " . TABLE_CONFIGURATION_GROUP . " SET sort_order = " . $configuration_group_id . " WHERE configuration_group_id = " . $configuration_group_id . ";");
+
+    // If the configuration group did not previously exist, then neither did the version information because it is created in this module.
+    if ($installed->EOF || $installed->RecordCount() == 0)
+    {
+      $db->Execute("INSERT INTO " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES
+                      ('" . $module_name . " (Version Installed)', '" . $module_constant . "_VERSION', '" . $current_version . "', 'Version installed:', " . $configuration_group_id . ", 0, NOW(), NULL, 'zen_cfg_select_option(array(\'0.0.0\'),');");
+    }
 }
 
-// Add support for admin profiles to edit configuration and orders
-if(function_exists('zen_register_admin_page')) {
-	if(!zen_page_key_exists('configDynamicPriceUpdater')) {
-		// Get the sort order
-		$page_sort_query = "SELECT MAX(sort_order) as max_sort FROM `". TABLE_ADMIN_PAGES ."` WHERE menu_key='configuration'";
-		$page_sort = $db->Execute($page_sort_query);
-		$page_sort = $page_sort->fields['max_sort'] + 1;
+// Obtain a list of files in the installer directory.
+if (is_dir($module_installer_directory)) {
+  $installers = scandir($module_installer_directory, 1);
 
-		// Register the administrative pages
-		zen_register_admin_page('configDynamicPriceUpdater', 'BOX_CONFIGURATION_DYNAMIC_PRICE_UPDATER',
-			'FILENAME_CONFIGURATION', 'gID=' . (int)$dpu_configuration_id,
-			'configuration', 'Y', (int)$page_sort);
-	}
+  // Determine the extension of this file to be used for comparison on the others.
+  $file_extension = substr($PHP_SELF, strrpos($PHP_SELF, '.'));
+  $file_extension_len = strlen($file_extension);
+
+  // sequence the installer files to support stepping through them.
+  if (sizeof($installers) > 0) {
+    sort($installers);
+  }
+
+  // Step through each installer file to establish the first file that matches the search criteria.
+  while (substr($installers[0], strrpos($installers[0], '.')) != $file_extension || preg_match('~^[^\._].*\.php$~i', $installers[0]) <= 0 || $installers[0] == 'empty.txt') {
+    unset($installers[0]);
+    if (sizeof($installers) == 0) {
+      break;
+    }
+    $installers = array_values($installers);
+  }
+
+  // If there are still installer files to process, then do so.
+  if (sizeof($installers) > 0) {
+      $newest_version = $installers[0];
+      $newest_version = substr($newest_version, 0, -1 * $file_extension_len);
+
+      if (version_compare($newest_version, $current_version) > 0) {
+          foreach ($installers as $installer) {
+              if (substr($installer, strrpos($installer, '.')) == $file_extension && (preg_match('~^[^\._].*\.php$~i', $installer) > 0 || $installer != 'empty.txt')) {
+                  if (version_compare($newest_version, substr($installer, 0, -1 * $file_extension_len)) >= 0 && version_compare($current_version, substr($installer, 0, -1 * $file_extension_len)) < 0) {
+                      include($module_installer_directory . '/' . $installer);
+                      $current_version = str_replace("_", ".", substr($installer, 0, -1 * $file_extension_len));
+                      $db->Execute("UPDATE " . TABLE_CONFIGURATION . " SET configuration_value = '" . $current_version . "', set_function = 'zen_cfg_select_option(array(\'" . $current_version . "\'),' WHERE configuration_key = '" . $module_constant . "_VERSION' LIMIT 1;");
+                      $messageStack->add("Installed " . $module_name . " v" . $current_version, 'success');
+                  }
+              }
+          }
+      }
+  }
 }
 
-if(file_exists(DIR_FS_ADMIN . DIR_WS_INCLUDES . 'auto_loaders/config.dpu.php'))
-{
-	if(!unlink(DIR_FS_ADMIN . DIR_WS_INCLUDES . 'auto_loaders/config.dpu.php'))
-	{
-		$messageStack->add('The auto-loader file '.DIR_FS_ADMIN.DIR_WS_INCLUDES.'auto_loaders/config.dpu.php has not been deleted. For this module to work you must delete the '.DIR_FS_ADMIN.DIR_WS_INCLUDES.'auto_loaders/config.dpu.php file manually.  Before you post on the Zen Cart forum to ask, YES you are REALLY supposed to follow these instructions and delete the '.DIR_FS_ADMIN.DIR_WS_INCLUDES.'auto_loaders/config.dpu.php file.','error');
-		$failed = true;
-	}
+
+// Respect the admin setting for version checking to prevent checking this if the store is disabled. (typically set because the version checker may generate warnings/errors.
+if (SHOW_VERSION_UPDATE_IN_HEADER && !function_exists('plugin_version_check_for_updates')) {
+    function plugin_version_check_for_updates($fileid = 0, $version_string_to_check = '') {
+        if ($fileid == 0){
+            return FALSE;
+        }
+        $new_version_available = FALSE;
+        $lookup_index = 0;
+        $url = 'https://www.zen-cart.com/downloads.php?do=versioncheck' . '&id=' . (int) $fileid;
+        $data = json_decode(file_get_contents($url), true);
+        if (!$data || !is_array($data)) return false;
+        // compare versions
+        if (version_compare($data[$lookup_index]['latest_plugin_version'], $version_string_to_check) > 0) {
+            $new_version_available = TRUE;
+        }
+        // check whether present ZC version is compatible with the latest available plugin version
+        if (!in_array('v' . PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR, $data[$lookup_index]['zcversions'])) {
+            $new_version_available = FALSE;
+        }
+        if ($version_string_to_check == true) {
+            return $data[$lookup_index];
+        } else {
+            return FALSE;
+        }
+    }
 }
 
-if(!$failed) $messageStack->add('Dynamic Price Updater v3.0.4 install completed!','success');
+// Version Checking 
+// Respect the admin setting for version checking to prevent checking this if the store is disabled. (typically set because the version checker may generate warnings/errors.
+if ($zencart_com_plugin_id != 0 && SHOW_VERSION_UPDATE_IN_HEADER && (!defined($module_constant . '_PLUGIN_CHECK') || constant($module_constant . '_PLUGIN_CHECK'))) {
+    $new_version_details = plugin_version_check_for_updates($zencart_com_plugin_id, $current_version);
+    if ($_GET['gID'] == $configuration_group_id && $new_version_details != FALSE) {
+        $messageStack->add("Version ".$new_version_details['latest_plugin_version']." of " . $new_version_details['title'] . ' is available at <a href="' . $new_version_details['link'] . '" target="_blank">[Details]</a>', 'caution');
+    }
+}
+ 
