@@ -1,5 +1,30 @@
-Dynamic Price Updater v3.0.4
+Dynamic Price Updater v3.0.5
 -=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+3.0.5:
+- Improved installation/installer
+-  Previous process for installation included a delete
+   of previous settings.  This is now performed using
+   insert ignore style sql and as necessary to update
+   settings with a focus of configuration sort order.
+- Rewrote the data collection about a product to improve ability to compare to the active cart.
+-  If using the class function of insertProducts,
+   the resulting prid is an integer only and does not
+   include the possibility of addressing attributes
+   based on the change(s) made here.  This is equivalent
+   to a standard product being listed in the product listing
+   screen being added to the cart where attributes are
+   "typically" not selectable.
+- Modified quantity reporting to provide quantity already
+   in cart for selected attributes if the quantity is
+   greater than zero.
+- Incorporated forum correction for operation when DPU_SHOW_LOADING_IMAGE is set to false.
+- Added JSON response information when retrieving results.
+- Incorporated the use of Zen Cart's provided zcJS when it is available.
+- Made the DPU class part of the overall system to better support additional observers as needed.
+- Maintained the "default" XML response if JSON is not requested to align with potential historical alterations.
+- Added the restoration of the price display if the transaction fails.
+- Added jscript function to perform data/screen update/swap.
 
 3.0.4 has a few bugfixes as well as general improvements for the overall operation.
 
