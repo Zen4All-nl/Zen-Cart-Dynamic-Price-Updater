@@ -131,7 +131,7 @@ objXHR.prototype.getData = function(strMode, resFunc, combinedData) { // send a 
     } else {
       var option = { url : theURL+"?act=DPU_Ajax&method=dpu_update",
                     data : combinedData["JSON"],
-                     timeout : 30000,
+                     timeout : 30000
                    };
       zcJS.ajax(option).done(
           function (response,textStatus,jqXHR) { 
@@ -281,7 +281,10 @@ objXHR.prototype.getPrice = function () {
   //this.getData("post", "handlePrice", temp);
 };
 
-objXHR.prototype.updateInnerHTML = function (storeVal, psp, obj, replace = true) {
+objXHR.prototype.updateInnerHTML = function (storeVal, psp, obj, replace) {
+  if (typeof(replace) === "undefined") {
+    replace = true;
+  }
   if (storeVal != "") {
           if (psp) {
             if (replace) {
@@ -517,7 +520,7 @@ function init() {
     if ($show_dynamic_price_updater_sidebox == true)
     {
 ?>
-    this.createSB();
+    xhr.createSB();
 <?php
     }
 ?>
