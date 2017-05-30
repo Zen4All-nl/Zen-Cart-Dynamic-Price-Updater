@@ -48,7 +48,7 @@ var objSB = false; // this holds the sidebox object // IE. Left sidebox false sh
 <?php if (DPU_SHOW_LOADING_IMAGE == 'true') { // create the JS object for the loading image ?>
 var imgLoc = "replace"; // Options are "replace" or , "" (empty)
 
-var origPrice;  
+var origPrice;
 var loadImg = document.createElement("img");
 loadImg.src = "<?php echo DIR_WS_IMAGES; ?>ajax-loader.gif";
 loadImg.id = "DPULoaderImage";
@@ -109,7 +109,7 @@ objXHR.prototype.getData = function(strMode, resFunc, combinedData) { // send a 
   if (((typeof zcJS == "undefined" || !zcJS) ? this.XHR : zcJS)) {
     if (typeof zcJS == "undefined" || !zcJS) {
       this.createXHR();
-      
+
       this.XHR.onreadystatechange = function () {
         if (_this.XHR.readyState == 4) {
         // only if "OK"
@@ -134,7 +134,7 @@ objXHR.prototype.getData = function(strMode, resFunc, combinedData) { // send a 
                      timeout : 30000
                    };
       zcJS.ajax(option).done(
-          function (response,textStatus,jqXHR) { 
+          function (response,textStatus,jqXHR) {
             _this.responseJSON = jqXHR.responseJSON;
             _this.responseText = jqXHR.responseText;
             _this.responseHandler(resFunc, _this);
@@ -235,7 +235,7 @@ objXHR.prototype.getPrice = function () {
   var temp = "";
   var jsonData = {};
   var combinedData = {};
-  
+
   for (var i=0; i<n; i++) {
     var el = theForm.elements[i];
     switch (el.type) { <?php /* I'm not sure this even needed as a switch; testing needed*/ ?>
@@ -264,10 +264,10 @@ objXHR.prototype.getPrice = function () {
     temp += "pspClass="+encodeURIComponent(pspClass)+"&";
     jsonData["pspClass"] = pspClass;
   }
-  
+
   temp += "stat=main&";
   jsonData["stat"] = "main";
-  
+
   temp += "outputType=XML&";
   jsonData["outputType"] = "JSON";
   temp = temp.substr(0, temp.length - 1);
@@ -276,7 +276,7 @@ objXHR.prototype.getPrice = function () {
   combinedData["JSON"] = jsonData;
 
   this.getData("post", "handlePrice", combinedData);
-  
+
   //temp = temp.substr(0, temp.length - 1)
   //this.getData("post", "handlePrice", temp);
 };
@@ -299,13 +299,13 @@ objXHR.prototype.updateInnerHTML = function (storeVal, psp, obj, replace) {
               obj.innerHTML += storeVal;
             }
           }
-  
+
           if (_secondPrice !== false) {
             this.updSP();
           }
   }
 };
-  
+
 objXHR.prototype.handlePrice = function (results) {
   var thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
   if (typeof(loadImg) !== "undefined" && loadImg.parentNode != null && loadImg.parentNode.id == thePrice.id && imgLoc != "replace") {
@@ -460,13 +460,13 @@ objXHR.prototype.showErrors = function () {
   var alertText = "";
   var errVal;
 
-  if (typeof zcJS == "undefined" || !zcJS) { 
+  if (typeof zcJS == "undefined" || !zcJS) {
     var errorText = this.responseXML.getElementsByTagName("responseText");
   } else {
     var errorText = this.responseJSON.responseText;
   }
   //var n=errorText.length;
-  
+
   for (var i in errorText/*var i=0; i<n; i++*/) {
     if (!(errorText.hasOwnProperty(i))) {
       continue;
