@@ -113,7 +113,7 @@ class DPU extends base {
       $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
       $this->responseText['priceTotal'] .= number_format($this->shoppingCart->total, $decimal_places);
     } else {
-      $this->responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, zen_get_tax_rate($product_check->fields['products_tax_class_id'])/* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
+      $this->responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, 0 /*zen_get_tax_rate($product_check->fields['products_tax_class_id'])*//* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
     }
 
     $this->responseText['weight'] = (string)$this->shoppingCart->weight;
