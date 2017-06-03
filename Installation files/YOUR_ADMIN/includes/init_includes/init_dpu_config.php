@@ -67,12 +67,17 @@ if (is_dir($module_installer_directory)) {
   }
 
   // Step through each installer file to establish the first file that matches the search criteria.
-  while (substr($installers[0], strrpos($installers[0], '.')) != $file_extension || preg_match('~^[^\._].*\.php$~i', $installers[0]) <= 0 || $installers[0] == 'empty.txt') {
+  $newest_version = $installers[0];
+  $newest_version = substr($newest_version, 0, -1 * $file_extension_len);
+
+  while (substr($installers[0], strrpos($installers[0], '.')) != $file_extension || preg_match('~^[^\._].*\.php$~i', $installers[0]) <= 0 || $installers[0] == 'empty.txt' || version_compare($newest_version, $current_version) <= 0) {
     unset($installers[0]);
     if (sizeof($installers) == 0) {
       break;
     }
     $installers = array_values($installers);
+    $newest_version = $installers[0];
+    $newest_version = substr($newest_version, 0, -1 * $file_extension_len);
   }
 
   // If there are still installer files to process, then do so.
@@ -104,22 +109,57 @@ if (SHOW_VERSION_UPDATE_IN_HEADER && !function_exists('plugin_version_check_for_
         }
         $new_version_available = FALSE;
         $lookup_index = 0;
-        $url = 'https://www.zen-cart.com/downloads.php?do=versioncheck' . '&id=' . (int) $fileid;
-        $data = json_decode(file_get_contents($url), true);
+        $url1 = 'https://plugins.zen-cart.com/versioncheck/'.(int)$fileid;
+        $url2 = 'https://www.zen-cart.com/versioncheck/'.(int)$fileid;
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL,$url1);
+        curl_setopt($ch, CURLOPT_VERBOSE, 0);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 9);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 9);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Plugin Version Check [' . (int)$plugin_file_id . '] ' . HTTP_SERVER);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response = curl_exec($ch);
+        $error = curl_error($ch);
+        $errno = curl_errno($ch);
+
+        if ($error > 0) {
+          trigger_error('CURL error checking plugin versions: ' . $errno . ':' . $error . "\nTrying http instead.");
+          curl_setopt($ch, CURLOPT_URL, str_replace('tps:', 'tp:', $url1));
+          $response = curl_exec($ch);
+          $error = curl_error($ch);
+          $errno = curl_errno($ch);
+        }
+        if ($error > 0) {
+          trigger_error('CURL error checking plugin versions: ' . $errno . ':' . $error . "\nTrying www instead.");
+          curl_setopt($ch, CURLOPT_URL, str_replace('tps:', 'tp:', $url2));
+          $response = curl_exec($ch);
+          $error = curl_error($ch);
+          $errno = curl_errno($ch);
+        }
+        curl_close($ch);
+        if ($error > 0 || $response == '') {
+          trigger_error('CURL error checking plugin versions: ' . $errno . ':' . $error . "\nTrying file_get_contents() instead.");
+          $ctx = stream_context_create(array('http' => array('timeout' => 5)));
+          $response = file_get_contents($url1, null, $ctx);
+          if ($response === false) {
+            trigger_error('file_get_contents() error checking plugin versions.' . "\nTrying http instead.");
+            $response = file_get_contents(str_replace('tps:', 'tp:', $url1), null, $ctx);
+          }
+          if ($response === false) {
+            trigger_error('file_get_contents() error checking plugin versions.' . "\nAborting.");
+            return false;
+          }
+        }
+
+        $data = json_decode($response, true);
         if (!$data || !is_array($data)) return false;
         // compare versions
-        if (version_compare($data[$lookup_index]['latest_plugin_version'], $version_string_to_check) > 0) {
-            $new_version_available = TRUE;
-        }
+        if (strcmp($data[$lookup_index]['latest_plugin_version'], $version_string_to_compare) > 0) $new_version_available = TRUE;
         // check whether present ZC version is compatible with the latest available plugin version
-        if (!in_array('v' . PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR, $data[$lookup_index]['zcversions'])) {
-            $new_version_available = FALSE;
-        }
-        if ($version_string_to_check == true) {
-            return $data[$lookup_index];
-        } else {
-            return FALSE;
-        }
+        if (!in_array('v'. PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR, $data[$lookup_index]['zcversions'])) $new_version_available = FALSE;
+        return ($new_version_available) ? $data[$lookup_index] : FALSE;
     }
 }
 
