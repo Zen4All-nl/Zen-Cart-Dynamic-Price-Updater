@@ -192,6 +192,9 @@ class DPU extends base {
           }
         }
       }
+    } else {
+      $products_id = (int)$_POST['products_id'];
+      $this->shoppingCart->contents[$products_id] = array('qty' => (float)$_POST['cart_quantity']);
     }
   }
 
