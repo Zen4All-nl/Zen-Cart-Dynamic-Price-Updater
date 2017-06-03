@@ -1,5 +1,17 @@
-Dynamic Price Updater v3.0.5
+Dynamic Price Updater v3.0.6
 -=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+3.0.6:
+-  Modified/updated the class information to provide the sidebox data.
+-  Correct additional javascript errors to prevent having to catch them.
+-  Modified sidebox to not display/be active if the page's javascript for dpu is not active.
+-  Added additional type casting to force data to the expected type.
+-  Incorporate the tax calculation correction posted in the forum into the code.
+-  Removed the use of default parameters because some browsers do/did not support it.
+-  Add separate control for update checking of this plugin.
+-  Updated installer version check to ZC 1.5.5e version.
+-  Corrected installer code to validate new version exists.
+
 
 3.0.5:
 - Improved installation/installer
@@ -64,7 +76,7 @@ This is (IMHO) an improved version of DPU 2
 
 Installation / Upgrade
 ------------
-NOTE: If you have an earlier version of Updater installed please remove the files first
+NOTE: If you have a version of Updater installed earlier than 3.0 please remove the files first
 
 1. Rename the YOUR_ADMIN folder to the name of your secret foldername.
 2. Rename the YOUR_TEMPLATE folders to the name of your custom template folder name.
@@ -73,6 +85,7 @@ NOTE: If you have an earlier version of Updater installed please remove the file
   ajax.php
   YOUR_ADMIN/includes/auto_loaders/config.dpu.php
   YOUR_ADMIN/includes/init_includes/init_dpu_config.php
+  YOUR_ADMIN/includes/installers/dpu/ (all files in the folder)
   YOUR_ADMIN/includes/languages/english/extra_definitions/dynamic_price_updater.php
   images/ajax-loader.gif
   includes/auto_loaders/config.dynamic_price_updater.php
@@ -89,13 +102,25 @@ NOTE: If you have an earlier version of Updater installed please remove the file
 5. Installation is now complete.
 6. By default DPU is disabled. Go to configuration=>Dynamic Price Updater set the status to true to enable DPU
 
-NOTE: If you have an earlier version of Updater installed please remove the files first
+NOTE: If you have a version of Updater installed earlier than 3.0 please remove the files first
 
 
 Settings
 --------
 
 The module is now set through the admin, more instructions to be added later
+
+As of Version 3.0.6 the settings include the following configuration options
+Dynamic Price Updater Status 	true - Allow disabling DPU in whole
+Dynamic Price Updater Version 	3.0.6 - Radio button style presentation of installed version
+Dynamic Price Updater Version Check? 	true - Allow DPU to check for latest ZC issued version?
+Where to display the price 	productPrices - Class in which DPU prices are to be shown/updated
+Define used to set a variable for this script 	cart_quantity - Value of name field for form that contains attributes and quantities.
+Where to display the weight 	productWeight - id object that is to display the product weight.
+show a small loading graphic 	true - While data is being retrieved from the system, show a loading picture.
+Show currency symbols 	true - If desired to see the symbols ($) associated with the customer's chosen currency then choose true.
+Show product quantity 	false - This is the quantity of the specifically selected/entered combination of attributes that are in the cart.
+Where to display the second price cartAdd - This is the id of the location to display the calculated price as a second location.
 
 Support
 -------
@@ -106,6 +131,9 @@ http://www.zen-cart.com/forum/showthread.php?t=70577
 
 Credits
 -------
+
+Versions 3.0.5 and 3.0.6 brought to you by mc12345678: http://mc12345678.com
+
 This update (V3.0.4 base content) : Erik Kerkhoven (Design75) http://zen4all.nl brought by mc12345678: http://mc12345678.com
 
 Original author : Dan Parry (Chrome) http://chrome.me.uk
