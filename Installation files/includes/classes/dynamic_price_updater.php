@@ -59,6 +59,7 @@ class DPU extends base {
   public function getDetails($outputType = "XML") {
     $this->insertProduct();
     $this->shoppingCart->calculate();
+    $this->removeExtraSelections();
     $show_dynamic_price_updater_sidebox = true;
     if ($show_dynamic_price_updater_sidebox == true) {
       $this->getSideboxContent();
@@ -132,6 +133,49 @@ class DPU extends base {
         }
       }
     }
+  }
+
+  /*
+   * Removes attributes that were added to help calculate the total price in absence of attributes having a default selection
+   *   and the product being priced by attributes.
+   */
+  protected function removeExtraSelections() {
+
+    foreach ($this->shoppingCart->contents as $products_id => $cart_contents) {
+      // If there were attributes that were added to support calculating
+      //   the further additional minimum price.  Removing it will restore
+      //   the cart to the data collected directly from the page.
+      if (isset($this->new_attributes) && sizeof($this->new_attributes) && array_key_exists($products_id, $this->new_attributes)) {
+
+        foreach ($this->new_attributes[$products_id] as $option => $value) {
+          //CLR 020606 check if input was from text box.  If so, store additional attribute information
+          //CLR 020708 check if text input is blank, if so do not add to attribute lists
+          //CLR 030228 add htmlspecialchars processing.  This handles quotes and other special chars in the user input.
+          $attr_value = NULL;
+          $blank_value = FALSE;
+          if (strstr($option, TEXT_PREFIX)) {
+            if (trim($value) == NULL) {
+              $blank_value = TRUE;
+            } else {
+              $option = substr($option, strlen(TEXT_PREFIX));
+              $attr_value = stripslashes($value);
+              $value = PRODUCTS_OPTIONS_VALUES_TEXT_ID;
+              unset($this->shoppingCart->contents[$products_id]['attributes_values'][$option]);// = $attr_value;
+            }
+          }
+
+          if (!$blank_value) {
+            if (is_array($value)) {
+              foreach ($value as $opt => $val) {
+                unset($this->shoppingCart->contents[$products_id]['attributes'][$option . '_chk' . $val]); // = $val;
+              }
+            } else {
+              unset($this->shoppingCart->contents[$products_id]['attributes'][$option]); // = $value;
+            }
+          }
+        } // EOF foreach of the new_attributes
+      } // EOF if $this->new_attributes
+    } // foreach on cart
   }
 
   /*
