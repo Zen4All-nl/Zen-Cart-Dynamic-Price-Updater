@@ -32,6 +32,14 @@ class DPU extends base {
   var $responseText = array();
 
   /*
+   * Array of attributes that could be associated with the product but have not been added by the customer to support
+   *   identifying the minimum price of a product from the point of having selected an attribute when other attributes have not
+   *   been selected.  (This is a setup contrary to recommendations by ZC, but is a condition that perhaps is best addressed regardless.)
+   * @var array
+   */
+  protected $new_attributes = array();
+
+  /*
    * Constructor
    *
    * @param obj The Zen Cart database class
@@ -147,6 +155,7 @@ class DPU extends base {
    * @returns void
    */
   protected function insertProduct() {
+    global $db;
 //    $this->shoppingCart->contents[$_POST['products_id']] = array('qty' => (float)$_POST['cart_quantity']);
     $attributes = array();
 
@@ -159,7 +168,68 @@ class DPU extends base {
     }
 
     if (is_array($attributes) && sizeof($attributes)) {
+      // If product is priced by attribute then determine which attributes had not been added, 
+      //  add them to the attribute list such that product added to the cart is fully defined with the minimum value(s), though 
+      //  at the moment seems that similar would be needed even for not priced by attribute possibly... Will see... Maybe someone will report if an issue.
+
+      $product_check = $db->Execute("select products_priced_by_attribute from " . TABLE_PRODUCTS . " where products_id = '" . (int)$_POST['products_id'] . "'");
+
+      // do not select display only attributes and attributes_price_base_included is true
+      $product_att_query = $db->Execute("select pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type, round(concat(pa.price_prefix, pa.options_values_price), 5) as value from " . TABLE_PRODUCTS_ATTRIBUTES . " pa LEFT JOIN " . TABLE_PRODUCTS_OPTIONS . " po on (po.products_options_id = pa.options_id) where products_id = '" . (int)$_POST['products_id'] . "' and attributes_display_only != '1' and attributes_price_base_included='1'". " order by pa.options_id, value");
+
+// add attributes that are price dependent and in or not in the page's submission
+      if ($product_check->fields['products_priced_by_attribute'] == '1' and $product_att_query->RecordCount() >= 1) {
+        $the_options_id= 'x';
+        $new_attributes = array();
+        while (!$product_att_query->EOF) {
+          if ($product_att_query->fields['products_options_type'] !== PRODUCTS_OPTIONS_TYPE_CHECKBOX) { // Do not add possible check box prices as a requirement
+            if ( $the_options_id != $product_att_query->fields['options_id']) {
+              $the_options_id = $product_att_query->fields['options_id'];
+              $new_attributes[$the_options_id] = $product_att_query->fields['options_values_id'];
+            } elseif (array_key_exists($the_options_id, $attributes) && $attributes[$the_options_id] == $product_att_query->fields['options_values_id']) {
+              $new_attributes[$the_options_id] = $product_att_query->fields['options_values_id'];
+            }
+          }
+            
+          $product_att_query->MoveNext();
+        }
+
+        // Need to now resort the attributes as one would have expected them to be presented which is to sort the option name(s)
+        if (PRODUCTS_OPTIONS_SORT_ORDER=='0') {
+          $options_order_by= ' order by LPAD(popt.products_options_sort_order,11,"0"), popt.products_options_name';
+        } else {
+          $options_order_by= ' order by popt.products_options_name';
+        }
+
+        $sql = "select distinct popt.products_options_id, popt.products_options_name, popt.products_options_sort_order
+        from        " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_ATTRIBUTES . " patrib
+        where           patrib.products_id='" . (int)$_POST['products_id'] . "'
+        and             patrib.options_id = popt.products_options_id
+        and             popt.language_id = '" . (int)$_SESSION['languages_id'] . "' " .
+        $options_order_by;
+
+        $products_options_names = $db->Execute($sql);
+        
+        $new_temp_attributes = array();
+        $this->new_temp_attributes = array();
+        
+        while (!$products_options_names->EOF) {
+          $options_id = $products_options_names->fields['products_options_id'];
+          if (array_key_exists($options_id, $attributes)) {
+            $new_temp_attributes[$options_id] = $attributes[$options_id];
+          } elseif (array_key_exists($options_id, $new_attributes)) {
+            $this->new_temp_attributes[$options_id] = $new_attributes[$options_id];
+            $new_temp_attributes[$options_id] = $new_attributes[$options_id];
+          }
+            
+          $products_options_names->MoveNext();
+        }
+
+        $attributes = $new_temp_attributes;
+      }
+
       $products_id = zen_get_uprid((int)$_POST['products_id'], $attributes);
+      $this->new_attributes[$products_id] = $this->new_temp_attributes;
       $this->shoppingCart->contents[$products_id] = array('qty' => (float)$_POST['cart_quantity']);
 
       foreach ($attributes as $option => $value) {
