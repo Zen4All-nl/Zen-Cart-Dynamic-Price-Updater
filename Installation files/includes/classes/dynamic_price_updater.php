@@ -145,7 +145,7 @@ class DPU extends base {
       // If there were attributes that were added to support calculating
       //   the further additional minimum price.  Removing it will restore
       //   the cart to the data collected directly from the page.
-      if (isset($this->new_attributes) && sizeof($this->new_attributes) && array_key_exists($products_id, $this->new_attributes)) {
+      if (isset($this->new_attributes) && count($this->new_attributes) && array_key_exists($products_id, $this->new_attributes) && is_array($this->new_attributes[$products_id])) {
 
         foreach ($this->new_attributes[$products_id] as $option => $value) {
           //CLR 020606 check if input was from text box.  If so, store additional attribute information
@@ -211,7 +211,7 @@ class DPU extends base {
       }
     }
 
-    if (is_array($attributes) && sizeof($attributes)) {
+    if (is_array($attributes) && count($attributes)) {
       // If product is priced by attribute then determine which attributes had not been added, 
       //  add them to the attribute list such that product added to the cart is fully defined with the minimum value(s), though 
       //  at the moment seems that similar would be needed even for not priced by attribute possibly... Will see... Maybe someone will report if an issue.
@@ -334,7 +334,7 @@ class DPU extends base {
 //    $global_total;
     $products = array();
     $products = $this->shoppingCart->get_products();
-    for ($i=0, $n=sizeof($products); $i<$n; $i++) 
+    for ($i=0, $n=count($products); $i<$n; $i++) 
     {
 
       $product_check = $db->Execute("SELECT products_tax_class_id FROM " . TABLE_PRODUCTS . " WHERE products_id = '" . (int)$products[$i]['id'] . "'" . " LIMIT 1");
