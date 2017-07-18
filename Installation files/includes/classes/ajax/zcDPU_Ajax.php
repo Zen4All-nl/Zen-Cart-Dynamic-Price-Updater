@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 class zcDPU_Ajax extends base
 {
