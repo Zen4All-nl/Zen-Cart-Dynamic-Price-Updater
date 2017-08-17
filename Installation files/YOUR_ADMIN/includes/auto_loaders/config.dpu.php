@@ -5,11 +5,14 @@ if (!defined('IS_ADMIN_FLAG')) {
   die('Illegal Access');
 } 
 
-
-$autoLoadConfig[999][] = array(
-  'autoType' => 'init_script',
-  'loadFile' => 'init_dpu_config.php'
-);
+if (IS_ADMIN_FLAG === true) {
+  $autoLoadConfig[999][] = array(
+    'autoType' => 'init_script',
+    'loadFile' => 'init_dpu_config.php'
+  );
+} else {
+  @unlink(__FILE__);
+}
 
 // uncomment the following line to perform a uninstall
 // $uninstall = 'uninstall';
