@@ -186,7 +186,7 @@ class DPU extends base {
   protected function insertProducts() {
     foreach ($_POST['products_id'] as $id => $qty) {
       $this->shoppingCart->contents[] = array((int)$id);
-      $this->shoppingCart->contents[(int)$id] = array('qty' => (float)$qty);
+      $this->shoppingCart->contents[(int)$id] = array('qty' => (empty((float)$qty) || (float)$qty < 0 ? zen_get_buy_now_qty((int)$id) : (float)$qty)); //(float)$qty);
     }
 
     var_dump($this->shoppingCart);
@@ -274,7 +274,7 @@ class DPU extends base {
 
       $products_id = zen_get_uprid((int)$_POST['products_id'], $attributes);
       $this->new_attributes[$products_id] = $this->new_temp_attributes;
-      $this->shoppingCart->contents[$products_id] = array('qty' => (float)$_POST['cart_quantity']);
+      $this->shoppingCart->contents[$products_id] = array('qty' => (empty((float)$_POST['cart_quantity']) || (float)$_POST['cart_quantity'] < 0 ? zen_get_buy_now_qty($products_id) : (float)$_POST['cart_quantity']));
 
       foreach ($attributes as $option => $value) {
         //CLR 020606 check if input was from text box.  If so, store additional attribute information
@@ -308,7 +308,7 @@ class DPU extends base {
       }
     } else {
       $products_id = (int)$_POST['products_id'];
-      $this->shoppingCart->contents[$products_id] = array('qty' => (float)$_POST['cart_quantity']);
+      $this->shoppingCart->contents[$products_id] = array('qty' => (empty((float)$_POST['cart_quantity']) || (float)$_POST['cart_quantity'] < 0 ? zen_get_buy_now_qty($products_id) : (float)$_POST['cart_quantity']));
     }
   }
 

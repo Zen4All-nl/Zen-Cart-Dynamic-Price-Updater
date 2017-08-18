@@ -260,6 +260,10 @@ objXHR.prototype.getPrice = function () {
         break;
     }
   }
+  if (!('products_id' in jsonData)) {
+    temp += "products_id=<?php echo (int)$pid; ?>&";
+    jsonData['products_id'] = <?php echo (int)$pid; ?>;
+  }
   if (pspClass) {
     temp += "pspClass="+encodeURIComponent(pspClass)+"&";
     jsonData["pspClass"] = pspClass;
