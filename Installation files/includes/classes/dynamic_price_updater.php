@@ -226,14 +226,14 @@ class DPU extends base {
         $the_options_id= 'x';
         $new_attributes = array();
         while (!$product_att_query->EOF) {
-          if ($product_att_query->fields['products_options_type'] !== PRODUCTS_OPTIONS_TYPE_CHECKBOX) { // Do not add possible check box prices as a requirement
+//          if ($product_att_query->fields['products_options_type'] !== PRODUCTS_OPTIONS_TYPE_CHECKBOX) { // Do not add possible check box prices as a requirement // mc12345678 17-06-13 Commented out this because attributes included in base price are controlled by attributes controller.  If a check box is not to be included, then its setting should be "off" for base_price.
             if ( $the_options_id != $product_att_query->fields['options_id']) {
               $the_options_id = $product_att_query->fields['options_id'];
               $new_attributes[$the_options_id] = $product_att_query->fields['options_values_id'];
             } elseif (array_key_exists($the_options_id, $attributes) && $attributes[$the_options_id] == $product_att_query->fields['options_values_id']) {
               $new_attributes[$the_options_id] = $product_att_query->fields['options_values_id'];
             }
-          }
+//          }
             
           $product_att_query->MoveNext();
         }
