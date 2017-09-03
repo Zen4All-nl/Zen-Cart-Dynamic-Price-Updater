@@ -408,13 +408,45 @@ class DPU extends base {
           }
           $global_total += $total;
           $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', (float)$_POST['cart_quantity']);
-          $total = sprintf(DPU_SIDEBOX_PRICE_FRAME, $currencies->display_price($total, 0 /* ?? Should this tax be applied? zen_get_tax_rate($product_check->fields['products_tax_class_id'])*/));
+          if (defined('DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS') && DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS == 'false') {
+            $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
+            $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
+            $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
+            /* use of number_format is governed by the instruction from the php manual: 
+            *  http://php.net/manual/en/function.number-format.php
+            * By providing below all four values, they will be assigned/used as provided above.
+            *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
+            *   then just the number will come back with a comma used at every thousands group (ie. 1,000).  
+             *  With the first two parameters provided, a comma will be used at every thousands group and a decimal (.) for every part of the whole number.
+             *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
+            *   decimal point and thousands group separater, respectively.
+            */
+            $total = sprintf(DPU_SIDEBOX_PRICE_FRAME, number_format($this->shoppingCart->total, $decimal_places, $decimal_point, $thousands_point));
+          } else {
+            $total = sprintf(DPU_SIDEBOX_PRICE_FRAME, $currencies->display_price($total, 0 /* ?? Should this tax be applied? zen_get_tax_rate($product_check->fields['products_tax_class_id'])*/));
+          }
           $out[] = sprintf(DPU_SIDEBOX_FRAME, $name, $total, $qty2);
         }
       }
     } // EOF FOR loop of product
 
-    $out[] = sprintf('<hr />' . DPU_SIDEBOX_TOTAL_FRAME, $currencies->display_price($this->shoppingCart->total, 0));
+    if (defined('DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS') && DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS == 'false') {
+      $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
+      $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
+      $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
+      /* use of number_format is governed by the instruction from the php manual: 
+      *  http://php.net/manual/en/function.number-format.php
+      * By providing below all four values, they will be assigned/used as provided above.
+      *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
+      *   then just the number will come back with a comma used at every thousands group (ie. 1,000).  
+       *  With the first two parameters provided, a comma will be used at every thousands group and a decimal (.) for every part of the whole number.
+       *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
+      *   decimal point and thousands group separater, respectively.
+      */
+      $out[] = sprintf('<hr />' . DPU_SIDEBOX_TOTAL_FRAME, number_format($this->shoppingCart->total, $decimal_places, $decimal_point, $thousands_point));
+    } else {
+      $out[] = sprintf('<hr />' . DPU_SIDEBOX_TOTAL_FRAME, $currencies->display_price($this->shoppingCart->total, 0));
+    }
 
     $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', (float)$_POST['cart_quantity']);
     $total = sprintf(DPU_SIDEBOX_PRICE_FRAME, $currencies->display_price($this->shoppingCart->total - $global_total, 0));
