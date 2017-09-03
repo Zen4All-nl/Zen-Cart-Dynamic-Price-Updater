@@ -84,39 +84,39 @@ class DPU extends base {
    */
   protected function prepareOutput() {
     global $currencies, $db;
-    $prefix = '';
+    $this->prefix = '';
     switch (true) {
         case (!isset($_POST['pspClass'])):
-            $prefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = UPDATER_PREFIX_TEXT;
             break;
         case ($_POST['pspClass'] == "productSpecialPrice"):
-            $prefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = UPDATER_PREFIX_TEXT;
             break;
         case ($_POST['pspClass'] == "productSalePrice"):
-            $prefix = PRODUCT_PRICE_SALE;
+            $this->prefix = PRODUCT_PRICE_SALE;
             break;
         case ($_POST['pspClass'] == "productSpecialPriceSale"):
-            $prefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = UPDATER_PREFIX_TEXT;
             break;
         case ($_POST['pspClass'] == "productPriceDiscount"):
-            $prefix = PRODUCT_PRICE_DISCOUNT_PREFIX;
+            $this->prefix = PRODUCT_PRICE_DISCOUNT_PREFIX;
             break;
         case ($_POST['pspClass'] == "normalprice"):
-            $prefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = UPDATER_PREFIX_TEXT;
             break;
         case ($_POST['pspClass'] == "productFreePrice"):
-            $prefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = UPDATER_PREFIX_TEXT;
             break;
         case ($_POST['pspClass'] == "productBasePrice"):
-            $prefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = UPDATER_PREFIX_TEXT;
             break;
         default:
-            $prefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = UPDATER_PREFIX_TEXT;
             // Add a notifier to allow updating this prefix if the ones above do not exist.
             $this->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_PREPARE_OUTPUT_PSP_CLASS');
         break;
     }
-    $this->responseText['priceTotal'] = $prefix;
+    $this->responseText['priceTotal'] = $this->prefix;
     $product_check = $db->Execute("SELECT products_tax_class_id FROM " . TABLE_PRODUCTS . " WHERE products_id = '" . (int)$_POST['products_id'] . "'" . " LIMIT 1");
     if (DPU_SHOW_CURRENCY_SYMBOLS == 'false') {
       $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
