@@ -120,7 +120,18 @@ class DPU extends base {
     $product_check = $db->Execute("SELECT products_tax_class_id FROM " . TABLE_PRODUCTS . " WHERE products_id = '" . (int)$_POST['products_id'] . "'" . " LIMIT 1");
     if (DPU_SHOW_CURRENCY_SYMBOLS == 'false') {
       $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
-      $this->responseText['priceTotal'] .= number_format($this->shoppingCart->total, $decimal_places);
+      $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
+      $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
+      /* use of number_format is governed by the instruction from the php manual: 
+       *  http://php.net/manual/en/function.number-format.php
+       * By providing below all four values, they will be assigned/used as provided above.
+       *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
+       *   then just the number will come back with a comma used at every thousands group (ie. 1,000).  
+       *  With the first two parameters provided, a comma will be used at every thousands group and a decimal (.) for every part of the whole number.
+       *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
+       *   decimal point and thousands group separater, respectively.
+      */
+      $this->responseText['priceTotal'] .= number_format($this->shoppingCart->total, $decimal_places, $decimal_point, $thousands_point);
     } else {
       $this->responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, 0 /*zen_get_tax_rate($product_check->fields['products_tax_class_id'])*//* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
     }
