@@ -1,5 +1,32 @@
-Dynamic Price Updater v3.0.7
+Dynamic Price Updater v3.0.8
 -=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+3.0.8, What changed:
+- Added a switch and code to support deactivating the use of currency symbols
+    in the sidebox, similar to the display of the base product price.
+- Corrected the use of the notifier to support using an observer to provide
+    a prefix for displayed prices.
+- Removed the specific comparison of an attribute being a checkbox for when
+    processing attributes to identify the lowest price of the product.  Inclusion
+    of the attribute into the base price is controlled through the attributes
+    controller and should not be just blindly omitted within this code.
+- Updated the installer including to incorporate the version checker provided
+    in the current alpha release of ZC 1.5.6 and to use that code instead of the built in code and
+    instead of pulling the recent file into the distribution of the
+    plugin (and then have multiple such versions out and about.)
+- Updated the installer to write a debug log if the installer files have been 
+    incorrectly placed in the catalog side of the installer.
+- Updated the installer to expect an admin to be logged in, and the page not currently being
+    the login page or as a result of selecting the logoff option.
+- Updated code for initial expected changes for PHP 7.2.
+- Corrected the encoding (BOM) of the file that provides the ajax processing.
+- Corrected issue with price being displayed as zero when it should be otherwise displayed.
+- Added the general page information (though not with zen_href_link) and support understanding what
+  the customer is looking at at the point of the call.
+- Updated the jscript code for the product_music to match the product_info code.
+- Added template jscript code to attempt to load jquery if it has not previously included or
+    loaded to load jquery 1.12.4
+
 
 3.0.7, What changed:
 -  Corrected issue that price of product without attributes was not incorporated/considered because
