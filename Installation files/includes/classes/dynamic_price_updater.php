@@ -140,7 +140,7 @@ class DPU extends base {
     if (DPU_SHOW_QUANTITY == 'true') {
       foreach ($this->shoppingCart->contents as $key => $value) {
         if ($_SESSION['cart']->contents[$key]['qty'] > 0) { // Hides quantity if the selected variant/options are not in the existing cart.
-          $this->responseText['quantity'] = sprintf(DPU_SHOW_QUANTITY_FRAME, (float)$_SESSION['cart']->contents[$key]['qty']);
+          $this->responseText['quantity'] = sprintf(DPU_SHOW_QUANTITY_FRAME, convertToFloat($_SESSION['cart']->contents[$key]['qty']));
         }
       }
     }
@@ -197,7 +197,7 @@ class DPU extends base {
   protected function insertProducts() {
     foreach ($_POST['products_id'] as $id => $qty) {
       $this->shoppingCart->contents[] = array((int)$id);
-      $this->shoppingCart->contents[(int)$id] = array('qty' => (empty((float)$qty) || (float)$qty < 0 ? zen_get_buy_now_qty((int)$id) : (float)$qty)); //(float)$qty);
+      $this->shoppingCart->contents[(int)$id] = array('qty' => (convertToFloat($qty) <= 0 ? zen_get_buy_now_qty((int)$id) : convertToFloat($qty))); //(float)$qty);
     }
 
     var_dump($this->shoppingCart);
@@ -285,7 +285,7 @@ class DPU extends base {
 
       $products_id = zen_get_uprid((int)$_POST['products_id'], $attributes);
       $this->new_attributes[$products_id] = $this->new_temp_attributes;
-      $this->shoppingCart->contents[$products_id] = array('qty' => (empty((float)$_POST['cart_quantity']) || (float)$_POST['cart_quantity'] < 0 ? zen_get_buy_now_qty($products_id) : (float)$_POST['cart_quantity']));
+      $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($_POST['cart_quantity']) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($_POST['cart_quantity'])));
 
       foreach ($attributes as $option => $value) {
         //CLR 020606 check if input was from text box.  If so, store additional attribute information
@@ -319,7 +319,7 @@ class DPU extends base {
       }
     } else {
       $products_id = (int)$_POST['products_id'];
-      $this->shoppingCart->contents[$products_id] = array('qty' => (empty((float)$_POST['cart_quantity']) || (float)$_POST['cart_quantity'] < 0 ? zen_get_buy_now_qty($products_id) : (float)$_POST['cart_quantity']));
+      $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($_POST['cart_quantity']) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($_POST['cart_quantity'])));
     }
   }
 
@@ -358,7 +358,7 @@ class DPU extends base {
       $prid = $product->fields['products_id'];
       $products_tax = zen_get_tax_rate(0);
       $products_price = $product->fields['products_price'];
-      $qty = (float)$products[$i]['quantity'];
+      $qty = convertToFloat($products[$i]['quantity']);
 
 
 
@@ -418,7 +418,7 @@ class DPU extends base {
             }
           }
           $global_total += $total;
-          $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', (float)$_POST['cart_quantity']);
+          $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', convertToFloat($_POST['cart_quantity']));
           if (defined('DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS') && DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS == 'false') {
             $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
             $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
@@ -459,7 +459,7 @@ class DPU extends base {
       $out[] = sprintf('<hr />' . DPU_SIDEBOX_TOTAL_FRAME, $currencies->display_price($this->shoppingCart->total, 0));
     }
 
-    $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', (float)$_POST['cart_quantity']);
+    $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', convertToFloat($_POST['cart_quantity']));
     $total = sprintf(DPU_SIDEBOX_PRICE_FRAME, $currencies->display_price($this->shoppingCart->total - $global_total, 0));
     array_unshift($out, sprintf(DPU_SIDEBOX_FRAME, DPU_BASE_PRICE, $total, $qty2));
 
@@ -519,5 +519,19 @@ class DPU extends base {
 
       die(json_encode($data));
     }
+  }
+}
+
+if (!function_exists('convertToFloat')) {
+  function convertToFloat($input = 0)
+  {
+    if ($input === null) return 0;
+
+    $val = preg_replace('/[^0-9,\.\-]/', '', $input);
+
+    // do a non-strict compare here:
+    if ($val == 0) return 0;
+
+    return (float)$val;
   }
 }
