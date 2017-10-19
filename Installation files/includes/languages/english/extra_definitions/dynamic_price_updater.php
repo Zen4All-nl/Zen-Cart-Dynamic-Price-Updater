@@ -10,6 +10,8 @@ define('BOX_HEADING_DYNAMIC_PRICE_UPDATER_SIDEBOX', 'Price Breakdown'); // the h
 define('DPU_BASE_PRICE', 'Base price');
 
 define('UPDATER_PREFIX_TEXT', 'Your price: ');
+define('UPDATER_PREFIX_TEXT_STARTING_AT', 'Starting at: ');
+define('UPDATER_PREFIX_TEXT_AT_LEAST', 'At least: ');
 define('DPU_SHOW_QUANTITY_FRAME', '&nbsp;(%s)');
 define('DPU_SIDEBOX_QUANTITY_FRAME', '&nbsp;x&nbsp;%s'); // how the weight is displayed in the sidebox.  Default is ' x 1'... set to '' for no display... %s is the quantity itself
 define('DPU_SIDEBOX_PRICE_FRAME', '&nbsp;(%s)'); // how the attribute price is displayed

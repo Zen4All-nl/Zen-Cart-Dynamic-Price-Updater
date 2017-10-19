@@ -86,6 +86,12 @@ class DPU extends base {
     global $currencies, $db;
     $this->prefix = '';
     switch (true) {
+        case ($this->num_options == $this->unused && !empty($this->new_temp_attributes)):
+            $this->prefix = UPDATER_PREFIX_TEXT_STARTING_AT;
+            break;
+        case ($this->num_options > $this->unused && !empty($this->unused)):
+            $this->prefix = UPDATER_PREFIX_TEXT_AT_LEAST;
+            break;
         case (!isset($_POST['pspClass'])):
             $this->prefix = UPDATER_PREFIX_TEXT;
             break;
@@ -151,12 +157,12 @@ class DPU extends base {
    *   and the product being priced by attributes.
    */
   protected function removeExtraSelections() {
-
+    if (!empty($this->new_attributes)) {
     foreach ($this->shoppingCart->contents as $products_id => $cart_contents) {
       // If there were attributes that were added to support calculating
       //   the further additional minimum price.  Removing it will restore
       //   the cart to the data collected directly from the page.
-      if (isset($this->new_attributes) && count($this->new_attributes) && array_key_exists($products_id, $this->new_attributes) && is_array($this->new_attributes[$products_id])) {
+      if (array_key_exists($products_id, $this->new_attributes) && is_array($this->new_attributes[$products_id])) {
 
         foreach ($this->new_attributes[$products_id] as $option => $value) {
           //CLR 020606 check if input was from text box.  If so, store additional attribute information
@@ -187,6 +193,7 @@ class DPU extends base {
         } // EOF foreach of the new_attributes
       } // EOF if $this->new_attributes
     } // foreach on cart
+    } // if $this->new_attributes
   }
 
   /*
@@ -236,11 +243,13 @@ class DPU extends base {
       if ($product_check->fields['products_priced_by_attribute'] == '1' and $product_att_query->RecordCount() >= 1) {
         $the_options_id= 'x';
         $new_attributes = array();
+        $this->num_options = 0;
         while (!$product_att_query->EOF) {
 //          if ($product_att_query->fields['products_options_type'] !== PRODUCTS_OPTIONS_TYPE_CHECKBOX) { // Do not add possible check box prices as a requirement // mc12345678 17-06-13 Commented out this because attributes included in base price are controlled by attributes controller.  If a check box is not to be included, then its setting should be "off" for base_price.
             if ( $the_options_id != $product_att_query->fields['options_id']) {
               $the_options_id = $product_att_query->fields['options_id'];
               $new_attributes[$the_options_id] = $product_att_query->fields['options_values_id'];
+              $this->num_options++;
             } elseif (array_key_exists($the_options_id, $attributes) && $attributes[$the_options_id] == $product_att_query->fields['options_values_id']) {
               $new_attributes[$the_options_id] = $product_att_query->fields['options_values_id'];
             }
@@ -267,14 +276,29 @@ class DPU extends base {
         
         $new_temp_attributes = array();
         $this->new_temp_attributes = array();
-        
+        $this->unused = 0;
+        //  To appear in the cart, $new_temp_attributes[$options_id]
+        // must contain either the selection or the lowest priced selection
+        // if an "invalid" selection had been made.
+        //  To get removed from the cart for display purposes
+        // the $options_id must be added to $this->new_temp_attributes
         while (!$products_options_names->EOF) {
           $options_id = $products_options_names->fields['products_options_id'];
-          if (array_key_exists($options_id, $attributes)) {
+          if (array_key_exists($options_id, $attributes) && zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id])) {
+            // If the options_id selected is a valid attribute then add it to be part of the calculation
             $new_temp_attributes[$options_id] = $attributes[$options_id];
+          } elseif (array_key_exists($options_id, $attributes) && array_key_exists($options_id, $new_attributes) && !zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id])) {
+            // If the options_id selected is not a valid attribute, then add a valid attribute determined above and mark it
+            //   to be deleted from the shopping cart after the price has been determined.
+            $this->new_temp_attributes[$options_id] = $attributes[$options_id];
+            $new_temp_attributes[$options_id] = $new_attributes[$options_id];
+            $this->unused++;
           } elseif (array_key_exists($options_id, $new_attributes)) {
+            // If the option_id has not been selected but is one that is to be populated, then add it to the cart and mark it
+            //   to be deleted from the shopping cart after the price has been determined.
             $this->new_temp_attributes[$options_id] = $new_attributes[$options_id];
             $new_temp_attributes[$options_id] = $new_attributes[$options_id];
+            $this->unused++;
           }
             
           $products_options_names->MoveNext();
