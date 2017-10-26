@@ -11,6 +11,7 @@ if (IS_ADMIN_FLAG === true) {
     'loadFile' => 'init_dpu_config.php'
   );
 } else {
+  trigger_error(__FILE__ . ' loaded from catalog side, verify upload of files.', E_USER_WARNING);
   @unlink(__FILE__);
 }
 

@@ -27,7 +27,7 @@ if (DPU_STATUS == 'true')
   if ($load)
   {
 ?>
-<script language="javascript" type="text/javascript">
+<script type="text/javascript">
 // <![CDATA[
 // Set some global vars
 var theFormName = "<?php echo DPU_PRODUCT_FORM; ?>";
@@ -122,14 +122,24 @@ objXHR.prototype.getData = function(strMode, resFunc, combinedData) { // send a 
           }
         }
       };
-      this.XHR.open(strMode.toLowerCase(), this.url+"?act=DPU_Ajax&method=dpu_update"+(strMode.toLowerCase() == "get" ? "&" + this.compileRequest() : ""), true);
+      this.XHR.open(strMode.toLowerCase(), this.url+"?act=DPU_Ajax&method=dpu_update"+(strMode.toLowerCase() == "get" ? "&" + this.compileRequest() : "")+<?php
+   
+   $all_get_params = zen_get_all_get_params();
+   
+   echo (!empty($all_get_params)) ? '"&' . preg_replace("/&$/","",$all_get_params) . '"' : '""'; 
+                    
+                    ?>, true);
       if (strMode.toLowerCase() == "post") {
         this.XHR.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
         this.XHR.setRequestHeader("X-Requested-With", "XMLHttpRequest");
       }
       this.XHR.send(combinedData["XML"]);
     } else {
-      var option = { url : theURL+"?act=DPU_Ajax&method=dpu_update",
+      var option = { url : theURL+"?act=DPU_Ajax&method=dpu_update<?php
+   
+   echo (!empty($all_get_params)) ? '&' . preg_replace("/&$/","", $all_get_params) : ''; 
+                    
+                    ?>",
                     data : combinedData["JSON"],
                      timeout : 30000
                    };
@@ -259,6 +269,10 @@ objXHR.prototype.getPrice = function () {
         }
         break;
     }
+  }
+  if (!('products_id' in jsonData)) {
+    temp += "products_id=<?php echo (int)$pid; ?>&";
+    jsonData['products_id'] = <?php echo (int)$pid; ?>;
   }
   if (pspClass) {
     temp += "pspClass="+encodeURIComponent(pspClass)+"&";

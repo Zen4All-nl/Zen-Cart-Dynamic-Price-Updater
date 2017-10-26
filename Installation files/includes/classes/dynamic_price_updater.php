@@ -84,43 +84,60 @@ class DPU extends base {
    */
   protected function prepareOutput() {
     global $currencies, $db;
-    $prefix = '';
+    $this->prefix = '';
     switch (true) {
+        case ($this->num_options == $this->unused && !empty($this->new_temp_attributes)):
+            $this->prefix = UPDATER_PREFIX_TEXT_STARTING_AT;
+            break;
+        case ($this->num_options > $this->unused && !empty($this->unused)):
+            $this->prefix = UPDATER_PREFIX_TEXT_AT_LEAST;
+            break;
         case (!isset($_POST['pspClass'])):
-            $prefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = UPDATER_PREFIX_TEXT;
             break;
         case ($_POST['pspClass'] == "productSpecialPrice"):
-            $prefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = UPDATER_PREFIX_TEXT;
             break;
         case ($_POST['pspClass'] == "productSalePrice"):
-            $prefix = PRODUCT_PRICE_SALE;
+            $this->prefix = PRODUCT_PRICE_SALE;
             break;
         case ($_POST['pspClass'] == "productSpecialPriceSale"):
-            $prefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = UPDATER_PREFIX_TEXT;
             break;
         case ($_POST['pspClass'] == "productPriceDiscount"):
-            $prefix = PRODUCT_PRICE_DISCOUNT_PREFIX;
+            $this->prefix = PRODUCT_PRICE_DISCOUNT_PREFIX;
             break;
         case ($_POST['pspClass'] == "normalprice"):
-            $prefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = UPDATER_PREFIX_TEXT;
             break;
         case ($_POST['pspClass'] == "productFreePrice"):
-            $prefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = UPDATER_PREFIX_TEXT;
             break;
         case ($_POST['pspClass'] == "productBasePrice"):
-            $prefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = UPDATER_PREFIX_TEXT;
             break;
         default:
-            $prefix = UPDATER_PREFIX_TEXT;
+            $this->prefix = UPDATER_PREFIX_TEXT;
             // Add a notifier to allow updating this prefix if the ones above do not exist.
             $this->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_PREPARE_OUTPUT_PSP_CLASS');
         break;
     }
-    $this->responseText['priceTotal'] = $prefix;
+    $this->responseText['priceTotal'] = $this->prefix;
     $product_check = $db->Execute("SELECT products_tax_class_id FROM " . TABLE_PRODUCTS . " WHERE products_id = '" . (int)$_POST['products_id'] . "'" . " LIMIT 1");
     if (DPU_SHOW_CURRENCY_SYMBOLS == 'false') {
       $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
-      $this->responseText['priceTotal'] .= number_format($this->shoppingCart->total, $decimal_places);
+      $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
+      $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
+      /* use of number_format is governed by the instruction from the php manual: 
+       *  http://php.net/manual/en/function.number-format.php
+       * By providing below all four values, they will be assigned/used as provided above.
+       *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
+       *   then just the number will come back with a comma used at every thousands group (ie. 1,000).  
+       *  With the first two parameters provided, a comma will be used at every thousands group and a decimal (.) for every part of the whole number.
+       *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
+       *   decimal point and thousands group separater, respectively.
+      */
+      $this->responseText['priceTotal'] .= number_format($this->shoppingCart->total, $decimal_places, $decimal_point, $thousands_point);
     } else {
       $this->responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, 0 /*zen_get_tax_rate($product_check->fields['products_tax_class_id'])*//* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
     }
@@ -129,7 +146,7 @@ class DPU extends base {
     if (DPU_SHOW_QUANTITY == 'true') {
       foreach ($this->shoppingCart->contents as $key => $value) {
         if ($_SESSION['cart']->contents[$key]['qty'] > 0) { // Hides quantity if the selected variant/options are not in the existing cart.
-          $this->responseText['quantity'] = sprintf(DPU_SHOW_QUANTITY_FRAME, (float)$_SESSION['cart']->contents[$key]['qty']);
+          $this->responseText['quantity'] = sprintf(DPU_SHOW_QUANTITY_FRAME, convertToFloat($_SESSION['cart']->contents[$key]['qty']));
         }
       }
     }
@@ -140,12 +157,12 @@ class DPU extends base {
    *   and the product being priced by attributes.
    */
   protected function removeExtraSelections() {
-
+    if (!empty($this->new_attributes)) {
     foreach ($this->shoppingCart->contents as $products_id => $cart_contents) {
       // If there were attributes that were added to support calculating
       //   the further additional minimum price.  Removing it will restore
       //   the cart to the data collected directly from the page.
-      if (isset($this->new_attributes) && count($this->new_attributes) && array_key_exists($products_id, $this->new_attributes) && is_array($this->new_attributes[$products_id])) {
+      if (array_key_exists($products_id, $this->new_attributes) && is_array($this->new_attributes[$products_id])) {
 
         foreach ($this->new_attributes[$products_id] as $option => $value) {
           //CLR 020606 check if input was from text box.  If so, store additional attribute information
@@ -176,6 +193,7 @@ class DPU extends base {
         } // EOF foreach of the new_attributes
       } // EOF if $this->new_attributes
     } // foreach on cart
+    } // if $this->new_attributes
   }
 
   /*
@@ -186,7 +204,7 @@ class DPU extends base {
   protected function insertProducts() {
     foreach ($_POST['products_id'] as $id => $qty) {
       $this->shoppingCart->contents[] = array((int)$id);
-      $this->shoppingCart->contents[(int)$id] = array('qty' => (float)$qty);
+      $this->shoppingCart->contents[(int)$id] = array('qty' => (convertToFloat($qty) <= 0 ? zen_get_buy_now_qty((int)$id) : convertToFloat($qty))); //(float)$qty);
     }
 
     var_dump($this->shoppingCart);
@@ -225,15 +243,17 @@ class DPU extends base {
       if ($product_check->fields['products_priced_by_attribute'] == '1' and $product_att_query->RecordCount() >= 1) {
         $the_options_id= 'x';
         $new_attributes = array();
+        $this->num_options = 0;
         while (!$product_att_query->EOF) {
-          if ($product_att_query->fields['products_options_type'] !== PRODUCTS_OPTIONS_TYPE_CHECKBOX) { // Do not add possible check box prices as a requirement
+//          if ($product_att_query->fields['products_options_type'] !== PRODUCTS_OPTIONS_TYPE_CHECKBOX) { // Do not add possible check box prices as a requirement // mc12345678 17-06-13 Commented out this because attributes included in base price are controlled by attributes controller.  If a check box is not to be included, then its setting should be "off" for base_price.
             if ( $the_options_id != $product_att_query->fields['options_id']) {
               $the_options_id = $product_att_query->fields['options_id'];
               $new_attributes[$the_options_id] = $product_att_query->fields['options_values_id'];
+              $this->num_options++;
             } elseif (array_key_exists($the_options_id, $attributes) && $attributes[$the_options_id] == $product_att_query->fields['options_values_id']) {
               $new_attributes[$the_options_id] = $product_att_query->fields['options_values_id'];
             }
-          }
+//          }
             
           $product_att_query->MoveNext();
         }
@@ -256,14 +276,29 @@ class DPU extends base {
         
         $new_temp_attributes = array();
         $this->new_temp_attributes = array();
-        
+        $this->unused = 0;
+        //  To appear in the cart, $new_temp_attributes[$options_id]
+        // must contain either the selection or the lowest priced selection
+        // if an "invalid" selection had been made.
+        //  To get removed from the cart for display purposes
+        // the $options_id must be added to $this->new_temp_attributes
         while (!$products_options_names->EOF) {
           $options_id = $products_options_names->fields['products_options_id'];
-          if (array_key_exists($options_id, $attributes)) {
+          if (array_key_exists($options_id, $attributes) && zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id])) {
+            // If the options_id selected is a valid attribute then add it to be part of the calculation
             $new_temp_attributes[$options_id] = $attributes[$options_id];
+          } elseif (array_key_exists($options_id, $attributes) && array_key_exists($options_id, $new_attributes) && !zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id])) {
+            // If the options_id selected is not a valid attribute, then add a valid attribute determined above and mark it
+            //   to be deleted from the shopping cart after the price has been determined.
+            $this->new_temp_attributes[$options_id] = $attributes[$options_id];
+            $new_temp_attributes[$options_id] = $new_attributes[$options_id];
+            $this->unused++;
           } elseif (array_key_exists($options_id, $new_attributes)) {
+            // If the option_id has not been selected but is one that is to be populated, then add it to the cart and mark it
+            //   to be deleted from the shopping cart after the price has been determined.
             $this->new_temp_attributes[$options_id] = $new_attributes[$options_id];
             $new_temp_attributes[$options_id] = $new_attributes[$options_id];
+            $this->unused++;
           }
             
           $products_options_names->MoveNext();
@@ -274,7 +309,7 @@ class DPU extends base {
 
       $products_id = zen_get_uprid((int)$_POST['products_id'], $attributes);
       $this->new_attributes[$products_id] = $this->new_temp_attributes;
-      $this->shoppingCart->contents[$products_id] = array('qty' => (float)$_POST['cart_quantity']);
+      $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($_POST['cart_quantity']) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($_POST['cart_quantity'])));
 
       foreach ($attributes as $option => $value) {
         //CLR 020606 check if input was from text box.  If so, store additional attribute information
@@ -308,7 +343,7 @@ class DPU extends base {
       }
     } else {
       $products_id = (int)$_POST['products_id'];
-      $this->shoppingCart->contents[$products_id] = array('qty' => (float)$_POST['cart_quantity']);
+      $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($_POST['cart_quantity']) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($_POST['cart_quantity'])));
     }
   }
 
@@ -347,7 +382,7 @@ class DPU extends base {
       $prid = $product->fields['products_id'];
       $products_tax = zen_get_tax_rate(0);
       $products_price = $product->fields['products_price'];
-      $qty = (float)$products[$i]['quantity'];
+      $qty = convertToFloat($products[$i]['quantity']);
 
 
 
@@ -407,16 +442,48 @@ class DPU extends base {
             }
           }
           $global_total += $total;
-          $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', (float)$_POST['cart_quantity']);
-          $total = sprintf(DPU_SIDEBOX_PRICE_FRAME, $currencies->display_price($total, 0 /* ?? Should this tax be applied? zen_get_tax_rate($product_check->fields['products_tax_class_id'])*/));
+          $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', convertToFloat($_POST['cart_quantity']));
+          if (defined('DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS') && DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS == 'false') {
+            $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
+            $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
+            $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
+            /* use of number_format is governed by the instruction from the php manual: 
+            *  http://php.net/manual/en/function.number-format.php
+            * By providing below all four values, they will be assigned/used as provided above.
+            *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
+            *   then just the number will come back with a comma used at every thousands group (ie. 1,000).  
+             *  With the first two parameters provided, a comma will be used at every thousands group and a decimal (.) for every part of the whole number.
+             *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
+            *   decimal point and thousands group separater, respectively.
+            */
+            $total = sprintf(DPU_SIDEBOX_PRICE_FRAME, number_format($this->shoppingCart->total, $decimal_places, $decimal_point, $thousands_point));
+          } else {
+            $total = sprintf(DPU_SIDEBOX_PRICE_FRAME, $currencies->display_price($total, 0 /* ?? Should this tax be applied? zen_get_tax_rate($product_check->fields['products_tax_class_id'])*/));
+          }
           $out[] = sprintf(DPU_SIDEBOX_FRAME, $name, $total, $qty2);
         }
       }
     } // EOF FOR loop of product
 
-    $out[] = sprintf('<hr />' . DPU_SIDEBOX_TOTAL_FRAME, $currencies->display_price($this->shoppingCart->total, 0));
+    if (defined('DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS') && DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS == 'false') {
+      $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
+      $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
+      $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
+      /* use of number_format is governed by the instruction from the php manual: 
+      *  http://php.net/manual/en/function.number-format.php
+      * By providing below all four values, they will be assigned/used as provided above.
+      *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
+      *   then just the number will come back with a comma used at every thousands group (ie. 1,000).  
+       *  With the first two parameters provided, a comma will be used at every thousands group and a decimal (.) for every part of the whole number.
+       *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
+      *   decimal point and thousands group separater, respectively.
+      */
+      $out[] = sprintf('<hr />' . DPU_SIDEBOX_TOTAL_FRAME, number_format($this->shoppingCart->total, $decimal_places, $decimal_point, $thousands_point));
+    } else {
+      $out[] = sprintf('<hr />' . DPU_SIDEBOX_TOTAL_FRAME, $currencies->display_price($this->shoppingCart->total, 0));
+    }
 
-    $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', (float)$_POST['cart_quantity']);
+    $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', convertToFloat($_POST['cart_quantity']));
     $total = sprintf(DPU_SIDEBOX_PRICE_FRAME, $currencies->display_price($this->shoppingCart->total - $global_total, 0));
     array_unshift($out, sprintf(DPU_SIDEBOX_FRAME, DPU_BASE_PRICE, $total, $qty2));
 
@@ -476,5 +543,19 @@ class DPU extends base {
 
       die(json_encode($data));
     }
+  }
+}
+
+if (!function_exists('convertToFloat')) {
+  function convertToFloat($input = 0)
+  {
+    if ($input === null) return 0;
+
+    $val = preg_replace('/[^0-9,\.\-]/', '', $input);
+
+    // do a non-strict compare here:
+    if ($val == 0) return 0;
+
+    return (float)$val;
   }
 }

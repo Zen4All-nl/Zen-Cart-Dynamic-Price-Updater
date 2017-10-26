@@ -10,6 +10,7 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
+if (!empty($_SESSION['admin_id']) && $_SERVER['SCRIPT_NAME'] !== DIR_WS_ADMIN . (!strstr(FILENAME_LOGIN, '.php') ? FILENAME_LOGIN . '.php' : FILENAME_LOGIN) && $_SERVER['SCRIPT_NAME'] !== DIR_WS_ADMIN . (!strstr(FILENAME_LOGOFF, '.php') ? FILENAME_LOGOFF . '.php' : FILENAME_LOGOFF)) {
 $module_constant = 'DPU'; // This should be a UNIQUE name followed by _VERSION for convention
 $module_installer_directory = DIR_FS_ADMIN . 'includes/installers/dpu'; // This is the directory your installer is in, usually this is lower case
 $module_name = "Dynamic Price Updater"; // This should be a plain English or Other in a user friendly way
@@ -24,7 +25,7 @@ if (defined($module_constant . '_VERSION')) {
     $current_version = constant($module_constant . '_VERSION');
     // Should collect the configuration information here before moving down/further
     $installed = $db->Execute("SELECT configuration_group_id FROM " . TABLE_CONFIGURATION . " WHERE configuration_key = '" . $module_constant . "_VERSION'");
-    $configuration_group_id = $installed->fields['configuration_group_id'];
+//    $configuration_group_id = $installed->fields['configuration_group_id'];
 //    $configuration_group_id_is_new = false;
 } else {
     // Version information does not exist, begin with version 0.0.0.
@@ -52,7 +53,7 @@ if (defined($module_constant . '_VERSION')) {
                       ('" . $module_name . " (Version Installed)', '" . $module_constant . "_VERSION', '" . $current_version . "', 'Version installed:', " . $configuration_group_id . ", 0, NOW(), NULL, 'zen_cfg_select_option(array(\'0.0.0\'),');");
       $db->Execute("INSERT INTO " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added, use_function, set_function) VALUES
                       ('" . $module_name . " (Update Check)', '" . $module_constant . "_PLUGIN_CHECK', '" . SHOW_VERSION_UPDATE_IN_HEADER . "', 'Allow version checking if Zen Cart version checking enabled<br/><br/>If false, no version checking performed.<br/>If true, then only if Zen Cart version checking is on:', " . $configuration_group_id . ", 0, NOW(), NULL, 'zen_cfg_select_option(array(\'true\', \'false\'),');");
-      define($module_constant . '_PLUGIN_CHECK', SHOW_VERSION_UPDATE_IN_HEADER);
+      define($module_constant . '_PLUGIN_CHECK', true);
     }
 }
 if ($configuration_group_id == '') {
@@ -62,7 +63,7 @@ if ($configuration_group_id == '') {
 
 // Obtain a list of files in the installer directory.
 if (is_dir($module_installer_directory)) {
-  $installers = scandir($module_installer_directory, 1); // Sorted ascending
+  $installers = scandir($module_installer_directory, (defined('SCANDIR_SORT_DESCENDING') ? SCANDIR_SORT_DESCENDING : 1)); // Sorted Descending
 
   // Determine the extension of this file to be used for comparison on the others.
   $file_extension = substr($PHP_SELF, strrpos($PHP_SELF, '.'));
@@ -79,7 +80,7 @@ if (is_dir($module_installer_directory)) {
 
   while (substr($installers[0], strrpos($installers[0], '.')) != $file_extension || preg_match('~^[^\._].*\.php$~i', $installers[0]) <= 0 || $installers[0] == 'empty.txt' /*|| version_compare($newest_version, $current_version) <= 0*/) {
     unset($installers[0]);
-    if (sizeof($installers) == 0) {
+    if (count($installers) == 0) {
       break;
     }
     $installers = array_values($installers);
@@ -88,10 +89,11 @@ if (is_dir($module_installer_directory)) {
   }
 
   // If there are still installer files to process, then do so.
-  if (sizeof($installers) > 0) {
+  if (count($installers) > 0) {
       $newest_version = $installers[0];
       $newest_version = substr($newest_version, 0, -1 * $file_extension_len);
 
+      sort($installers);
       if (version_compare($newest_version, $current_version) > 0) {
           foreach ($installers as $installer) {
               if (substr($installer, strrpos($installer, '.')) == $file_extension && (preg_match('~^[^\._].*\.php$~i', $installer) > 0 || $installer != 'empty.txt')) {
@@ -109,43 +111,49 @@ if (is_dir($module_installer_directory)) {
 
 
 // Respect the admin setting for version checking to prevent checking this if the store is disabled. (typically set because the version checker may generate warnings/errors.
-if (SHOW_VERSION_UPDATE_IN_HEADER && !function_exists('plugin_version_check_for_updates')) {
-    function plugin_version_check_for_updates($plugin_file_id = 0, $version_string_to_compare = '', $strict_zc_version_compare = false)
+if (constant($module_constant . '_PLUGIN_CHECK') && !function_exists('this_plugin_version_check_for_updates')) {
+    function this_plugin_version_check_for_updates($plugin_file_id = 0, $version_string_to_compare = '', $strict_zc_version_compare = false)
     {
         if ($plugin_file_id == 0) return false;
         $new_version_available = false;
-        $lookup_index = 0;
+        $lookup_index = $errno = 0;
+        $response = $error = '';
         $url1 = 'https://plugins.zen-cart.com/versioncheck/'.(int)$plugin_file_id;
         $url2 = 'https://www.zen-cart.com/versioncheck/'.(int)$plugin_file_id;
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL,$url1);
-        curl_setopt($ch, CURLOPT_VERBOSE, 0);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 9);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 9);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Plugin Version Check [' . (int)$plugin_file_id . '] ' . HTTP_SERVER);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $response = curl_exec($ch);
-        $error = curl_error($ch);
-        $errno = curl_errno($ch);
+        if (function_exists('curl_init')) {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL,$url1);
+            curl_setopt($ch, CURLOPT_VERBOSE, 0);
+            curl_setopt($ch, CURLOPT_HEADER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 9);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 9);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Plugin Version Check [' . (int)$plugin_file_id . '] ' . HTTP_SERVER);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            $error = curl_error($ch);
+            $errno = curl_errno($ch);
 
-        if ($error > 0) {
-            trigger_error('CURL error checking plugin versions: ' . $errno . ':' . $error . "\nTrying http instead.");
-            curl_setopt($ch, CURLOPT_URL, str_replace('tps:', 'tp:', $url1));
-            $response = curl_exec($ch);
-            $error = curl_error($ch);
-            $errno = curl_errno($ch);
+            if ($errno > 0) {
+                trigger_error('CURL error checking plugin versions: ' . $errno . ':' . $error . "\nTrying http instead.");
+                curl_setopt($ch, CURLOPT_URL, str_replace('tps:', 'tp:', $url1));
+                $response = curl_exec($ch);
+                $error = curl_error($ch);
+                $errno = curl_errno($ch);
+            }
+            if ($errno > 0) {
+                trigger_error('CURL error checking plugin versions: ' . $errno . ':' . $error . "\nTrying www instead.");
+                curl_setopt($ch, CURLOPT_URL, str_replace('tps:', 'tp:', $url2));
+                $response = curl_exec($ch);
+                $error = curl_error($ch);
+                $errno = curl_errno($ch);
+            }
+            curl_close($ch);
+        } else {
+            $errno = 9999;
+            $error = 'curl_init not found in PHP';
         }
-        if ($error > 0) {
-            trigger_error('CURL error checking plugin versions: ' . $errno . ':' . $error . "\nTrying www instead.");
-            curl_setopt($ch, CURLOPT_URL, str_replace('tps:', 'tp:', $url2));
-            $response = curl_exec($ch);
-            $error = curl_error($ch);
-            $errno = curl_errno($ch);
-        }
-        curl_close($ch);
-        if ($error > 0 || $response == '') {
+        if ($errno > 0 || $response == '') {
             trigger_error('CURL error checking plugin versions: ' . $errno . ':' . $error . "\nTrying file_get_contents() instead.");
             $ctx = stream_context_create(array('http' => array('timeout' => 5)));
             $response = file_get_contents($url1, null, $ctx);
@@ -173,10 +181,10 @@ if (SHOW_VERSION_UPDATE_IN_HEADER && !function_exists('plugin_version_check_for_
 
 // Version Checking
 // Respect the admin setting for version checking to prevent checking this if the store is disabled. (typically set because the version checker may generate warnings/errors.
-if ($zencart_com_plugin_id != 0 && SHOW_VERSION_UPDATE_IN_HEADER && (!defined($module_constant . '_PLUGIN_CHECK') || constant($module_constant . '_PLUGIN_CHECK'))) {
-    $new_version_details = plugin_version_check_for_updates($zencart_com_plugin_id, $current_version);
-    if ($_GET['gID'] == $configuration_group_id && $new_version_details != FALSE) {
+if ($zencart_com_plugin_id != 0 && isset($_GET['gID']) && $_GET['gID'] == $configuration_group_id && (!defined($module_constant . '_PLUGIN_CHECK') || constant($module_constant . '_PLUGIN_CHECK'))) {
+    $new_version_details = this_plugin_version_check_for_updates($zencart_com_plugin_id, $current_version);
+    if ($new_version_details != false) {
         $messageStack->add("Version ".$new_version_details['latest_plugin_version']." of " . $new_version_details['title'] . ' is available at <a href="' . $new_version_details['link'] . '" target="_blank">[Details]</a>', 'caution');
     }
 }
- 
+} 
