@@ -46,7 +46,7 @@ class DPU extends base {
    * @return DPU
    */
   public function __construct() {
-    global $db;
+//    global $db; // Variable unused.
     // grab the shopping cart class and instantiate it
     $this->shoppingCart = new shoppingCart();
   }
@@ -367,7 +367,7 @@ class DPU extends base {
     $qty = (float)$_POST['cart_quantity'];*/
     $out = array();
 //    $global_total;
-    $products = array();
+    //$products = array(); // Unnecessary define
     $products = $this->shoppingCart->get_products();
     for ($i=0, $n=count($products); $i<$n; $i++) 
     {

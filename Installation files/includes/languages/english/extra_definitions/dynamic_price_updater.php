@@ -22,5 +22,5 @@ define('DPU_SIDEBOX_FRAME', '<span class="DPUSideBoxName">%1$s</span>%3$s%2$s<br
  * %1$s - The attribute name
  * %2$s - The quantity display
  * %3$s - The individual price display
- * You can position these anywahere around the DPU_SIDEBOX_FRAME string or even remove them to prevent them from displaying
+ * You can position these anywhere around the DPU_SIDEBOX_FRAME string or even remove them to prevent them from displaying
  */
