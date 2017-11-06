@@ -140,6 +140,13 @@ NOTE: If you have a version of Updater installed earlier than 3.0 please remove 
 4. Log in to your webshop's admin panel, and the module will install automatically. There are no seperate sql files needed.
 5. Installation is now complete.
 6. By default DPU is disabled. Go to configuration=>Dynamic Price Updater set the status to true to enable DPU
+7. To allow DPU to update the display of product quantity available (in particular if using Stock By Attributes):
+   7.a. edit includes/templates/YOUR_TEMPLATE/templates/tpl_product_info_display.php with a plain text editor.
+   7.b. find: 
+$products_quantity . 
+   7.c. and surround it by a span tag (replace with below) so that it will look like: 
+'<span id="productDetailsList_product_info_quantity">' . $products_quantity . '</span>' . 
+   7.d. perform the same for each PRODUCT_TYPE file such as product_music_info, etc...
 
 NOTE: If you have a version of Updater installed earlier than 3.0 please remove the files first
 

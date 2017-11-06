@@ -86,6 +86,7 @@ class DPU extends base {
     global $currencies, $db;
     $this->prefix = '';
     switch (true) {
+        //case ($this->product_stock <= 0 && (($this->num_options == $this->unused && !empty($this->new_temp_attributes)) || ($this->num_options > $this->unused && !empty($this->unused)))):
         case ($this->num_options == $this->unused && !empty($this->new_temp_attributes)):
             $this->prefix = UPDATER_PREFIX_TEXT_STARTING_AT;
             break;
@@ -142,6 +143,47 @@ class DPU extends base {
       $this->responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, 0 /*zen_get_tax_rate($product_check->fields['products_tax_class_id'])*//* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
     }
 
+    switch (true) {
+      case ($this->product_stock > 0): // No consideration made yet on allowing quantity to go less than 0.
+        $this->responseText['stock_quantity'] = $this->product_stock;
+        break;
+      case (true):
+        $out_of_stock = false;
+        if ((STOCK_CHECK == 'true') && (STOCK_ALLOW_CHECKOUT != 'true')) {
+          $out_of_stock = true;
+        }
+      case ($out_of_stock && $this->num_options == $this->unused && !empty($this->new_temp_attributes)):
+        // No selections made yet, stock is 0 or less and not allowed to checkout.
+        $this->responseText['stock_quantity'] = $this->product_stock;
+        if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'quantity_replace') {
+          $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE;
+        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'after') {
+          $this->responseText['stock_quantity'] .= DPU_OUT_OF_STOCK_IMAGE;
+        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'before') {
+          $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE . $this->responseText['stock_quantity'];
+        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
+          $this->responseText['priceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
+        }
+        break;
+      case ($out_of_stock && $this->num_options > $this->unused && !empty($this->unused)):
+        // Not all selections have been made, stock is 0 or less and not allowed to checkout.
+        $this->responseText['stock_quantity'] = $this->product_stock;
+        if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'quantity_replace') {
+          $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE;
+        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'after') {
+          $this->responseText['stock_quantity'] .= DPU_OUT_OF_STOCK_IMAGE;
+        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'before') {
+          $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE . $this->responseText['stock_quantity'];
+        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
+          $this->responseText['priceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
+        }
+        break;
+      default:
+        // Selections are complete and stock is 0 or less.
+        $this->responseText['stock_quantity'] = $this->product_stock;
+        break;
+    }
+    
     $this->responseText['weight'] = (string)$this->shoppingCart->weight;
     if (DPU_SHOW_QUANTITY == 'true') {
       foreach ($this->shoppingCart->contents as $key => $value) {
@@ -316,6 +358,9 @@ class DPU extends base {
       }
 
       $products_id = zen_get_uprid((int)$_POST['products_id'], $attributes);
+      
+      $this->product_stock = zen_get_products_stock($_POST['products_id'], $attributes);
+      
       $this->new_attributes[$products_id] = $this->new_temp_attributes;
       $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($_POST['cart_quantity']) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($_POST['cart_quantity'])));
 
@@ -351,6 +396,7 @@ class DPU extends base {
       }
     } else {
       $products_id = (int)$_POST['products_id'];
+      $this->product_stock = zen_get_products_stock($products_id);
       $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($_POST['cart_quantity']) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($_POST['cart_quantity'])));
     }
   }

@@ -21,6 +21,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
   }
 
   if ($load) {
+    if (!defined('DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY')) define('DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY', 'productDetailsList_product_info_quantity');
 ?>
 <script type="text/javascript">
 // <![CDATA[
@@ -421,6 +422,12 @@ objXHR.prototype.handlePrice = function (results) {
           if (updateSidebox) {
 //            sbContent += temp[i].childNodes[0].nodeValue;
             sbContent += storeVal;
+          }
+          break;
+        case "stock_quantity":
+          var theStockQuantity = document.getElementById("<?php echo DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY; ?>");
+          if (theStockQuantity) {
+            this.updateInnerHTML(storeVal, false, theStockQuantity, true);
           }
           break;
       }
