@@ -229,7 +229,7 @@ class DPU extends base {
       }
     }
 
-    if (is_array($attributes) && count($attributes)) {
+    if (!empty($attributes) || zen_has_product_attributes_values($_POST['products_id'])) {
       // If product is priced by attribute then determine which attributes had not been added, 
       //  add them to the attribute list such that product added to the cart is fully defined with the minimum value(s), though 
       //  at the moment seems that similar would be needed even for not priced by attribute possibly... Will see... Maybe someone will report if an issue.
