@@ -85,6 +85,7 @@ class DPU extends base {
   protected function prepareOutput() {
     global $currencies, $db;
     $this->prefix = '';
+    $this->preDiscPrefix = '';
 
     if (!defined('DPU_ATTRIBUTES_MULTI_PRICE_TEXT')) define('DPU_ATTRIBUTES_MULTI_PRICE_TEXT', 'start_at_least');
 
@@ -95,41 +96,54 @@ class DPU extends base {
         //case ($this->product_stock <= 0 && (($this->num_options == $this->unused && !empty($this->new_temp_attributes)) || ($this->num_options > $this->unused && !empty($this->unused)))):
         case ($this->attributeDisplayStartAtPrices() && $this->num_options == $this->unused && !empty($this->new_temp_attributes)):
             $this->prefix = UPDATER_PREFIX_TEXT_STARTING_AT;
+            $this->preDiscPrefix = UPDATER_PREFIX_TEXT_STARTING_AT;
             break;
         case ($this->attributeDisplayAtLeastPrices() && $this->num_options > $this->unused && !empty($this->unused)):
             $this->prefix = UPDATER_PREFIX_TEXT_AT_LEAST;
+            $this->preDiscPrefix = UPDATER_PREFIX_TEXT_AT_LEAST;
             break;
         case (!isset($_POST['pspClass'])):
             $this->prefix = UPDATER_PREFIX_TEXT;
+            $this->preDiscPrefix = UPDATER_PREFIX_TEXT;
             break;
         case ($_POST['pspClass'] == "productSpecialPrice"):
             $this->prefix = UPDATER_PREFIX_TEXT;
+            $this->preDiscPrefix = UPDATER_PREFIX_TEXT;
             break;
         case ($_POST['pspClass'] == "productSalePrice"):
             $this->prefix = PRODUCT_PRICE_SALE;
+            $this->preDiscPrefix = PRODUCT_PRICE_SALE;
             break;
         case ($_POST['pspClass'] == "productSpecialPriceSale"):
             $this->prefix = UPDATER_PREFIX_TEXT;
+            $this->preDiscPrefix = UPDATER_PREFIX_TEXT;
             break;
         case ($_POST['pspClass'] == "productPriceDiscount"):
             $this->prefix = PRODUCT_PRICE_DISCOUNT_PREFIX;
+            $this->preDiscPrefix = PRODUCT_PRICE_DISCOUNT_PREFIX;
             break;
         case ($_POST['pspClass'] == "normalprice"):
             $this->prefix = UPDATER_PREFIX_TEXT;
+            $this->preDiscPrefix = UPDATER_PREFIX_TEXT;
             break;
         case ($_POST['pspClass'] == "productFreePrice"):
             $this->prefix = UPDATER_PREFIX_TEXT;
+            $this->preDiscPrefix = UPDATER_PREFIX_TEXT;
             break;
         case ($_POST['pspClass'] == "productBasePrice"):
             $this->prefix = UPDATER_PREFIX_TEXT;
+            $this->preDiscPrefix = UPDATER_PREFIX_TEXT;
             break;
         default:
             $this->prefix = UPDATER_PREFIX_TEXT;
+            $this->preDiscPrefix = UPDATER_PREFIX_TEXT;
             // Add a notifier to allow updating this prefix if the ones above do not exist.
             $this->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_PREPARE_OUTPUT_PSP_CLASS');
         break;
     }
     $this->responseText['priceTotal'] = $this->prefix;
+    $this->responseText['preDiscPriceTotal'] = $this->preDiscPrefix;
+    
     $product_check = $db->Execute("SELECT products_tax_class_id FROM " . TABLE_PRODUCTS . " WHERE products_id = " . (int)$_POST['products_id'] . " LIMIT 1");
     if (DPU_SHOW_CURRENCY_SYMBOLS == 'false') {
       $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
@@ -145,8 +159,10 @@ class DPU extends base {
        *   decimal point and thousands group separater, respectively.
       */
       $this->responseText['priceTotal'] .= number_format($this->shoppingCart->total, $decimal_places, $decimal_point, $thousands_point);
+      $this->responseText['preDiscPriceTotal'] .= number_format($this->shoppingCart->total_before_discounts, $decimal_places, $decimal_point, $thousands_point);
     } else {
       $this->responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, 0 /*zen_get_tax_rate($product_check->fields['products_tax_class_id'])*//* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
+      $this->responseText['preDiscPriceTotal'] .= $currencies->display_price($this->shoppingCart->total_before_discounts, 0 /*zen_get_tax_rate($product_check->fields['products_tax_class_id'])*//* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
     }
 
     switch (true) {
@@ -169,6 +185,7 @@ class DPU extends base {
           $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE . $this->responseText['stock_quantity'];
         } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
           $this->responseText['priceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
+          $this->responseText['preDiscPriceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
         }
         break;
       case ($out_of_stock && $this->num_options > $this->unused && !empty($this->unused)):
@@ -182,6 +199,7 @@ class DPU extends base {
           $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE . $this->responseText['stock_quantity'];
         } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
           $this->responseText['priceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
+          $this->responseText['preDiscPriceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
         }
         break;
       default:
