@@ -85,12 +85,18 @@ class DPU extends base {
   protected function prepareOutput() {
     global $currencies, $db;
     $this->prefix = '';
+
+    if (!defined('DPU_ATTRIBUTES_MULTI_PRICE_TEXT')) define('DPU_ATTRIBUTES_MULTI_PRICE_TEXT', 'start_at_least');
+
+    $this->priceDisplay = DPU_ATTRIBUTES_MULTI_PRICE_TEXT;
+    $this->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_PREPARE_PRICE_DISPLAY');
+
     switch (true) {
         //case ($this->product_stock <= 0 && (($this->num_options == $this->unused && !empty($this->new_temp_attributes)) || ($this->num_options > $this->unused && !empty($this->unused)))):
-        case ($this->num_options == $this->unused && !empty($this->new_temp_attributes)):
+        case ($this->attributeDisplayStartAtPrices() && $this->num_options == $this->unused && !empty($this->new_temp_attributes)):
             $this->prefix = UPDATER_PREFIX_TEXT_STARTING_AT;
             break;
-        case ($this->num_options > $this->unused && !empty($this->unused)):
+        case ($this->attributeDisplayAtLeastPrices() && $this->num_options > $this->unused && !empty($this->unused)):
             $this->prefix = UPDATER_PREFIX_TEXT_AT_LEAST;
             break;
         case (!isset($_POST['pspClass'])):
@@ -124,7 +130,7 @@ class DPU extends base {
         break;
     }
     $this->responseText['priceTotal'] = $this->prefix;
-    $product_check = $db->Execute("SELECT products_tax_class_id FROM " . TABLE_PRODUCTS . " WHERE products_id = '" . (int)$_POST['products_id'] . "'" . " LIMIT 1");
+    $product_check = $db->Execute("SELECT products_tax_class_id FROM " . TABLE_PRODUCTS . " WHERE products_id = " . (int)$_POST['products_id'] . " LIMIT 1");
     if (DPU_SHOW_CURRENCY_SYMBOLS == 'false') {
       $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
       $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
@@ -238,6 +244,39 @@ class DPU extends base {
     } // if $this->new_attributes
   }
 
+  /**
+   * Tests for the need to show all types of prices to be displayed by and of each individual function to display text of a price.
+   * @return bool
+   */
+  protected function attributesDisplayMultiplePrices() {
+    
+    $response = ($this->attributeDisplayStartAtPrices() && $this->attributeDisplayAtLeastPrices());
+    
+    return $response;
+  }
+  
+  /**
+   * Helper function to test for the need to show Start At price text.
+   * @return bool
+   */
+  protected function attributeDisplayStartAtPrices() {
+    
+    $response = ($this->priceDisplay === 'start_at_least' || $this->priceDisplay === 'start_at');
+    
+    return $response;
+  }
+  
+  /**
+   * Helper function to test for the need to show At Least price text.
+   * @return bool
+   */
+  protected function attributeDisplayAtLeastPrices() {
+    
+    $response = ($this->priceDisplay === 'start_at_least' || $this->priceDisplay === 'at_least');
+    
+    return $response;
+  }
+  
   /*
    * Inserts multiple non-attributed products into the shopping cart
    *
@@ -280,12 +319,12 @@ class DPU extends base {
 
       $product_check_result = false;
       if (DPU_PROCESS_ATTRIBUTES !== 'all') {
-        $product_check = $db->Execute("select products_priced_by_attribute from " . TABLE_PRODUCTS . " where products_id = '" . (int)$_POST['products_id'] . "'");
+        $product_check = $db->Execute("select products_priced_by_attribute from " . TABLE_PRODUCTS . " where products_id = " . (int)$_POST['products_id']);
         $product_check_result = $product_check->fields['products_priced_by_attribute'] == '1';
       }
 
       // do not select display only attributes and attributes_price_base_included is true
-      $product_att_query = $db->Execute("select pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type, round(concat(pa.price_prefix, pa.options_values_price), 5) as value from " . TABLE_PRODUCTS_ATTRIBUTES . " pa LEFT JOIN " . TABLE_PRODUCTS_OPTIONS . " po on (po.products_options_id = pa.options_id) where products_id = '" . (int)$_POST['products_id'] . "' and attributes_display_only != '1' and attributes_price_base_included='1'". " order by pa.options_id, value");
+      $product_att_query = $db->Execute("select pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type, round(concat(pa.price_prefix, pa.options_values_price), 5) as value from " . TABLE_PRODUCTS_ATTRIBUTES . " pa LEFT JOIN " . TABLE_PRODUCTS_OPTIONS . " po on (po.products_options_id = pa.options_id) where products_id = " . (int)$_POST['products_id'] . " and attributes_display_only != '1' and attributes_price_base_included='1'". " order by pa.options_id, value");
 
 // add attributes that are price dependent and in or not in the page's submission
       // Support price determination for product that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
@@ -317,9 +356,9 @@ class DPU extends base {
 
         $sql = "select distinct popt.products_options_id, popt.products_options_name, popt.products_options_sort_order
         from        " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_ATTRIBUTES . " patrib
-        where           patrib.products_id='" . (int)$_POST['products_id'] . "'
+        where           patrib.products_id=" . (int)$_POST['products_id'] . "
         and             patrib.options_id = popt.products_options_id
-        and             popt.language_id = '" . (int)$_SESSION['languages_id'] . "' " .
+        and             popt.language_id = " . (int)$_SESSION['languages_id'] . " " .
         $options_order_by;
 
         $products_options_names = $db->Execute($sql);
@@ -378,7 +417,20 @@ class DPU extends base {
             $attr_value = stripslashes($value);
             $value = PRODUCTS_OPTIONS_VALUES_TEXT_ID;
 //            $product_info['attributes_values'][$option] = $attr_value;
-            $this->shoppingCart->contents[$products_id]['attributes_values'][$option] = $attr_value;
+
+            // -----
+            // Check that the length of this TEXT attribute is less than or equal to its "Max Length" definition. While there
+            // is some javascript on a product details' page that limits the number of characters entered, the customer
+            // can choose to disable javascript entirely or circumvent that checking by performing a copy&paste action.
+            // Disabling javascript would have also disabled operation of this plugin so primarily by copy&paste.
+            //
+            $check = $db->Execute ("SELECT products_options_length FROM " . TABLE_PRODUCTS_OPTIONS . " WHERE products_options_id = " . (int)$option . " LIMIT 1");
+            if (!$check->EOF) {
+              if (strlen ($attr_value) > $check->fields['products_options_length']) {
+                $attr_value = zen_trunc_string ($attr_value, $check->fields['products_options_length'], '');
+              }
+              $this->shoppingCart->contents[$products_id]['attributes_values'][$option] = $attr_value;
+            }
           }
         }
 
@@ -426,12 +478,12 @@ class DPU extends base {
     for ($i=0, $n=count($products); $i<$n; $i++) 
     {
 
-      $product_check = $db->Execute("SELECT products_tax_class_id FROM " . TABLE_PRODUCTS . " WHERE products_id = '" . (int)$products[$i]['id'] . "'" . " LIMIT 1");
+      $product_check = $db->Execute("SELECT products_tax_class_id FROM " . TABLE_PRODUCTS . " WHERE products_id = " . (int)$products[$i]['id'] . " LIMIT 1");
       $product = $db->Execute("SELECT products_id, products_price, products_tax_class_id, products_weight,
                         products_priced_by_attribute, product_is_always_free_shipping, products_discount_type, products_discount_type_from,
                         products_virtual, products_model
                         FROM " . TABLE_PRODUCTS . "
-                        WHERE products_id = '" . (int)$products[$i]['id'] . "'");
+                        WHERE products_id = " . (int)$products[$i]['id']);
 
       $prid = $product->fields['products_id'];
       $products_tax = zen_get_tax_rate(0);
@@ -447,9 +499,9 @@ class DPU extends base {
 
           $attribute_price = $db->Execute("SELECT *
                                     FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
-                                    WHERE products_id = '" . (int)$prid . "'
-                                    AND options_id = '" . (int)$option . "'
-                                    AND options_values_id = '" . (int)$value . "'");
+                                    WHERE products_id = " . (int)$prid . "
+                                    AND options_id = " . (int)$option . "
+                                    AND options_values_id = " . (int)$value);
 
           $data = $db->Execute("SELECT products_options_values_name
                          FROM " . TABLE_PRODUCTS_OPTIONS_VALUES . "
