@@ -118,7 +118,7 @@ objXHR.prototype.getData = function(strMode, resFunc, combinedData) { // send a 
         }
       };
 
-      this.XHR.open(strMode.toLowerCase(), "<?php echo zen_decode_specialchars(zen_href_link('ajax.php', zen_get_all_get_params() . 'act=DPU_Ajax&method=dpu_update', $request_type, true, true, true)); ?>" + (strMode.toLowerCase() === "get" ? "&" + this.compileRequest() : ""), true);
+      this.XHR.open(strMode.toLowerCase(), "<?php echo zen_decode_specialchars(zen_href_link('ajax.php', zen_get_all_get_params(array('action','pid')) . 'act=DPU_Ajax&method=dpu_update', $request_type, true, true, true)); ?>" + (strMode.toLowerCase() === "get" ? "&" + this.compileRequest() : ""), true);
    
 /*                        this.XHR.open(strMode.toLowerCase(), this.url+"?act=DPU_Ajax&method=dpu_update"+(strMode.toLowerCase() == "get" ? "&" + this.compileRequest() : ""), true);*/
       if (strMode.toLowerCase() === "post") {
@@ -128,7 +128,7 @@ objXHR.prototype.getData = function(strMode, resFunc, combinedData) { // send a 
       this.XHR.send(combinedData.XML);
     } else {
       var option = {
-          url: "<?php echo zen_decode_specialchars(zen_href_link('ajax.php', zen_get_all_get_params() . 'act=DPU_Ajax&method=dpu_update', $request_type, true, true, true)); ?>",
+          url: "<?php echo zen_decode_specialchars(zen_href_link('ajax.php', zen_get_all_get_params(array('action','pid')) . 'act=DPU_Ajax&method=dpu_update', $request_type, true, true, true)); ?>",
                     data: combinedData.JSON,
                      timeout : 30000
                    };
