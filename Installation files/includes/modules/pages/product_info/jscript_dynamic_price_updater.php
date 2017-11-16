@@ -254,6 +254,7 @@ objXHR.prototype.getPrice = function () {
     switch (el.type) { <?php /* I'm not sure this even needed as a switch; testing needed*/ ?>
       case "select":
       case "select-one":
+      case "textarea":
       case "text":
       case "number":
       case "hidden":
@@ -532,8 +533,9 @@ function init() {
           xhr.getPrice();
         });
         break;
+      case "textarea":
       case "text":
-        theForm.elements[i].addEventListener("keyup", function () {
+        theForm.elements[i].addEventListener("input", function () {
           xhr.getPrice();
         });
         break;
