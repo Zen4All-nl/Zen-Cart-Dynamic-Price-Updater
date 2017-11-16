@@ -159,10 +159,10 @@ class DPU extends base {
        *   decimal point and thousands group separater, respectively.
       */
       $this->responseText['priceTotal'] .= number_format($this->shoppingCart->total, $decimal_places, $decimal_point, $thousands_point);
-      $this->responseText['preDiscPriceTotal'] .= number_format($this->shoppingCart->total_before_discounts, $decimal_places, $decimal_point, $thousands_point);
+      $this->responseText['preDiscPriceTotal'] = number_format($this->shoppingCart->total_before_discounts, $decimal_places, $decimal_point, $thousands_point);
     } else {
       $this->responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, 0 /*zen_get_tax_rate($product_check->fields['products_tax_class_id'])*//* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
-      $this->responseText['preDiscPriceTotal'] .= $currencies->display_price($this->shoppingCart->total_before_discounts, 0 /*zen_get_tax_rate($product_check->fields['products_tax_class_id'])*//* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
+      $this->responseText['preDiscPriceTotal'] = $currencies->display_price($this->shoppingCart->total_before_discounts, 0 /*zen_get_tax_rate($product_check->fields['products_tax_class_id'])*//* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
     }
 
     switch (true) {
@@ -372,7 +372,7 @@ class DPU extends base {
           $options_order_by= ' order by popt.products_options_name';
         }
 
-        $sql = "select distinct popt.products_options_id, popt.products_options_name, popt.products_options_sort_order
+        $sql = "select distinct popt.products_options_id, popt.products_options_name, popt.products_options_sort_order, popt.products_options_type
         from        " . TABLE_PRODUCTS_OPTIONS . " popt, " . TABLE_PRODUCTS_ATTRIBUTES . " patrib
         where           patrib.products_id=" . (int)$_POST['products_id'] . "
         and             patrib.options_id = popt.products_options_id
@@ -391,6 +391,21 @@ class DPU extends base {
         // the $options_id must be added to $this->new_temp_attributes
         while (!$products_options_names->EOF) {
           $options_id = $products_options_names->fields['products_options_id'];
+          $options_type = $products_options_names->fields['products_options_type'];
+
+          // Taken from the expected format in includes/modules/attributes.
+          switch ($options_type) {
+            case (PRODUCTS_OPTIONS_TYPE_TEXT):
+              $options_id = TEXT_PREFIX . $options_id;
+              break;
+            case (PRODUCTS_OPTIONS_TYPE_FILE):
+              $options_id = TEXT_PREFIX . $options_id;
+              break;
+            default:
+              $this->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_DEFAULT_INSERT_PRODUCT_TYPE', $options_type, $options_id);
+              break;
+          }
+
           if (array_key_exists($options_id, $attributes) && zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id])) {
             // If the options_id selected is a valid attribute then add it to be part of the calculation
             $new_temp_attributes[$options_id] = $attributes[$options_id];
