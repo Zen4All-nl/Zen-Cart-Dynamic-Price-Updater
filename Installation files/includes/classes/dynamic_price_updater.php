@@ -57,6 +57,7 @@ class DPU extends base {
    * @return void
    */
   public function getDetails($outputType = "XML") {
+    $this->setCurrentPage();
     $this->insertProduct();
     $this->shoppingCart->calculate();
     $this->removeExtraSelections();
@@ -628,6 +629,81 @@ class DPU extends base {
     array_unshift($out, sprintf(DPU_SIDEBOX_FRAME, DPU_BASE_PRICE, $total, $qty2));
 
     $this->responseText['sideboxContent'] = implode('', $out);
+  }
+
+  function setCurrentPage() {
+    global $db, $request_type;
+
+    if (isset($_SESSION['customer_id']) && $_SESSION['customer_id']) {
+      $wo_customer_id = $_SESSION['customer_id'];
+
+      $customer_query = "select customers_firstname, customers_lastname
+                           from " . TABLE_CUSTOMERS . "
+                           where customers_id = '" . (int)$_SESSION['customer_id'] . "'";
+
+      $customer = $db->Execute($customer_query);
+
+      $wo_full_name = $customer->fields['customers_lastname'] . ', ' . $customer->fields['customers_firstname'];
+    } else {
+      $wo_customer_id = '';
+      $wo_full_name = '&yen;' . 'Guest';
+    }
+
+    $wo_session_id = zen_session_id();
+    $wo_ip_address = (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'Unknown');
+    $wo_user_agent = substr(zen_db_prepare_input($_SERVER['HTTP_USER_AGENT']), 0, 254);
+
+    $page = zen_get_info_page((int)$_GET['products_id']);
+    $uri = zen_href_link($page, zen_get_all_get_params(), $request_type);
+    if (substr($uri, -1)=='?') $uri = substr($uri,0,strlen($uri)-1);
+    $wo_last_page_url = (zen_not_null($uri) ? substr($uri, 0, 254) : 'Unknown');
+    $current_time = time();
+    $xx_mins_ago = ($current_time - 900);
+
+    // remove entries that have expired
+    $sql = "delete from " . TABLE_WHOS_ONLINE . "
+            where time_last_click < '" . $xx_mins_ago . "'";
+
+    $db->Execute($sql);
+
+    $stored_customer_query = "select count(*) as count
+                                from " . TABLE_WHOS_ONLINE . "
+                                where session_id = '" . zen_db_input($wo_session_id) . "' and ip_address='" . zen_db_input($wo_ip_address) . "'";
+
+    $stored_customer = $db->Execute($stored_customer_query);
+
+    if (empty($wo_session_id)) {
+      $wo_full_name = '&yen;' . 'Spider';
+    }
+
+    if ($stored_customer->fields['count'] > 0) {
+      $sql = "update " . TABLE_WHOS_ONLINE . "
+                set customer_id = '" . (int)$wo_customer_id . "',
+                    full_name = '" . zen_db_input($wo_full_name) . "',
+                    ip_address = '" . zen_db_input($wo_ip_address) . "',
+                    time_last_click = '" . zen_db_input($current_time) . "',
+                    last_page_url = '" . zen_db_input($wo_last_page_url) . "',
+                    host_address = '" . zen_db_input($_SESSION['customers_host_address']) . "',
+                    user_agent = '" . zen_db_input($wo_user_agent) . "'
+                where session_id = '" . zen_db_input($wo_session_id) . "' and ip_address='" . zen_db_input($wo_ip_address) . "'";
+
+      $db->Execute($sql);
+
+    } else {
+      $sql = "insert into " . TABLE_WHOS_ONLINE . "
+                  (customer_id, full_name, session_id, ip_address, time_entry,
+                   time_last_click, last_page_url, host_address, user_agent)
+                values ('" . (int)$wo_customer_id . "', '" . zen_db_input($wo_full_name) . "', '"
+                           . zen_db_input($wo_session_id) . "', '" . zen_db_input($wo_ip_address)
+                           . "', '" . zen_db_input($current_time) . "', '" . zen_db_input($current_time)
+                           . "', '" . zen_db_input($wo_last_page_url)
+                           . "', '" . zen_db_input($_SESSION['customers_host_address'])
+                           . "', '" . zen_db_input($wo_user_agent)
+                           . "')";
+
+      $db->Execute($sql);
+    }
+
   }
 
   /**
