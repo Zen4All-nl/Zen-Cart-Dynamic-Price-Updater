@@ -409,19 +409,20 @@ class DPU extends base {
           if (array_key_exists($options_id, $attributes) && zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id])) {
             // If the options_id selected is a valid attribute then add it to be part of the calculation
             $new_temp_attributes[$options_id] = $attributes[$options_id];
-          } elseif (array_key_exists($options_id, $attributes) && array_key_exists($options_id, $new_attributes) && !zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id])) {
+          } elseif (array_key_exists($options_id, $attributes) && !zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id])) {
             // If the options_id selected is not a valid attribute, then add a valid attribute determined above and mark it
             //   to be deleted from the shopping cart after the price has been determined.
             $this->new_temp_attributes[$options_id] = $attributes[$options_id];
             $new_temp_attributes[$options_id] = $new_attributes[$options_id];
             $this->unused++;
+          } /*elseif (array_key_exists($options_id, $attributes) && array_key_exists($options_id, $new_attributes) && !zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id])) {
           } elseif (array_key_exists($options_id, $new_attributes)) {
             // If the option_id has not been selected but is one that is to be populated, then add it to the cart and mark it
             //   to be deleted from the shopping cart after the price has been determined.
             $this->new_temp_attributes[$options_id] = $new_attributes[$options_id];
             $new_temp_attributes[$options_id] = $new_attributes[$options_id];
             $this->unused++;
-          }
+          }*/
             
           $products_options_names->MoveNext();
         }
