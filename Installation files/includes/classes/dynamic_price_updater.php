@@ -142,7 +142,7 @@ class DPU extends base {
         break;
     }
     $this->responseText['priceTotal'] = $this->prefix;
-    $this->responseText['preDiscPriceTotal'] = $this->preDiscPrefix;
+    $this->responseText['preDiscPriceTotalText'] = $this->preDiscPrefix;
     
     $product_check = $db->Execute("SELECT products_tax_class_id FROM " . TABLE_PRODUCTS . " WHERE products_id = " . (int)$_POST['products_id'] . " LIMIT 1");
     if (DPU_SHOW_CURRENCY_SYMBOLS == 'false') {
