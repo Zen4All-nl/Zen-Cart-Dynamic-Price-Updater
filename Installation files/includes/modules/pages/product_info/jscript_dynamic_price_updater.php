@@ -204,9 +204,12 @@ objXHR.prototype.getPrice = function () {
     <?php if (DPU_SHOW_LOADING_IMAGE === 'true') { ?>
 
     var psp = false;
-    if (imgLoc === "replace") {
+//    if (imgLoc === "replace") {
       var thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
-      var test = thePrice.getElementsByTagName("span");
+      var test = false;
+      if (thePrice) {
+        test = thePrice.getElementsByTagName("span");
+      }
       var a;
       var b = test.length;
 
@@ -218,11 +221,15 @@ objXHR.prototype.getPrice = function () {
       if (!psp) {
         psp = thePrice;
       }
-    }
+      if (psp) {
+        pspClass = psp.className;
+        origPrice = psp.innerHTML;
+      }
+//  }
     if (psp && imgLoc === "replace") {
       if (thePrice) {
         loadImg.style.display = "inline"; //'block';
-        pspClass = psp.className;
+//        pspClass = psp.className;
         var pspStyle = psp.currentStyle || window.getComputedStyle(psp);
         loadImg.style.height = pspStyle.lineHeight; // Maintains the height so that there is not a vertical shift of the content.
         origPrice = psp.innerHTML;
