@@ -234,13 +234,21 @@ class DPU extends base {
       //  add them to the attribute list such that product added to the cart is fully defined with the minimum value(s), though 
       //  at the moment seems that similar would be needed even for not priced by attribute possibly... Will see... Maybe someone will report if an issue.
 
-      $product_check = $db->Execute("select products_priced_by_attribute from " . TABLE_PRODUCTS . " where products_id = '" . (int)$_POST['products_id'] . "'");
+      if(!defined('DPU_PROCESS_ATTRIBUTES')) define('DPU_PROCESS_ATTRIBUTES', 'all');
+
+      $product_check_result = false;
+      if (DPU_PROCESS_ATTRIBUTES !== 'all') {
+        $product_check = $db->Execute("select products_priced_by_attribute from " . TABLE_PRODUCTS . " where products_id = '" . (int)$_POST['products_id'] . "'");
+        $product_check_result = $product_check->fields['products_priced_by_attribute'] == '1';
+      }
 
       // do not select display only attributes and attributes_price_base_included is true
       $product_att_query = $db->Execute("select pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type, round(concat(pa.price_prefix, pa.options_values_price), 5) as value from " . TABLE_PRODUCTS_ATTRIBUTES . " pa LEFT JOIN " . TABLE_PRODUCTS_OPTIONS . " po on (po.products_options_id = pa.options_id) where products_id = '" . (int)$_POST['products_id'] . "' and attributes_display_only != '1' and attributes_price_base_included='1'". " order by pa.options_id, value");
 
 // add attributes that are price dependent and in or not in the page's submission
-      if ($product_check->fields['products_priced_by_attribute'] == '1' and $product_att_query->RecordCount() >= 1) {
+      // Support price determination for product that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
+      $process_price_attributes = (defined('DPU_PROCESS_ATTRIBUTES') && DPU_PROCESS_ATTRIBUTES === 'all') ? true : $product_check_result;
+      if ($process_price_attributes and $product_att_query->RecordCount() >= 1) {
         $the_options_id= 'x';
         $new_attributes = array();
         $this->num_options = 0;
