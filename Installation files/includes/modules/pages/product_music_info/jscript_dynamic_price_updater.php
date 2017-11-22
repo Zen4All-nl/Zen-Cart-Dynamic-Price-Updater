@@ -342,8 +342,12 @@ objXHR.prototype.handlePrice = function (results) {
   var psp = false;
   var a;
   var b = test.length;
+  var pdpt = false;
 
   for (a = 0; a < b; a += 1) {
+    if (test[a].className === "normalprice") {
+      pdpt = test[a];
+    }
     if (test[a].className === "productSpecialPrice" || test[a].className === "productSalePrice" || test[a].className === "productSpecialPriceSale") {
       psp = test[a];
     }
@@ -394,6 +398,20 @@ objXHR.prototype.handlePrice = function (results) {
       }
 
       switch (type) {<?php // the 'type' attribute defines what type of information is being provided ?>
+
+        case "preDiscPriceTotal":
+          if (pdpt) {
+            this.updateInnerHTML(storeVal, pdpt, thePrice, true);
+          }
+          break;
+        case "preDiscPriceTotalText":
+          if (pdpt) {
+//          $(thePrice).contents().first()[0].textContent = storeVal;
+            if (thePrice.firstChild.nodeType === 3) {
+              thePrice.firstChild.nodeValue = storeVal;
+            }
+          }
+          break;
         case "priceTotal":
           /*if (psp) {
             psp.innerHTML = temp[i].childNodes[0].nodeValue;
