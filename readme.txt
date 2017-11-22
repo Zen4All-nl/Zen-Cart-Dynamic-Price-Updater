@@ -1,5 +1,43 @@
-Dynamic Price Updater v3.0.8
+Dynamic Price Updater v3.2.0
 -=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+3.2.0, What changed:
+- Identified this version as 3.2.0 because 1) this update provided significant new functionality and modified/provided
+    new database features and 2) 3.1.0 had previously been identified in the github path/history and did not want to
+    cause undo confusion.
+- Commented out code that performed no operation/action.
+- Added an update to the customer's latest page when using an ajax style call to improve display of
+    information on the who's online admin page.
+- Added a method to update price text to represent when none and less than all attributes have been selected.
+- Added DPU_ATTRIBUTES_MULTI_PRICE_TEXT to be able to control which of the pretext(s) to allow to show.
+- Added a variable to be able to update/display the text before the first price when price includes
+    a special and/or a sale.
+- Added ability to update what is known as the normalprice which is the price/value that is crossed out when there
+    is a sale or other special.
+- Added stock quantity update capability which incorporates the possibility of operating with ZC 1.5.x and
+    control how the information is replaces other content.  Guidance for display modifications provided in readme.txt.
+- Corrected use of float casting to use code published in ZC 1.5.6 to support strict server mode.
+- Reworked code to better account and control sub-functional area execution.
+- Removed single quotes from SQL queries that included casted integers to minimize further processing.
+- Expanded attribute text switching to more than product priced by attribute such that should apply to
+    product that have attributes that affect the base price.
+- Corrected price display and determination to include pricing associated with text (word and/or letter pricing, etc...)
+- Updated javascript side to use exactly equal to instead of loosely comparing two values (in a majority of examples.
+- Switched javascript calls to use dot notation where able.
+- Added a fallback attempt for collecting/setting JSON response if responseJSON is empty but a non-fault responseText
+    is provided.
+- Moved javascript variable declaration out of most function calls.
+- Corrected an issue reported by mvstudio of where the expected text to be in front of the priced item would not be
+    displayed if the imgLoc variable in the includes/modules/pages/PRODUCT_TYPE/jscript_dynamic_price_updater.php file
+    was not set to "replace".  Essentially the result was that pspClass would be blank when sending to ajax.
+- Added change detection and capture of the html element textarea and changed the text detection to an input event
+    instead of a keyup event.  This allows capture/detection of pasted content without firing off multiple events for
+    the same modification.  Additional testing may reveal the need to incorporate other event listeners. The process
+    would be similar as shown for the number case.
+- Updated ajax.php file to prevent known spiders from performing ajax requests.  This is from the ZC 1.5.6 version of
+    the file
+- Moved the status notification from an alert to a console log when zcJS is not used and a 200 status result is not
+    received.
 
 3.0.8, What changed:
 - Added a switch and code to support deactivating the use of currency symbols
@@ -134,8 +172,13 @@ NOTE: If you have a version of Updater installed earlier than 3.0 please remove 
   includes/modules/pages/product_music_info/jscript_ajax_updater.php
   includes/modules/sideboxes/YOUR_TEMPLATE/dynamic_price_updater_sidebox.php
   includes/templates/YOUR_TEMPLATE/sideboxes/tpl_dynamic_price_updater_sidebox.php
+  includes/templates/YOUR_TEMPLATE/jscript/jscript_jquery.min.dpu.php
 
   dpu_ajax.php has been removed from the fileset as far as necessary code. After all files are in the place provided it may be removed from the server.
+  it is expected that to support use of the ZC zcJS ajax process, that includes/templates/YOUR_TEMPLATE/jscript/ contains
+    the file jscript_framework.php that can be found in includes/templates/template_default/jscript/
+  it is also expected that your template loads a version of jQuery preferably 1.12.0 or above. jscript_jquery.min.dpu.php is
+    provided to remotely load jQuery 1.12.4 if a form of jQuery has not yet been loaded when the file is executed.
 
 4. Log in to your webshop's admin panel, and the module will install automatically. There are no seperate sql files needed.
 5. Installation is now complete.
@@ -156,9 +199,9 @@ Settings
 
 The module is now set through the admin, more instructions to be added later
 
-As of Version 3.0.6 the settings include the following configuration options
+As of Version 3.2.0 the settings include the following configuration options
 Dynamic Price Updater Status 	true - Allow disabling DPU in whole
-Dynamic Price Updater Version 	3.0.6 - Radio button style presentation of installed version
+Dynamic Price Updater Version 	3.2.0 - Radio button style presentation of installed version
 Dynamic Price Updater Version Check? 	true - Allow DPU to check for latest ZC issued version?
 Where to display the price 	productPrices - Class in which DPU prices are to be shown/updated
 Define used to set a variable for this script 	cart_quantity - Value of name field for form that contains attributes and quantities.
@@ -167,6 +210,11 @@ show a small loading graphic 	true - While data is being retrieved from the syst
 Show currency symbols 	true - If desired to see the symbols ($) associated with the customer's chosen currency then choose true.
 Show product quantity 	false - This is the quantity of the specifically selected/entered combination of attributes that are in the cart.
 Where to display the second price cartAdd - This is the id of the location to display the calculated price as a second location.
+Show sidebox currency symbols 	true - Show currency symbols in the sidebox (when displayed).
+Show alternate text for partial selection 	start_at_least 	 When selections are being made that affect the price of the product, what alternate text if any should be shown to the customer.  For example if when no selections have been made, the ZC starting at text may be displayed.  When one selection of many has been made, then the text may be changed to at least this amount indicating that there are selections to be made that could increase the price.  Then once all selections have been made as expected/required the text is or should change to something like Your Price:.
+Show or update the display of out-of-stock 	quantity_replace 	Allows display of the current stock status of a product while the customer remains on the product information page and offers control about the ajax update when the product is identified as out-of-stock.
+Modify minimum attribute display price 	all 	On what should the minimum display price be based for product with attributes? Only product that are priced by attribute or for all product that have attributes?
+The id tag for product_quantity 	productDetailsList_product_info_quantity 	This is the ID where your product quantity is displayed.
 
 Support
 -------
@@ -178,7 +226,14 @@ http://www.zen-cart.com/forum/showthread.php?t=70577
 Credits
 -------
 
-Versions 3.0.5 and 3.0.6 brought to you by mc12345678: http://mc12345678.com
+Version 3.2.0 brought to you by mc12345678: http://mc12345678.com with thank yous to:
+  mvstudio for identifying issues with strict operation, as well as edge case operation.
+  izar74 for a potential way to display out-of-stock information.
+  diamond1 for identifying the need of these instructions to contain just a little more.
+  Calljj for the idea of updating the "base" price while making attribute selections on product
+    that are on special or on sale.  This allows seeing the true price reduction/difference for chosen options.
+
+Versions 3.0.5 through 3.0.8 brought to you by mc12345678: http://mc12345678.com
 
 This update (V3.0.4 base content) : Erik Kerkhoven (Design75) http://zen4all.nl brought by mc12345678: http://mc12345678.com
 
