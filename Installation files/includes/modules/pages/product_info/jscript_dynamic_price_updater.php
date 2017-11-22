@@ -113,7 +113,7 @@ objXHR.prototype.getData = function(strMode, resFunc, combinedData) { // send a 
             _this.responseText = _this.XHR.responseText;
             _this.responseHandler(resFunc, _this);
           } else {
-            alert("Status returned - " + _this.XHR.statusText);
+            console.log("Status returned - " + _this.XHR.statusText);
           }
         }
       };
