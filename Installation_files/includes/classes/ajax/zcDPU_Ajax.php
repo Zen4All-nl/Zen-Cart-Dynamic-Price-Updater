@@ -7,40 +7,39 @@
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
  */
 class zcDPU_Ajax extends base {
-  /*
+
+  /**
    * Local instantiation of the shopping cart
    *
    * @var object
    */
-
   protected $shoppingCart;
-  /*
+
+  /**
    * The type of message being sent (error or success)
    *
    * @var string
    */
   protected $responseType = 'success';
-  /*
+
+  /**
    * Array of lines to be sent back.  The key of the array provides the attribute to identify it at the client side
    * The array value is the text to be inserted into the node
    *
    * @var array
    */
-  var $responseText = array();
+  var $responseText = [];
 
-  /*
+  /**
    * Array of attributes that could be associated with the product but have not been added by the customer to support
    *   identifying the minimum price of a product from the point of having selected an attribute when other attributes have not
    *   been selected.  (This is a setup contrary to recommendations by ZC, but is a condition that perhaps is best addressed regardless.)
    * @var array
    */
-  protected $new_attributes = array();
+  protected $new_attributes = [];
 
   /**
    * Constructor
-   *
-   * @param obj The Zen Cart database class
-   * @return DPU
    */
   public function __construct()
   {
@@ -51,7 +50,7 @@ class zcDPU_Ajax extends base {
   /**
    * Wrapper to call all methods to generate the output
    *
-   * @return void
+   * @return array
    */
   public function getDetails()
   {
@@ -65,7 +64,7 @@ class zcDPU_Ajax extends base {
     }
     $this->prepareOutput();
 
-    $data = array();
+    $data = [];
     $data['responseType'] = $this->responseType;
     // now loop through the responseText nodes
     foreach ($this->responseText as $key => $val) {
@@ -79,7 +78,8 @@ class zcDPU_Ajax extends base {
   /**
    * Prepares the shoppingCart contents for transmission
    *
-   * @return void
+   * @global object $currencies
+   * @global object $db
    */
   protected function prepareOutput()
   {
@@ -145,11 +145,13 @@ class zcDPU_Ajax extends base {
     }
     $this->responseText['priceTotal'] = $this->prefix;
     $this->responseText['preDiscPriceTotalText'] = $this->preDiscPrefix;
-
-    $product_check = $db->Execute("SELECT products_tax_class_id
-                                   FROM " . TABLE_PRODUCTS . "
-                                   WHERE products_id = " . (int)$_POST['products_id'] . "
-                                   LIMIT 1");
+    /*
+     * Code is unused: remove??
+      $product_check = $db->Execute("SELECT products_tax_class_id
+      FROM " . TABLE_PRODUCTS . "
+      WHERE products_id = " . (int)$_POST['products_id'] . "
+      LIMIT 1");
+     */
     if (DPU_SHOW_CURRENCY_SYMBOLS == 'false') {
       $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
       $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
@@ -307,18 +309,18 @@ class zcDPU_Ajax extends base {
   /**
    * Inserts the product into the shoppingCart content array
    *
-   * @returns void
+   * @global object $db
    */
   protected function insertProduct()
   {
     global $db;
-    $attributes = array();
+    $attributes = [];
     $temp = explode('|', $_POST['attributes']);
     foreach ($temp as $item) {
       $tempArray = explode('~', $item);
-      $test = str_replace('id[', '', $tempArray[0]);
-      $test1 = str_replace(']', '', $test);
-      $attributes[$test1] = $tempArray[1];
+      $temp1 = str_replace('id[', '', $tempArray[0]);
+      $temp2 = str_replace(']', '', $temp1);
+      $attributes[$temp2] = $tempArray[1];
     }
 
     if (!empty($attributes) || zen_has_product_attributes_values($_POST['products_id'])) {
@@ -350,9 +352,9 @@ class zcDPU_Ajax extends base {
 // add attributes that are price dependent and in or not in the page's submission
       // Support price determination for product that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
       $process_price_attributes = (defined('DPU_PROCESS_ATTRIBUTES') && DPU_PROCESS_ATTRIBUTES === 'all') ? true : $product_check_result;
-      if ($process_price_attributes and $product_att_query->RecordCount() >= 1) {
+      if ($process_price_attributes && $product_att_query->RecordCount() >= 1) {
         $the_options_id = 'x';
-        $new_attributes = array();
+        $new_attributes = [];
         $this->num_options = 0;
         foreach ($product_att_query as $item) {
           if ($the_options_id != $item['options_id']) {
@@ -381,8 +383,8 @@ class zcDPU_Ajax extends base {
 
         $products_options_names = $db->Execute($sql);
 
-        $new_temp_attributes = array();
-        $this->new_temp_attributes = array();
+        $new_temp_attributes = [];
+        $this->new_temp_attributes = [];
         $this->unused = 0;
         //  To appear in the cart, $new_temp_attributes[$options_id]
         // must contain either the selection or the lowest priced selection
@@ -426,7 +428,9 @@ class zcDPU_Ajax extends base {
       $this->product_stock = zen_get_products_stock($_POST['products_id'], $attributes);
 
       $this->new_attributes[$products_id] = $this->new_temp_attributes;
-      $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($_POST['cart_quantity']) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($_POST['cart_quantity'])));
+      $this->shoppingCart->contents[$products_id] = [
+        'qty' => (convertToFloat($_POST['cart_quantity']) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($_POST['cart_quantity'])),
+      ];
 
       foreach ($attributes as $option => $value) {
         //CLR 020606 check if input was from text box.  If so, store additional attribute information
@@ -476,26 +480,33 @@ class zcDPU_Ajax extends base {
     } else {
       $products_id = (int)$_POST['products_id'];
       $this->product_stock = zen_get_products_stock($products_id);
-      $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($_POST['cart_quantity']) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($_POST['cart_quantity'])));
+      $this->shoppingCart->contents[$products_id] = [
+        'qty' => (convertToFloat($_POST['cart_quantity']) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($_POST['cart_quantity']))
+      ];
     }
   }
 
   /**
    * Prepares the output for the Updater's sidebox display
    *
+   * @global object $currencies
+   * @global object $db
    */
   protected function getSideboxContent()
   {
     global $currencies, $db;
 
-    $out = array();
+    $out = [];
     $products = $this->shoppingCart->get_products();
     for ($i = 0, $n = count($products); $i < $n; $i++) {
 
-      $product_check = $db->Execute("SELECT products_tax_class_id
-                                     FROM " . TABLE_PRODUCTS . "
-                                     WHERE products_id = " . (int)$products[$i]['id'] . "
-                                     LIMIT 1");
+      /*
+       * Code is unused: remove??
+        $product_check = $db->Execute("SELECT products_tax_class_id
+        FROM " . TABLE_PRODUCTS . "
+        WHERE products_id = " . (int)$products[$i]['id'] . "
+        LIMIT 1");
+       */
       $product = $db->Execute("SELECT products_id, products_price, products_tax_class_id, products_weight,
                                       products_priced_by_attribute, product_is_always_free_shipping, products_discount_type, products_discount_type_from,
                                       products_virtual, products_model
@@ -504,15 +515,19 @@ class zcDPU_Ajax extends base {
 
       $prid = $product->fields['products_id'];
       $products_tax = zen_get_tax_rate(0);
-      $products_price = $product->fields['products_price'];
+      /*
+       * Code is unused: remove??
+        $products_price = $product->fields['products_price'];
+       */
       $qty = convertToFloat($products[$i]['quantity']);
-
-
 
       if (is_array($this->shoppingCart->contents[$products[$i]['id']]['attributes'])) {
 //    while (isset($this->shoppingCart->contents[$_POST['products_id']]['attributes']) && list($option, $value) = each($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
         foreach ($this->shoppingCart->contents[$products[$i]['id']]['attributes'] as $option => $value) {
-          $adjust_downloads++;
+          /*
+           * Code is unused: remove??
+            $adjust_downloads++;
+           */
 
           $attribute_price = $db->Execute("SELECT *
                                            FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
@@ -526,8 +541,11 @@ class zcDPU_Ajax extends base {
           $name = $data->fields['products_options_values_name'];
 
           $new_attributes_price = 0;
-          $discount_type_id = '';
-          $sale_maker_discount = '';
+          /*
+           * Code is unused: remove??
+            $discount_type_id = '';
+            $sale_maker_discount = '';
+           */
           $total = 0;
 
           if ($attribute_price->fields['product_attribute_is_free'] == '1' && zen_get_products_price_is_free((int)$prid)) {
