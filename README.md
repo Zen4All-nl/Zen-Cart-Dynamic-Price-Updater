@@ -1,5 +1,12 @@
-Dynamic Price Updater v3.2.0
+Dynamic Price Updater v4.0.0 Beta 1
 -=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+4.0.0 Beta 1, What changed:
+- moving the class code from ```includes/classes/dynamic_price_updater.php``` to ```includes/classes/ajax/zcDPU_Ajax.php```
+- Removing the ancient code, using JSON or XML, and replaced it with the build in native Zen Cart Ajax functionality
+- Drop support for ZC versions <1.5.6
+- PHP version >= 5.6
+- Updated optional jquery version to 3.4.1
 
 3.2.0, What changed:
 - Identified this version as 3.2.0 because 1) this update provided significant new functionality and modified/provided
