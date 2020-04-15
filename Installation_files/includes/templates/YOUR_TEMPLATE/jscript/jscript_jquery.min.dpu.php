@@ -4,6 +4,6 @@
 ?>
 <script type="text/javascript">
 if (typeof jQuery == 'undefined') {
-    document.write('<script type="text/javascript" src="//code.jquery.com/jquery-1.12.4.min.js"><\/script>');
+    document.write('<script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"><\/script>');
 }
 </script>
