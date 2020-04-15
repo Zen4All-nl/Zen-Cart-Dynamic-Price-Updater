@@ -184,29 +184,33 @@ class zcDPU_Ajax extends base {
       case ($out_of_stock && $this->num_options == $this->unused && !empty($this->new_temp_attributes)):
         // No selections made yet, stock is 0 or less and not allowed to checkout.
         $this->responseText['stock_quantity'] = $this->product_stock;
-        if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'quantity_replace') {
-          $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE;
-        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'after') {
-          $this->responseText['stock_quantity'] .= DPU_OUT_OF_STOCK_IMAGE;
-        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'before') {
-          $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE . $this->responseText['stock_quantity'];
-        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
-          $this->responseText['priceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
-          $this->responseText['preDiscPriceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
+        if (defined(DPU_OUT_OF_STOCK_IMAGE)) {
+          if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'quantity_replace') {
+            $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE;
+          } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'after') {
+            $this->responseText['stock_quantity'] .= DPU_OUT_OF_STOCK_IMAGE;
+          } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'before') {
+            $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE . $this->responseText['stock_quantity'];
+          } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
+            $this->responseText['priceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
+            $this->responseText['preDiscPriceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
+          }
         }
         break;
       case ($out_of_stock && $this->num_options > $this->unused && !empty($this->unused)):
         // Not all selections have been made, stock is 0 or less and not allowed to checkout.
         $this->responseText['stock_quantity'] = $this->product_stock;
-        if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'quantity_replace') {
-          $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE;
-        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'after') {
-          $this->responseText['stock_quantity'] .= DPU_OUT_OF_STOCK_IMAGE;
-        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'before') {
-          $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE . $this->responseText['stock_quantity'];
-        } else if (defined('DPU_SHOW_OUT_OF_STOCK_IMAGE') && DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
-          $this->responseText['priceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
-          $this->responseText['preDiscPriceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
+        if (defined(DPU_OUT_OF_STOCK_IMAGE)) {
+          if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'quantity_replace') {
+            $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE;
+          } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'after') {
+            $this->responseText['stock_quantity'] .= DPU_OUT_OF_STOCK_IMAGE;
+          } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'before') {
+            $this->responseText['stock_quantity'] = DPU_OUT_OF_STOCK_IMAGE . $this->responseText['stock_quantity'];
+          } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
+            $this->responseText['priceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
+            $this->responseText['preDiscPriceTotal'] = DPU_OUT_OF_STOCK_IMAGE;
+          }
         }
         break;
       default:
@@ -314,14 +318,15 @@ class zcDPU_Ajax extends base {
   protected function insertProduct()
   {
     global $db;
-    $attributes = [];
+    $tempAttributes = [];
     $temp = explode('|', $_POST['attributes']);
     foreach ($temp as $item) {
       $tempArray = explode('~', $item);
       $temp1 = str_replace('id[', '', $tempArray[0]);
       $temp2 = str_replace(']', '', $temp1);
-      $attributes[$temp2] = $tempArray[1];
+      $tempAttributes[$temp2] = $tempArray[1];
     }
+    $attributes = array_filter($tempAttributes);
 
     if (!empty($attributes) || zen_has_product_attributes_values($_POST['products_id'])) {
       // If product is priced by attribute then determine which attributes had not been added, 
@@ -661,8 +666,9 @@ class zcDPU_Ajax extends base {
 
     $page = zen_get_info_page((int)$_GET['products_id']);
     $uri = zen_href_link($page, zen_get_all_get_params(), $request_type);
-    if (substr($uri, -1) == '?')
+    if (substr($uri, -1) == '?') {
       $uri = substr($uri, 0, strlen($uri) - 1);
+    }
     $wo_last_page_url = (zen_not_null($uri) ? substr($uri, 0, 254) : 'Unknown');
     $current_time = time();
     $xx_mins_ago = ($current_time - 900);

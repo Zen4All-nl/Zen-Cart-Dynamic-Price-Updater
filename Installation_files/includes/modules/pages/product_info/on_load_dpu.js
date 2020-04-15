@@ -1,5 +1,5 @@
-try { 
+try {
   init();
 } catch(dpu_err) { 
-  console.log(dpu_err.stack);
+  console.log('DPU catch error:', dpu_err.stack);
 }
