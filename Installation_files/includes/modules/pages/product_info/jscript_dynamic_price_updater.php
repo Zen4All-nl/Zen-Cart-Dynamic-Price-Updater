@@ -27,12 +27,12 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
     ?>
 <script type="text/javascript">
       // Set some global vars
-      var theFormName = "<?php echo DPU_PRODUCT_FORM; ?>";
-      var theForm = false;
-      var _secondPrice = <?php echo (DPU_SECOND_PRICE !== '' ? '"' . DPU_SECOND_PRICE . '"' : 'false'); ?>;
-      var objSP = false; // please don't adjust this
+      const theFormName = "<?php echo DPU_PRODUCT_FORM; ?>";
+      let theForm = false;
+      let _secondPrice = <?php echo (DPU_SECOND_PRICE !== '' ? '"' . DPU_SECOND_PRICE . '"' : 'false'); ?>;
+      let objSP = false; // please don't adjust this
       // Updater sidebox settings
-      var objSB = false;
+      let objSB = false;
     <?php
 // this holds the sidebox object // IE. Left sidebox false should become document.getElementById('leftBoxContainer');
 // For right sidebox, this should equal document.getElementById('rightBoxContainer');
@@ -43,14 +43,14 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
     if (DPU_SHOW_LOADING_IMAGE === 'true') { // create the JS object for the loading image 
       ?>
-        var imgLoc = "replace"; // Options are "replace" or , "" (empty)
+        const imgLoc = "replace"; // Options are "replace" or , "" (empty)
 
-        var origPrice;
-        var loadImg = document.createElement("img");
+        let origPrice;
+        let loadImg = document.createElement("img");
         loadImg.src = "<?php echo DIR_WS_IMAGES; ?>ajax-loader.gif";
         loadImg.id = "DPULoaderImage";
 
-        var loadImgSB = document.createElement("img");
+        let loadImgSB = document.createElement("img");
         loadImgSB.src = "<?php echo DIR_WS_IMAGES; ?>ajax-loader.gif";
         loadImgSB.id = "DPULoaderImageSB";
         loadImgSB.style.margin = "auto";
@@ -58,17 +58,17 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
     <?php } ?>
 
       function getPrice() {
-        var pspClass = false;
+        let pspClass = false;
     <?php if (DPU_SHOW_LOADING_IMAGE === 'true') { ?>
 
-          var psp = false;
-          var thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
-          var test = false;
+          let psp = false;
+          let thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
+          let test = false;
           if (thePrice) {
             test = thePrice.getElementsByTagName("span");
           }
-          var a;
-          var b = test.length;
+          let a;
+          let b = test.length;
 
           for (a = 0; a < b; a += 1) {
             if (test[a].className === "productSpecialPrice" || test[a].className === "productSalePrice" || test[a].className === "productSpecialPriceSale") {
@@ -85,19 +85,19 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
           if (psp && imgLoc === "replace") {
             if (thePrice) {
               loadImg.style.display = "inline"; //'block';
-              var pspStyle = psp.currentStyle || window.getComputedStyle(psp);
+              let pspStyle = psp.currentStyle || window.getComputedStyle(psp);
               loadImg.style.height = pspStyle.lineHeight; // Maintains the height so that there is not a vertical shift of the content.
               origPrice = psp.innerHTML;
-              this.updateInnerHTML(loadImg.outerHTML, false, psp, true);
+              updateInnerHTML(loadImg.outerHTML, false, psp, true);
             }
 
           } else {
             document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>").appendChild(loadImg);
           }
-
+          let theSB;
           if (document.getElementById("dynamicpriceupdatersidebox")) {
-            var theSB = document.getElementById("dynamicpriceupdatersideboxContent");
-            this.updateInnerHTML("", false, theSB, true);
+            theSB = document.getElementById("dynamicpriceupdatersideboxContent");
+            updateInnerHTML("", false, theSB, true);
             theSB.style.textAlign = "center";
             theSB.appendChild(loadImgSB);
           }
@@ -134,9 +134,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
               break;
           }
         }
-        products_id = <?php echo (int)$pid; ?>;
-
-        stat = "main";
+        const products_id = <?php echo (int)$pid; ?>;
 
         var _this = this; // scope resolution
 
@@ -151,11 +149,11 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
           handlePrice(resultArray);
         }).fail(function (jqXHR, textStatus, errorThrown) {
     <?php if (DPU_SHOW_LOADING_IMAGE === 'true') { ?>
-            var thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
-            var test = thePrice.getElementsByTagName("span");
-            var psp = false;
-            var a;
-            var b = test.length;
+            const thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
+            let test = thePrice.getElementsByTagName("span");
+            let psp = false;
+            let a;
+            let b = test.length;
 
             for (a = 0; a < b; a += 1) {
               if (test[a].className === "productSpecialPrice" || test[a].className === "productSalePrice" || test[a].className === "productSpecialPriceSale") {
@@ -170,10 +168,10 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 thePrice.removeChild(loadImg);
               }
             } else if (typeof (loadImg) !== "undefined" && imgLoc === "replace") {
-              _this.updateInnerHTML(origPrice, psp, thePrice);
+              updateInnerHTML(origPrice, psp, thePrice);
             }
             if (_secondPrice !== false) {
-              _this.updSP();
+              updSP();
             }
 
     <?php } ?>
@@ -201,7 +199,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
           }
 
           if (_secondPrice !== false) {
-            this.updSP();
+            updSP();
           }
         }
       }
@@ -213,11 +211,11 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
         }
 
         // use the spans to see if there is a discount occuring up in this here house
-        var test = thePrice.getElementsByTagName("span");
-        var psp = false;
-        var a;
-        var b = test.length;
-        var pdpt = false;
+        let test = thePrice.getElementsByTagName("span");
+        let psp = false;
+        let a;
+        let b = test.length;
+        let pdpt = false;
 
         for (a = 0; a < b; a += 1) {
           if (test[a].className === "normalprice") {
@@ -228,13 +226,14 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
           }
         }
 
-        var updateSidebox;
-        var type = results.responseType;
+        let updateSidebox;
+        let type = results.responseType;
+          let sbContent = "";
+let theSB;
 
         if (document.getElementById("dynamicpriceupdatersidebox")) {
-          var theSB = document.getElementById("dynamicpriceupdatersideboxContent");
+          theSB = document.getElementById("dynamicpriceupdatersideboxContent");
           theSB.style.textAlign = "left";
-          var sbContent = "";
           updateSidebox = true;
         } else {
           updateSidebox = false;
@@ -242,11 +241,11 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
         if (type === "error") {
           showErrors();
         } else {
-          var temp;
+          let temp;
           temp = results.data;
 
-          var storeVal;
-          var i;
+          let storeVal;
+          let i;
           for (i in temp) {
             type = i;
             storeVal = temp[i];
@@ -255,7 +254,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
               case "preDiscPriceTotal":
                 if (pdpt) {
-                  this.updateInnerHTML(storeVal, pdpt, thePrice, true);
+                  updateInnerHTML(storeVal, pdpt, thePrice, true);
                 }
                 break;
               case "preDiscPriceTotalText":
@@ -266,15 +265,15 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 }
                 break;
               case "priceTotal":
-                this.updateInnerHTML(storeVal, psp, thePrice, true);
+                updateInnerHTML(storeVal, psp, thePrice, true);
                 break;
               case "quantity":
-                this.updateInnerHTML(storeVal, psp, thePrice, false);
+                updateInnerHTML(storeVal, psp, thePrice, false);
                 break;
               case "weight":
                 var theWeight = document.getElementById("<?php echo DPU_WEIGHT_ELEMENT_ID; ?>");
                 if (theWeight) {
-                  this.updateInnerHTML(storeVal, false, theWeight, true);
+                  updateInnerHTML(storeVal, false, theWeight, true);
                 }
                 break;
               case "sideboxContent":
@@ -285,25 +284,25 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
               case "stock_quantity":
                 var theStockQuantity = document.getElementById("<?php echo DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY; ?>");
                 if (theStockQuantity) {
-                  this.updateInnerHTML(storeVal, false, theStockQuantity, true);
+                  updateInnerHTML(storeVal, false, theStockQuantity, true);
                 }
                 break;
             }
           }
         }
         if (updateSidebox) {
-          this.updateInnerHTML(sbContent, false, theSB, true);
+          updateInnerHTML(sbContent, false, theSB, true);
         }
       }
 
       function updSP() {
         // adjust the second price display; create the div if necessary
-        var flag = false; // error tracking flag
+        let flag = false; // error tracking flag
 
         if (_secondPrice !== false) { // second price is active
-          var centre = document.getElementById("productGeneral");
-          var temp = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
-          var itemp = document.getElementById(_secondPrice);
+          let centre = document.getElementById("productGeneral");
+          let temp = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
+          let itemp = document.getElementById(_secondPrice);
           flag = false;
 
           if (objSP === false) { // create the second price object
@@ -323,7 +322,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
       function createSB() { // create the sidebox for the attributes info display
         if (!(document.getElementById("dynamicpriceupdatersidebox")) && objSB) {
-          var tempC = document.createElement("div");
+          let tempC = document.createElement("div");
           tempC.id = "dynamicpriceupdatersideboxContent";
           tempC.className = "sideBoxContent";
           tempC.innerHTML = "If you can read this Chrome has broken something";
@@ -334,10 +333,10 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
       }
 
       function showErrors() {
-        var alertText = "";
-        var errVal;
-        var errorText;
-        var i;
+        let alertText = "";
+        let errVal;
+        let errorText;
+        let i;
 
         errorText = this.responseJSON.responseText;
 
@@ -352,8 +351,8 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
       }
 
       function init() {
-        var n = document.forms.length;
-        var i;
+        let n = document.forms.length;
+        let i;
         for (i = 0; i < n; i += 1) {
           if (document.forms[i].name === theFormName) {
             theForm = document.forms[i];
