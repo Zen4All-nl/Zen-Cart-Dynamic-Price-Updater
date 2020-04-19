@@ -135,7 +135,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
           }
         }
         const products_id = <?php echo (int)$pid; ?>;
-
+        let cartQuantity = $('input[name="cart_quantity"]').val();
         var _this = this; // scope resolution
 
         zcJS.ajax({
@@ -143,7 +143,8 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
           data: {
             products_id: products_id,
             attributes: attributes,
-            pspClass: pspClass
+            pspClass: pspClass,
+            cart_quantity: cartQuantity
           }
         }).done(function (resultArray) {
           handlePrice(resultArray);
