@@ -7,7 +7,6 @@
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
  */
 class zcDPU_Ajax extends base {
-
   /**
    * Local instantiation of the shopping cart
    *
@@ -42,7 +41,7 @@ class zcDPU_Ajax extends base {
    * Array of temporary attributes.
    * @var array
    */
-  protected $new_temp_attributes = array();
+  protected $new_temp_attributes = [];
 
   /**
    * - query to be stored with class usable in observers with older Zen Cart versions.
@@ -358,12 +357,12 @@ class zcDPU_Ajax extends base {
 
       // do not select display only attributes and do select attributes_price_base_included is true
       $this->product_attr_query = "SELECT pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type,
-                                          ROUND(CONCAT(pa.price_prefix, pa.options_values_price), 5) as value
+                                          ROUND(CONCAT(pa.price_prefix, pa.options_values_price), 5) AS value
                                    FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
                                    LEFT JOIN " . TABLE_PRODUCTS_OPTIONS . " po ON (po.products_options_id = pa.options_id)
                                    WHERE products_id = " . (int)$_POST['products_id'] . "
-                                   AND attributes_display_only != 1
-                                   AND attributes_price_base_included= 1
+                                   AND pa.attributes_display_only != 1
+                                   AND pa.attributes_price_base_included = 1
                                    ORDER BY pa.options_id, value";
 
       $query_handled = false;
@@ -472,8 +471,7 @@ class zcDPU_Ajax extends base {
 
       $this->new_attributes[$products_id] = $this->new_temp_attributes;
       $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
-      $this->shoppingCart->contents[$products_id] = array('qty' => ((convertToFloat($cart_quantity) <= 0) ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity)),
-      );
+      $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity)));
 
       foreach ($attributes as $option => $value) {
         //CLR 020606 check if input was from text box.  If so, store additional attribute information
@@ -749,7 +747,9 @@ class zcDPU_Ajax extends base {
       $option_name_id = array($option_name_id);
     }
 
-    $sql = "SELECT products_options_type FROM " . TABLE_PRODUCTS_OPTIONS . " WHERE products_options_id :option_name_id:";
+    $sql = "SELECT products_options_type
+            FROM " . TABLE_PRODUCTS_OPTIONS . "
+            WHERE products_options_id :option_name_id:";
     if (count($option_name_id) > 1) {
       $sql2 = 'in (';
       foreach ($option_name_id as $option_id) {
