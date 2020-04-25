@@ -1,14 +1,18 @@
-Dynamic Price Updater v4.0.0 Beta 2
--=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-4.0.0 Beta 2, What changed:
+# Dynamic Price Updater v4.0.0 Beta 3
+## Introduction
+The Dynamic Price Updater is a module for Zen Cart that automatically updates the price display on product pages when a visitor changes an attribute or adjusts the cart quantity
+## Changelog:
+4.0.0 Beta3:
 - moving the class code from ```includes/classes/dynamic_price_updater.php``` to ```includes/classes/ajax/zcDPU_Ajax.php```
 - Removing the ancient code, using JSON or XML, and replaced it with the build in native Zen Cart Ajax functionality
 - Drop support for ZC versions <1.5.6
 - PHP version >= 5.6
 - Updated optional jquery version to 3.4.1
+- fixed missing cart_quantity from ```$_POST```
+- Removed ajax.php, as this is included in ZC1.5.6
+- Added updates form [Torvista](https://github.com/torvista), [mc12345678](https://github.com/mc12345678), and [Zen4all](https://github.com/Zen4All)
 
-3.2.0, What changed:
+3.2.0:
 - Identified this version as 3.2.0 because 1) this update provided significant new functionality and modified/provided
     new database features and 2) 3.1.0 had previously been identified in the github path/history and did not want to
     cause undo confusion.
@@ -46,7 +50,7 @@ Dynamic Price Updater v4.0.0 Beta 2
 - Moved the status notification from an alert to a console log when zcJS is not used and a 200 status result is not
     received.
 
-3.0.8, What changed:
+3.0.8:
 - Added a switch and code to support deactivating the use of currency symbols
     in the sidebox, similar to the display of the base product price.
 - Corrected the use of the notifier to support using an observer to provide
@@ -72,8 +76,7 @@ Dynamic Price Updater v4.0.0 Beta 2
 - Added template jscript code to attempt to load jquery if it has not previously included or
     loaded to load jquery 1.12.4
 
-
-3.0.7, What changed:
+3.0.7:
 -  Corrected issue that price of product without attributes was not incorporated/considered because
       the dpu javascript code basically prevented overwriting the price until corrections were made
       in version 3.0.6 that would automatically rewrite the current price display based on what
@@ -95,7 +98,6 @@ Dynamic Price Updater v4.0.0 Beta 2
 -  Add separate control for update checking of this plugin.
 -  Updated installer version check to ZC 1.5.5e version.
 -  Corrected installer code to validate new version exists.
-
 
 3.0.5:
 - Improved installation/installer
@@ -123,8 +125,6 @@ Dynamic Price Updater v4.0.0 Beta 2
 - Added jscript function to perform data/screen update/swap.
 
 3.0.4 has a few bugfixes as well as general improvements for the overall operation.
-
-
 - Added data sanitization to the database queries.
 - Incorporated full database table names instead of providing some sort of prefix to the anticipated table name. 
 - Added ZC 1.5.5e ajax.php file for use to take the place of dpu_ajax.php
@@ -148,18 +148,15 @@ Dynamic Price Updater v4.0.0 Beta 2
 - product_music_info.
 
 3.0.3 has a minor bugfix, in jscript files
-
 - Moving all the defines to language files, or the database
 - Making DPU multilingual
 - updating code to accommodate proper database calls, Zen Cart compliant.
 - Added a real sidebox, only the content is dynamically built.
 - Added an admin configuration, to make changes to the configurable defines of DPU.
 
-
 This is (IMHO) an improved version of DPU 2
 
-Installation / Upgrade
-------------
+## Installation / Upgrade
 NOTE: If you have a version of Updater installed earlier than 3.0 please remove the files first
 
 1. Rename the YOUR_ADMIN folder to the name of your secret foldername.
@@ -200,10 +197,7 @@ $products_quantity .
 
 NOTE: If you have a version of Updater installed earlier than 3.0 please remove the files first
 
-
-Settings
---------
-
+## Settings
 The module is now set through the admin, more instructions to be added later
 
 As of Version 3.2.0 the settings include the following configuration options
@@ -223,16 +217,12 @@ Show or update the display of out-of-stock 	quantity_replace 	Allows display of 
 Modify minimum attribute display price 	all 	On what should the minimum display price be based for product with attributes? Only product that are priced by attribute or for all product that have attributes?
 The id tag for product_quantity 	productDetailsList_product_info_quantity 	This is the ID where your product quantity is displayed.
 
-Support
--------
-
+## Support
 As always support is located on the Zen Cart forums at:
 
 http://www.zen-cart.com/forum/showthread.php?t=70577
 
-Credits
--------
-
+## Credits
 Version 3.2.0 brought to you by mc12345678: http://mc12345678.com with thank yous to:
   mvstudio for identifying issues with strict operation, as well as edge case operation.
   izar74 for a potential way to display out-of-stock information.
@@ -242,7 +232,7 @@ Version 3.2.0 brought to you by mc12345678: http://mc12345678.com with thank you
 
 Versions 3.0.5 through 3.0.8 brought to you by mc12345678: http://mc12345678.com
 
-This update (V3.0.4 base content) : Erik Kerkhoven (Design75) http://zen4all.nl brought by mc12345678: http://mc12345678.com
+This update (V3.0.4 base content) : Erik Kerkhoven (Design75) https://zen4all.nl brought by mc12345678: http://mc12345678.com
 
 Original author : Dan Parry (Chrome) http://chrome.me.uk
 
@@ -254,9 +244,9 @@ Thanks to web28 for the idea of preventing loading under certain circumstances
 
 Thanks to Matt (lankeeyankee) for testing and correcting my inevitable mistakes
 
-Copyright
----------
+## Copyright
 Parts of copyright
 2009 Dan Parry (Chrome)
-2013 Erik Kerkhoven (Design75) Zen4All.nl
+2013 Erik Kerkhoven (Design75) https:zen4All.nl
 2017 mc12345678 http://mc12345678.com
+2019 torvista https://github.com/torvista
