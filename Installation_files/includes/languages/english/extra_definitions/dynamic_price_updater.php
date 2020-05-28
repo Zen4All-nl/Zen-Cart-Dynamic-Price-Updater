@@ -9,9 +9,9 @@
 define('BOX_HEADING_DYNAMIC_PRICE_UPDATER_SIDEBOX', 'Price Breakdown'); // the heading that shows in the Updater sidebox
 define('DPU_BASE_PRICE', 'Base price');
 
-define('UPDATER_PREFIX_TEXT', 'Your price: ');
-define('UPDATER_PREFIX_TEXT_STARTING_AT', 'Starting at: ');
-define('UPDATER_PREFIX_TEXT_AT_LEAST', 'At least: ');
+define('UPDATER_PREFIX_TEXT', 'Your price:&nbsp;');
+define('UPDATER_PREFIX_TEXT_STARTING_AT', 'Starting at:&nbsp;');
+define('UPDATER_PREFIX_TEXT_AT_LEAST', 'At least:&nbsp;');
 define('DPU_SHOW_QUANTITY_FRAME', '&nbsp;(%s)');
 define('DPU_SIDEBOX_QUANTITY_FRAME', '&nbsp;x&nbsp;%s'); // how the weight is displayed in the sidebox.  Default is ' x 1'... set to '' for no display... %s is the quantity itself
 define('DPU_SIDEBOX_PRICE_FRAME', '&nbsp;(%s)'); // how the attribute price is displayed
@@ -24,3 +24,7 @@ define('DPU_SIDEBOX_FRAME', '<span class="DPUSideBoxName">%1$s</span>%3$s%2$s<br
  * %3$s - The individual price display
  * You can position these anywhere around the DPU_SIDEBOX_FRAME string or even remove them to prevent them from displaying
  */
+define('DPU_OUT_OF_STOCK_IMAGE', 'Out-of-stock %s');
+define('DPU_TEXT_PRODUCT_QUANTITY', ' %1$s in Stock');
+define('DPU_TEXT_PRODUCT_QUANTITY_MULTIPLE', 'Units');
+define('DPU_TEXT_PRODUCT_QUANTITY_SINGLE', 'Unit');

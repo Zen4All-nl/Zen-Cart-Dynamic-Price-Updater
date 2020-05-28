@@ -151,7 +151,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             case "checkbox":
             case "radio":
               if (true === el.checked) {
-                if (!(el.name in attributes) && el.name.startsWith("id[")) { // Ensure not to replace an existing value. I.e. drop a duplicate value.
+                if (el.name.startsWith("id[")) { // Ensure not to replace an existing value. I.e. drop a duplicate value.
                   aName = el.name;
                   attributes += aName + '~' + el.value + '|';
                 }
@@ -229,7 +229,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
       }
 
       function handlePrice(results) {
-        var thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
+        let thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
         if (typeof (loadImg) !== "undefined" && loadImg.parentNode !== null && loadImg.parentNode.id === thePrice.id && imgLoc !== "replace") {
           thePrice.removeChild(loadImg);
         }
@@ -295,7 +295,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 updateInnerHTML(storeVal, psp, thePrice, false);
                 break;
               case "weight":
-                var theWeight = document.getElementById("<?php echo DPU_WEIGHT_ELEMENT_ID; ?>");
+                let theWeight = document.getElementById("<?php echo DPU_WEIGHT_ELEMENT_ID; ?>");
                 if (theWeight) {
                   updateInnerHTML(storeVal, false, theWeight, true);
                 }
@@ -306,7 +306,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 }
                 break;
               case "stock_quantity":
-                var theStockQuantity = document.getElementById("<?php echo DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY; ?>");
+                let theStockQuantity = document.getElementById("<?php echo DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY; ?>");
                 if (theStockQuantity) {
                   updateInnerHTML(storeVal, false, theStockQuantity, true);
                 }
