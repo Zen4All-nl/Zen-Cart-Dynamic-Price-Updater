@@ -53,8 +53,8 @@ if (version_compare($newest_version, $current_version) > 0) {
     if (version_compare($newest_version, substr($installer, 0, -4)) >= 0 && version_compare($current_version, substr($installer, 0, -4)) < 0) {
       include($module_installer_directory . '/' . $installer);
       $current_version = str_replace("_", ".", substr($installer, 0, -4));
-      $db->Execute("UPDATE " . TABLE_CONFIGURATION . " SET configuration_value = '" . $current_version . "' WHERE configuration_key = '" . $module_constant . "' LIMIT 1;");
-      $messageStack->add("Installed " . $module_name . " v" . $current_version, 'success');
+                $db->Execute("UPDATE " . TABLE_CONFIGURATION . " SET configuration_value = '" . $current_version . "' WHERE configuration_key = '" . $module_constant . "' LIMIT 1");
+                $messageStack->add("$module_name: v$current_version installed", 'success');
     }
   }
 }
