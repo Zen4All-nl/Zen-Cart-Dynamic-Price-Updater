@@ -6,7 +6,7 @@
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
  * @version $Id: mc12345678 thanks to bislewl 6/9/2015
  */
-/* 
+/*
   V3.0.5, What changed:
     Added JSON response information when retrieving results.
     Incorporated the use of Zen Cart's provided zcJS when it is available.
@@ -28,24 +28,24 @@ if ($zc150) { // continue Zen Cart 1.5.0
 
     $old_group_title = "Dynamic Price Updater";
     // Need to update/verify/establish configuration_group info.
-    
+
     $installed = $db->Execute("SELECT configuration_group_id FROM " . TABLE_CONFIGURATION_GROUP . " WHERE configuration_group_title = '" . $old_group_title . "'");
-    
+
     if (!$installed->EOF) {
-      // The old configuration group exists, so create the new one, add it to the database and establish the configuration_group_id.
+      // The old configuration group exists, so create the new one, add it to the database and reset the configuration_group_id to the new one.
       $db->Execute("INSERT INTO " . TABLE_CONFIGURATION_GROUP . " (configuration_group_title, configuration_group_description, sort_order, visible) VALUES ('" . $module_name . " Config', 'Set " . $module_name . " Configuration Options', '1', '1');");
       $configuration_group_id = $db->insert_ID();
 
-      // Set the sort order of the configuration group to be equal to the configuration_group_id, idea being that each new group will be added to the end.
+      // Set the sort order of the configuration group to be equal to the configuration_group_id so the new group will be added to the end of the menu list.
       $db->Execute("UPDATE " . TABLE_CONFIGURATION_GROUP . " SET sort_order = " . $configuration_group_id . " WHERE configuration_group_id = " . $configuration_group_id);
 
-      // Need to move all of the old records from here to the other, then delete this old version.
+      // Move the old records from the old group id to the new group id, then delete the old version record.
       $db->Execute("UPDATE " . TABLE_CONFIGURATION . " SET configuration_group_id = " . $configuration_group_id . " WHERE configuration_group_id = " . (int)$installed->fields['configuration_group_id']);
       $db->Execute("DELETE FROM " . TABLE_CONFIGURATION_GROUP . " WHERE configuration_group_id = " . (int)$installed->fields['configuration_group_id']);
     }
 
     // Attempt to use the ZC function to test for the existence of the page otherwise detect using SQL.
-    if (function_exists('zen_page_key_exists')) 
+    if (function_exists('zen_page_key_exists'))
     {
         $DPUPageExists = zen_page_key_exists('config' . $admin_page);
     } else {
@@ -54,7 +54,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
             $DPUPageExists = false;
         } else {
             $DPUPageExists = true;
-        } 
+        }
     }
 
     if ($DPUPageExists && $configuration_group_id !== (int)$installed->fields['configuration_group_id']) {
@@ -230,19 +230,19 @@ if ($zc150) { // continue Zen Cart 1.5.0
             $page_sort = $page_sort->fields['max_sort'];
 
             zen_register_admin_page('config' . $admin_page,
-                                'BOX_CONFIGURATION_' . str_replace(' ', '_', strtoupper($module_name)), 
+                                'BOX_CONFIGURATION_' . str_replace(' ', '_', strtoupper($module_name)),
                                 'FILENAME_CONFIGURATION',
-                                'gID=' . $configuration_group_id, 
-                                'configuration', 
+                                'gID=' . $configuration_group_id,
+                                'configuration',
                                 'Y',
                                 $page_sort);
-          
+
             $messageStack->add("$module_name: added to Configuration menu", 'success');
         }
 
         foreach ($sort_order as $config_key => $config_item) {
 
-            $sql = "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " (configuration_group_id, configuration_key, configuration_title, configuration_value, configuration_description, sort_order, date_added, use_function, set_function) 
+            $sql = "INSERT IGNORE INTO " . TABLE_CONFIGURATION . " (configuration_group_id, configuration_key, configuration_title, configuration_value, configuration_description, sort_order, date_added, use_function, set_function)
               VALUES (:configuration_group_id:, :configuration_key:, :configuration_title:, :configuration_value:, :configuration_description:, :sort_order:, :date_added:, :use_function:, :set_function:)
               ON DUPLICATE KEY UPDATE configuration_group_id = :configuration_group_id:";
             $sql = $db->bindVars($sql, ':configuration_group_id:', $config_item['configuration_group_id']['value'], $config_item['configuration_group_id']['type']);
@@ -250,7 +250,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
             $sql = $db->bindVars($sql, ':configuration_title:', $config_item['configuration_title']['value'], $config_item['configuration_title']['type']);
             $sql = $db->bindVars($sql, ':configuration_value:', $config_item['configuration_value']['value'], $config_item['configuration_value']['type']);
             $sql = $db->bindVars($sql, ':configuration_description:', $config_item['configuration_description']['value'], $config_item['configuration_description']['type']);
-            $sql = $db->bindVars($sql, ':sort_order:', ((int)$config_key + 1) * 10, 'integer');
+            $sql = $db->bindVars($sql, ':sort_order:', ($config_key + 1) * 10, 'integer');
             $sql = $db->bindVars($sql, ':date_added:', $config_item['date_added']['value'], $config_item['date_added']['type']);
             $sql = $db->bindVars($sql, ':use_function:', $config_item['use_function']['value'], $config_item['use_function']['type']);
             $sql = $db->bindVars($sql, ':set_function:', $config_item['set_function']['value'], $config_item['set_function']['type']);
@@ -262,9 +262,9 @@ if ($zc150) { // continue Zen Cart 1.5.0
     } else {
 
         foreach ($sort_order as $config_key => $config_item) {
-	
-            $sql = "UPDATE ".TABLE_CONFIGURATION." SET sort_order = :sort_order:, configuration_group_id = :configuration_group_id: WHERE configuration_key = :configuration_key:"; 
-            $sql = $db->bindVars($sql, ':sort_order:', ((int)$config_key + 1) * 10, 'integer');
+
+            $sql = "UPDATE ".TABLE_CONFIGURATION." SET sort_order = :sort_order:, configuration_group_id = :configuration_group_id: WHERE configuration_key = :configuration_key:";
+            $sql = $db->bindVars($sql, ':sort_order:', ($config_key + 1) * 10, 'integer');
             $sql = $db->bindVars($sql, ':configuration_key:', $config_item['configuration_key']['value'], $config_item['configuration_key']['type']);
             $sql = $db->bindVars($sql, ':configuration_group_id:', $config_item['configuration_group_id']['value'], $config_item['configuration_group_id']['type']);
             $db->Execute($sql);
@@ -273,5 +273,5 @@ if ($zc150) { // continue Zen Cart 1.5.0
 
         $messageStack->add("$module_name: menu item sort order updated", 'success');
     } // End of New Install
-		
+
 } // END OF VERSION 1.5.x INSTALL
