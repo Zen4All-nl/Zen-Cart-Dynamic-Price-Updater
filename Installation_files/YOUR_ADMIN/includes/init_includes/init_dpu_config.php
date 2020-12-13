@@ -69,43 +69,37 @@ if (version_compare($newest_version, $current_version) > 0) {
 }
 
 if (!function_exists('plugin_version_check_for_updates')) {
+        //core function from ZC157
+        function plugin_version_check_for_updates($plugin_file_id = 0, $version_string_to_compare = '', $strict_zc_version_compare = false)
+        {
+            // for v1.5.7 and newer
 
-  function plugin_version_check_for_updates($plugin_file_id = 0, $version_string_to_compare = '', $strict_zc_version_compare = false)
-  {
+            if ($plugin_file_id === 0) return false;
 
-    if ($plugin_file_id === 0)
-      return false;
+            if (false === ENABLE_PLUGIN_VERSION_CHECKING) return false;
 
-    if (false === ENABLE_PLUGIN_VERSION_CHECKING)
-      return false;
+            $new_version_available = false;
+            $versionServer = new VersionServer();
+            $data = json_decode($versionServer->getPluginVersion($plugin_file_id), true);
 
-    $new_version_available = false;
-    $versionServer = new VersionServer();
-    $data = json_decode($versionServer->getPluginVersion($plugin_file_id), true);
+            if (null === $data || isset($data['error'])) {
+                if (LOG_PLUGIN_VERSIONCHECK_FAILURES) error_log('CURL error checking plugin versions: ' . print_r(!empty($data) ? $data : 'null', true));
+                return false;
+            }
 
-    if (null === $data || isset($data['error'])) {
-      if (!empty(LOG_PLUGIN_VERSIONCHECK_FAILURES))
-        error_log('CURL error checking plugin versions: ' . print_r($data['error'], true));
-      return false;
-    }
+            if (!is_array($data)) $data = json_decode($data, true);
 
-    if (!is_array($data))
-      $data = json_decode($data, true);
+            if (strcmp($data[0]['latest_plugin_version'], $version_string_to_compare) > 0) $new_version_available = true;
 
-    if (strcmp($data[0]['latest_plugin_version'], $version_string_to_compare) > 0)
-      $new_version_available = true;
+            // check whether present ZC version is compatible with the latest available plugin version
+            if (!defined('PLUGIN_VERSION_CHECK_MATCHING_OVERRIDE') || empty(PLUGIN_VERSION_CHECK_MATCHING_OVERRIDE)) {
+                $zc_version = preg_replace('/[^0-9.]/', '', zen_get_zcversion());
+                if ($strict_zc_version_compare) $zc_version = zen_get_zcversion();
+                if (!in_array('v' . $zc_version, $data[0]['zcversions'], false)) $new_version_available = false;
+            }
 
-    // check whether present ZC version is compatible with the latest available plugin version
-    if (!defined('PLUGIN_VERSION_CHECK_MATCHING_OVERRIDE') || empty(PLUGIN_VERSION_CHECK_MATCHING_OVERRIDE)) {
-      $zc_version = PROJECT_VERSION_MAJOR . '.' . preg_replace('/[^0-9.]/', '', PROJECT_VERSION_MINOR);
-      if ($strict_zc_version_compare)
-        $zc_version = PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR;
-      if (!in_array('v' . $zc_version, $data[0]['zcversions'], false))
-        $new_version_available = false;
-    }
-
-    return $new_version_available ? $data[0] : false;
-  }
+            return $new_version_available ? $data[0] : false;
+        }
 
     }
 }
