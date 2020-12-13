@@ -18,18 +18,19 @@ $admin_page = 'DynamicPriceUpdater';//"config" is prefixed subsequently
 $zencart_com_plugin_id = 1301;
 
 $configuration_group_id = '';
-if (defined($module_constant)) {
+if (defined($module_constant)) {// a version of this module is already installed
   $current_version = constant($module_constant);
-} else {
+} else { // this module has never been installed
   $current_version = "0.0.0";
   $db->Execute("INSERT INTO " . TABLE_CONFIGURATION_GROUP . " (configuration_group_title, configuration_group_description, sort_order, visible)
                 VALUES ('" . $module_name . "', '" . $module_name . " Settings', '1', '1');");
   $configuration_group_id = $db->Insert_ID();
 
+//use insert_ID as configuration_group_id for subsequent constant inserts
   $db->Execute("UPDATE " . TABLE_CONFIGURATION_GROUP . "
                 SET sort_order = " . $configuration_group_id . "
                 WHERE configuration_group_id = " . $configuration_group_id . ";");
-
+//set module version constant
   $db->Execute("INSERT INTO " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, last_modified, date_added)
                 VALUES ('Version', '" . $module_constant . "', '0.0.0', 'Version installed:', " . $configuration_group_id . ", 0, NOW(), NOW());");
 }
