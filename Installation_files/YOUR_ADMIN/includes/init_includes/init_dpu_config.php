@@ -23,8 +23,8 @@ if (defined($module_constant)) {// a version of this module is already installed
 } else { // this module has never been installed
   $current_version = "0.0.0";
   $db->Execute("INSERT INTO " . TABLE_CONFIGURATION_GROUP . " (configuration_group_title, configuration_group_description, sort_order, visible)
-                VALUES ('" . $module_name . "', '" . $module_name . " Settings', '1', '1');");
-  $configuration_group_id = $db->Insert_ID();
+                VALUES ('" . $module_name . "', '" . $module_name . " Settings', '1', '1')");
+  $configuration_group_id = $db->insert_ID();//integer
 
 //use insert_ID as configuration_group_id for subsequent constant inserts
   $db->Execute("UPDATE " . TABLE_CONFIGURATION_GROUP . "
@@ -32,12 +32,12 @@ if (defined($module_constant)) {// a version of this module is already installed
                 WHERE configuration_group_id = " . $configuration_group_id . ";");
 //set module version constant
   $db->Execute("INSERT INTO " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, last_modified, date_added)
-                VALUES ('Version', '" . $module_constant . "', '0.0.0', 'Version installed:', " . $configuration_group_id . ", 0, NOW(), NOW());");
+                VALUES ('Version', '" . $module_constant . "', '0.0.0', 'Version installed:', " . $configuration_group_id . ", 0, NOW(), NOW())");
 }
 
-if ($configuration_group_id == '') {
+if ($configuration_group_id === '') {
   $config = $db->Execute("SELECT configuration_group_id FROM " . TABLE_CONFIGURATION . " WHERE configuration_key= '" . $module_constant . "'");
-  $configuration_group_id = $config->fields['configuration_group_id'];
+  $configuration_group_id = (int)$config->fields['configuration_group_id'];
 }
 
 $installers = scandir($module_installer_directory, 1);
@@ -61,7 +61,7 @@ if (version_compare($newest_version, $current_version) > 0) {
 $module_file_for_version_check = ($module_file_for_version_check != '') ? DIR_FS_ADMIN . $module_file_for_version_check : '';
 if ($zencart_com_plugin_id != 0 && $module_file_for_version_check != '' && $_SERVER["PHP_SELF"] == $module_file_for_version_check) {
   $new_version_details = plugin_version_check_for_updates($zencart_com_plugin_id, $current_version);
-  if ($_GET['gID'] == $configuration_group_id && $new_version_details != false) {
+        if ((int)$_GET['gID'] === $configuration_group_id && $new_version_details !== false) {
     $messageStack->add("Version " . $new_version_details['latest_plugin_version'] . " of " . $new_version_details['title'] . ' is available at <a href="' . $new_version_details['link'] . '" target="_blank">[Details]</a>', 'caution');
   }
 }
