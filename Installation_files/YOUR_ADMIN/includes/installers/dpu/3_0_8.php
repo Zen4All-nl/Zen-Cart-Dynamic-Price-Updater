@@ -38,25 +38,25 @@
 $zc150 = ((int)PROJECT_VERSION_MAJOR > 1 || (PROJECT_VERSION_MAJOR === '1' && substr(PROJECT_VERSION_MINOR, 0, 3) >= 5));
 if ($zc150) { // continue Zen Cart 1.5.0
 
-$sort_order = array(
-                array('configuration_group_id' => array('value' => $configuration_group_id,
-                                                   'type' => 'integer'),
-                      'configuration_key' => array('value' => 'DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS',
-                                                   'type' => 'string'),
-                      'configuration_title' => array('value' => 'Show sidebox currency symbols',
-                                                   'type' => 'string'),
-                      'configuration_value' => array('value' => 'true',
-                                                   'type' => 'string'),
-                      'configuration_description' => array('value' => 'Show currency symbols in the sidebox (when displayed).<br /><br />Default: true',
-                                                   'type' => 'string'),
-                      'date_added' => array('value' => 'NOW()',
-                                                   'type' => 'noquotestring'),
-                      'use_function' => array('value' => 'NULL',
-                                                   'type' => 'noquotestring'),
-                      'set_function' => array('value' => 'zen_cfg_select_option(array(\'true\', \'false\'),',
-                                                   'type' => 'string'),
-                      ),
-                );
+$sort_order = [
+                ['configuration_group_id' => ['value' => $configuration_group_id,
+                                                   'type' => 'integer'],
+                      'configuration_key' => ['value' => 'DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS',
+                                                   'type' => 'string'],
+                      'configuration_title' => ['value' => 'Show sidebox currency symbols',
+                                                   'type' => 'string'],
+                      'configuration_value' => ['value' => 'true',
+                                                   'type' => 'string'],
+                      'configuration_description' => ['value' => 'Show currency symbols in the sidebox (when displayed).<br /><br />Default: true',
+                                                   'type' => 'string'],
+                      'date_added' => ['value' => 'NOW()',
+                                                   'type' => 'noquotestring'],
+                      'use_function' => ['value' => 'NULL',
+                                                   'type' => 'noquotestring'],
+                      'set_function' => ['value' => 'zen_cfg_select_option(array(\'true\', \'false\'),',
+                                                   'type' => 'string'],
+                ],
+];
 
     $oldcount_sort_sql = "SELECT MAX(sort_order) as max_sort FROM `". TABLE_CONFIGURATION ."` WHERE configuration_group_id=" . (int)$configuration_group_id;
     $oldcount_sort = $db->Execute($oldcount_sort_sql);
