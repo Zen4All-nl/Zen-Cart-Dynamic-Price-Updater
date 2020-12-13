@@ -237,7 +237,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                                 'Y',
                                 $page_sort);
           
-            $messageStack->add('Enabled ' . $module_name . ' Configuration Menu.', 'success');
+            $messageStack->add("$module_name: added to Configuration menu", 'success');
         }
 
         foreach ($sort_order as $config_key => $config_item) {
@@ -257,7 +257,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
             $db->Execute($sql);
         }
 
-        $messageStack->add('Inserted configuration for ' . $module_name , 'success');
+        $messageStack->add("$module_name: configuration constants installed" , 'success');
 
     } else {
 
@@ -271,7 +271,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
         }
 
 
-        $messageStack->add('Updated sort order configuration for ' . $module_name , 'success');
+        $messageStack->add("$module_name: menu item sort order updated", 'success');
     } // End of New Install
 		
 } // END OF VERSION 1.5.x INSTALL
