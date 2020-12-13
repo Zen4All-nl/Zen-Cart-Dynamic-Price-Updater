@@ -21,10 +21,10 @@
 */
 
 
-$zc150 = (PROJECT_VERSION_MAJOR > 1 || (PROJECT_VERSION_MAJOR == 1 && substr(PROJECT_VERSION_MINOR, 0, 3) >= 5));
+$zc150 = ((int)PROJECT_VERSION_MAJOR > 1 || (PROJECT_VERSION_MAJOR === '1' && substr(PROJECT_VERSION_MINOR, 0, 3) >= 5));
 if ($zc150) { // continue Zen Cart 1.5.0
 
-    $DPUExists = FALSE;
+    $DPUExists = false;
 
     $old_group_title = "Dynamic Price Updater";
     // Need to update/verify/establish configuration_group info.
@@ -34,7 +34,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
     if (!$installed->EOF) {
       // The old configuration group exists, so create the new one, add it to the database and establish the configuration_group_id.
       $db->Execute("INSERT INTO " . TABLE_CONFIGURATION_GROUP . " (configuration_group_title, configuration_group_description, sort_order, visible) VALUES ('" . $module_name . " Config', 'Set " . $module_name . " Configuration Options', '1', '1');");
-      $configuration_group_id = $db->Insert_ID();
+      $configuration_group_id = $db->insert_ID();
 
       // Set the sort order of the configuration group to be equal to the configuration_group_id, idea being that each new group will be added to the end.
       $db->Execute("UPDATE " . TABLE_CONFIGURATION_GROUP . " SET sort_order = " . (int)$configuration_group_id . " WHERE configuration_group_id = " . (int)$configuration_group_id);
@@ -50,13 +50,14 @@ if ($zc150) { // continue Zen Cart 1.5.0
         $DPUPageExists = zen_page_key_exists('config' . $admin_page);
     } else {
         $DPUPageExists_result = $db->Execute("SELECT FROM " . TABLE_ADMIN_PAGES . " WHERE page_key = 'config" . $admin_page . "' LIMIT 1");
-        if ($DPUPageExists_result->EOF && $DPUPageExists_result->RecordCount() == 0) {
+        if ($DPUPageExists_result->EOF && $DPUPageExists_result->RecordCount() === 0) {
+            $DPUPageExists = false;
         } else {
             $DPUPageExists = TRUE;
         } 
     }
 
-    if ($DPUPageExists && $configuration_group_id != $installed->fields['configuration_group_id']) {
+    if ($DPUPageExists && $configuration_group_id !== (int)$installed->fields['configuration_group_id']) {
       $db->Execute("UPDATE " . TABLE_ADMIN_PAGES . " SET page_params = 'gID=" . (int)$configuration_group_id . "' WHERE page_key = 'config" . $admin_page . "'");
     }
 
