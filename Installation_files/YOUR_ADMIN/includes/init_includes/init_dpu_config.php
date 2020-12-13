@@ -41,7 +41,9 @@ if ($configuration_group_id === '') {
 }
 
 $installers = scandir($module_installer_directory, 1);
-
+if ($installers === false) {
+    $messageStack->add("$module_name: module installer directory ($module_installer_directory) not found. Installation aborted.", 'error');
+} else {
 $newest_version = $installers[0];
 $newest_version = substr($newest_version, 0, -4);
 
@@ -105,4 +107,5 @@ if (!function_exists('plugin_version_check_for_updates')) {
     return $new_version_available ? $data[0] : false;
   }
 
+    }
 }
