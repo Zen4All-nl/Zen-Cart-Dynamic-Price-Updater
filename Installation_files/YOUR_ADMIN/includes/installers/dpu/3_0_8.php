@@ -6,7 +6,7 @@
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
  * @version $Id: mc12345678 thanks to bislewl 6/9/2015
  */
-/* 
+/*
   V3.0.8, What changed:
   - Added a switch and code to support deactivating the use of currency symbols
       in the sidebox, similar to the display of the base product price.
@@ -20,7 +20,7 @@
       in the current alpha release of ZC 1.5.6 and to use that code instead of the built in code and
       instead of pulling the recent file into the distribution of the
       plugin (and then have multiple such versions out and about.)
-  - Updated the installer to write a debug log if the installer files have been 
+  - Updated the installer to write a debug log if the installer files have been
       incorrectly placed in the catalog side of the installer.
   - Updated the installer to expect an admin to be logged in, and the page not currently being
       the login page or as a result of selecting the logoff option.
@@ -62,7 +62,7 @@ $sort_order = [
     $oldcount_sort = $db->Execute($oldcount_sort_sql);
 
     foreach ($sort_order as $config_key => $config_item) {
-        $sql = "INSERT INTO " . TABLE_CONFIGURATION . " (configuration_group_id, configuration_key, configuration_title, configuration_value, configuration_description, sort_order, date_added, use_function, set_function) 
+        $sql = "INSERT INTO " . TABLE_CONFIGURATION . " (configuration_group_id, configuration_key, configuration_title, configuration_value, configuration_description, sort_order, date_added, use_function, set_function)
           VALUES (:configuration_group_id:, :configuration_key:, :configuration_title:, :configuration_value:, :configuration_description:, :sort_order:, :date_added:, :use_function:, :set_function:)
           ON DUPLICATE KEY UPDATE sort_order = :sort_order:";
         $sql = $db->bindVars($sql, ':configuration_group_id:', $config_item['configuration_group_id']['value'], $config_item['configuration_group_id']['type']);
@@ -70,7 +70,7 @@ $sort_order = [
         $sql = $db->bindVars($sql, ':configuration_title:', $config_item['configuration_title']['value'], $config_item['configuration_title']['type']);
         $sql = $db->bindVars($sql, ':configuration_value:', $config_item['configuration_value']['value'], $config_item['configuration_value']['type']);
         $sql = $db->bindVars($sql, ':configuration_description:', $config_item['configuration_description']['value'], $config_item['configuration_description']['type']);
-        $sql = $db->bindVars($sql, ':sort_order:', (int)$oldcount_sort->fields['max_sort'] + ((int)$config_key + 1) * 10, 'integer');
+        $sql = $db->bindVars($sql, ':sort_order:', (int)$oldcount_sort->fields['max_sort'] + ($config_key + 1) * 10, 'integer');
         $sql = $db->bindVars($sql, ':date_added:', $config_item['date_added']['value'], $config_item['date_added']['type']);
         $sql = $db->bindVars($sql, ':use_function:', $config_item['use_function']['value'], $config_item['use_function']['type']);
         $sql = $db->bindVars($sql, ':set_function:', $config_item['set_function']['value'], $config_item['set_function']['type']);
