@@ -6,7 +6,7 @@
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
  * @version $Id: mc12345678 thanks to bislewl 6/9/2015
  */
-/* 
+/*
   V3.0.6, What changed:
     Modified/updated the class information to provide the sidebox data.
     Correct additional javascript errors to prevent having to catch them.
@@ -26,7 +26,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
 /*    $DPUExists = FALSE;
 
     // Attempt to use the ZC function to test for the existence of the page otherwise detect using SQL.
-    if (function_exists('zen_page_key_exists')) 
+    if (function_exists('zen_page_key_exists'))
     {
         $DPUPageExists = zen_page_key_exists('config' . $admin_page);
     } else {
@@ -34,16 +34,16 @@ if ($zc150) { // continue Zen Cart 1.5.0
         if ($DPUPageExists_result->EOF && $DPUPageExists_result->RecordCount() == 0) {
         } else {
             $DPUPageExists = TRUE;
-        } 
+        }
     }*/
 
     // Initialize the variable.
     $sort_order = [];
 
 /*    $sort_order_sql = "SELECT MAX(sort_order) as max_sort FROM `". TABLE_CONFIGURATION ."` WHERE configuration_group_id=" . (int)$configuration_group_id;
-    
+
     $sort_order_result = $db->Execute($sort_order_sql);
-    
+
     $sort_order_start = (int)($sort_order_result->fields['max_sort'] / 10);*/
 
     // Identify the order in which the keys should be added for display.
@@ -226,7 +226,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
 
     foreach ($sort_order as $config_key => $config_item) {
 
-        $sql = "INSERT INTO " . TABLE_CONFIGURATION . " (configuration_group_id, configuration_key, configuration_title, configuration_value, configuration_description, sort_order, date_added, use_function, set_function) 
+        $sql = "INSERT INTO " . TABLE_CONFIGURATION . " (configuration_group_id, configuration_key, configuration_title, configuration_value, configuration_description, sort_order, date_added, use_function, set_function)
           VALUES (:configuration_group_id:, :configuration_key:, :configuration_title:, :configuration_value:, :configuration_description:, :sort_order:, :date_added:, :use_function:, :set_function:)
           ON DUPLICATE KEY UPDATE sort_order = :sort_order:";
         $sql = $db->bindVars($sql, ':configuration_group_id:', $config_item['configuration_group_id']['value'], $config_item['configuration_group_id']['type']);
@@ -234,7 +234,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
         $sql = $db->bindVars($sql, ':configuration_title:', $config_item['configuration_title']['value'], $config_item['configuration_title']['type']);
         $sql = $db->bindVars($sql, ':configuration_value:', $config_item['configuration_value']['value'], $config_item['configuration_value']['type']);
         $sql = $db->bindVars($sql, ':configuration_description:', $config_item['configuration_description']['value'], $config_item['configuration_description']['type']);
-        $sql = $db->bindVars($sql, ':sort_order:', ((int)$config_key + 1) * 10, 'integer');
+        $sql = $db->bindVars($sql, ':sort_order:', ($config_key + 1) * 10, 'integer');
         $sql = $db->bindVars($sql, ':date_added:', $config_item['date_added']['value'], $config_item['date_added']['type']);
         $sql = $db->bindVars($sql, ':use_function:', $config_item['use_function']['value'], $config_item['use_function']['type']);
         $sql = $db->bindVars($sql, ':set_function:', $config_item['set_function']['value'], $config_item['set_function']['type']);
