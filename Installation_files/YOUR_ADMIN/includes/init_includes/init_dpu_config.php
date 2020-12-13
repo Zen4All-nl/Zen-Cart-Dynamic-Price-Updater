@@ -44,31 +44,31 @@ $installers = scandir($module_installer_directory, 1);
 if ($installers === false) {
     $messageStack->add("$module_name: module installer directory ($module_installer_directory) not found. Installation aborted.", 'error');
 } else {
-$newest_version = $installers[0];
-$newest_version = substr($newest_version, 0, -4);
+    $newest_version = $installers[0];
+    $newest_version = substr($newest_version, 0, -4);
 
-sort($installers);
-if (version_compare($newest_version, $current_version) > 0) {
-  foreach ($installers as $installer) {
-    if (version_compare($newest_version, substr($installer, 0, -4)) >= 0 && version_compare($current_version, substr($installer, 0, -4)) < 0) {
-      include($module_installer_directory . '/' . $installer);
-      $current_version = str_replace("_", ".", substr($installer, 0, -4));
+    sort($installers);
+    if (version_compare($newest_version, $current_version) > 0) {
+        foreach ($installers as $installer) {
+            if (version_compare($newest_version, substr($installer, 0, -4)) >= 0 && version_compare($current_version, substr($installer, 0, -4)) < 0) {
+                include($module_installer_directory . '/' . $installer);
+                $current_version = str_replace("_", ".", substr($installer, 0, -4));
                 $db->Execute("UPDATE " . TABLE_CONFIGURATION . " SET configuration_value = '" . $current_version . "' WHERE configuration_key = '" . $module_constant . "' LIMIT 1");
                 $messageStack->add("$module_name: v$current_version installed", 'success');
+            }
+        }
     }
-  }
-}
 
 // Version Checking
     $module_file_for_version_check = (!empty($module_file_for_version_check)) ? DIR_FS_ADMIN . $module_file_for_version_check : '';
     if ($zencart_com_plugin_id !== 0 && $module_file_for_version_check !== '' && $_SERVER["PHP_SELF"] === $module_file_for_version_check) {
-  $new_version_details = plugin_version_check_for_updates($zencart_com_plugin_id, $current_version);
+        $new_version_details = plugin_version_check_for_updates($zencart_com_plugin_id, $current_version);
         if ((int)$_GET['gID'] === $configuration_group_id && $new_version_details !== false) {
-    $messageStack->add("Version " . $new_version_details['latest_plugin_version'] . " of " . $new_version_details['title'] . ' is available at <a href="' . $new_version_details['link'] . '" target="_blank">[Details]</a>', 'caution');
-  }
-}
+            $messageStack->add("Version " . $new_version_details['latest_plugin_version'] . " of " . $new_version_details['title'] . ' is available at <a href="' . $new_version_details['link'] . '" target="_blank">[Details]</a>', 'caution');
+        }
+    }
 
-if (!function_exists('plugin_version_check_for_updates')) {
+    if (!function_exists('plugin_version_check_for_updates')) {
         //core function from ZC157
         function plugin_version_check_for_updates($plugin_file_id = 0, $version_string_to_compare = '', $strict_zc_version_compare = false)
         {
