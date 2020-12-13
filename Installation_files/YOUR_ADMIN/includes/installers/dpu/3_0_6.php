@@ -241,6 +241,6 @@ if ($zc150) { // continue Zen Cart 1.5.0
         $db->Execute($sql);
     }
 
-    $messageStack->add('Inserted configuration for ' . $module_name , 'success');
+    $messageStack->add("$module_name: configuration constants added", 'success');
 
 } // END OF VERSION 1.5.x INSTALL
