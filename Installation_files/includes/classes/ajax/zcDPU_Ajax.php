@@ -325,18 +325,19 @@ class zcDPU_Ajax extends base {
    *
    * @global object $db
    */
-  protected function insertProduct()
+  protected function insertProduct(): void
   {
     global $db;
-    $tempAttributes = [];
-    $temp = explode('|', $_POST['attributes']);
+
+    $attributes = [];
+    $temp = array_filter(explode('|', $_POST['attributes']));
     foreach ($temp as $item) {
       $tempArray = explode('~', $item);
-      $temp1 = str_replace('id[', '', $tempArray[0]);
-      $temp2 = str_replace(']', '', $temp1);
-      $tempAttributes[$temp2] = $tempArray[1];
+      if ($tempArray !== false && is_array($tempArray)) {
+          preg_match("/\[([^\]]*)\]/", $tempArray[0], $matches);
+          $attributes[$matches[1]] = $tempArray[1];//string
+      }
     }
-    $attributes = array_filter($tempAttributes);
 
     if (!empty($attributes) || zen_has_product_attributes_values($_POST['products_id'])) {
       // If product is priced by attribute then determine which attributes had not been added, 
