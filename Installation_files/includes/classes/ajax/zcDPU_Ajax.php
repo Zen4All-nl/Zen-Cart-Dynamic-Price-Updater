@@ -353,7 +353,7 @@ class zcDPU_Ajax extends base {
         $product_check = $db->Execute("SELECT products_priced_by_attribute
                                        FROM " . TABLE_PRODUCTS . "
                                        WHERE products_id = " . (int)$_POST['products_id']);
-        $product_check_result = $product_check->fields['products_priced_by_attribute'] == '1';
+        $product_check_result = $product_check->fields['products_priced_by_attribute'] === '1';
       }
 
       // do not select display only attributes and do select attributes_price_base_included is true
@@ -373,8 +373,8 @@ class zcDPU_Ajax extends base {
 
 // add attributes that are price dependent and in or not in the page's submission
       // Support price determination for product that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
-      $process_price_attributes = (defined('DPU_PROCESS_ATTRIBUTES') && DPU_PROCESS_ATTRIBUTES === 'all') ? true : $product_check_result;
-      if ($process_price_attributes && $product_att_query->RecordCount() >= 1) {
+      $process_price_attributes = (DPU_PROCESS_ATTRIBUTES === 'all' ? true : $product_check_result);
+      if ($process_price_attributes && $product_att_query->RecordCount() > 0) {
         $the_options_id = 'x';
         $new_attributes = [];
           if (empty($this->num_options)) {
@@ -382,17 +382,17 @@ class zcDPU_Ajax extends base {
           }
 
         foreach ($product_att_query as $item) {
-          if ($the_options_id != $item['options_id']) {
+          if ($the_options_id !== $item['options_id']) {
             $the_options_id = $item['options_id'];
             $new_attributes[$the_options_id] = $item['options_values_id'];
             $this->num_options++;
-          } elseif (array_key_exists($the_options_id, $attributes) && $attributes[$the_options_id] == $item['options_values_id']) {
+          } elseif (array_key_exists($the_options_id, $attributes) && $attributes[$the_options_id] === $item['options_values_id']) {
             $new_attributes[$the_options_id] = $item['options_values_id'];
           }
         }
 
         // Need to now resort the attributes as one would have expected them to be presented which is to sort the option name(s)
-        if (PRODUCTS_OPTIONS_SORT_ORDER == '0') {
+        if (PRODUCTS_OPTIONS_SORT_ORDER === '0') {
           $options_order_by = ' ORDER BY LPAD(popt.products_options_sort_order,11,"0"), popt.products_options_name';
         } else {
           $options_order_by = ' ORDER BY popt.products_options_name';
@@ -423,8 +423,6 @@ class zcDPU_Ajax extends base {
           // Taken from the expected format in includes/modules/attributes.
           switch ($options_type) {
             case (PRODUCTS_OPTIONS_TYPE_TEXT):
-              $options_id = TEXT_PREFIX . $options_id;
-              break;
             case (PRODUCTS_OPTIONS_TYPE_FILE):
               $options_id = TEXT_PREFIX . $options_id;
               break;
@@ -471,11 +469,11 @@ class zcDPU_Ajax extends base {
 
       $products_id = zen_get_uprid((int)$_POST['products_id'], $attributes);
 
-      $this->product_stock = zen_get_products_stock($_POST['products_id'], $attributes);
+      $this->product_stock = zen_get_products_stock($_POST['products_id']);
 
       $this->new_attributes[$products_id] = $this->new_temp_attributes;
       $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
-      $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity)));
+      $this->shoppingCart->contents[$products_id] = ['qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))];
 
       foreach ($attributes as $option => $value) {
         //CLR 020606 check if input was from text box.  If so, store additional attribute information
@@ -526,7 +524,7 @@ class zcDPU_Ajax extends base {
       $products_id = (int)$_POST['products_id'];
       $this->product_stock = zen_get_products_stock($products_id);
       $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
-      $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity)));
+      $this->shoppingCart->contents[$products_id] = ['qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))];
     }
   }
 
@@ -748,7 +746,7 @@ class zcDPU_Ajax extends base {
 
     $option_name_no_value = true;
     if (!is_array($option_name_id)) {
-      $option_name_id = array($option_name_id);
+      $option_name_id = [$option_name_id];
     }
 
     $sql = "SELECT products_options_type
