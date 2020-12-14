@@ -688,7 +688,7 @@ class zcDPU_Ajax extends base {
     $wo_ip_address = (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'Unknown');
     $wo_user_agent = substr(zen_db_prepare_input($_SERVER['HTTP_USER_AGENT']), 0, 254);
 
-    $page = zen_get_info_page((int)$_GET['products_id']);
+    $page = zen_get_info_page((int)$_POST['products_id']);
     $uri = zen_href_link($page, zen_get_all_get_params(), $request_type);
     if (substr($uri, -1) == '?') {
       $uri = substr($uri, 0, strlen($uri) - 1);
