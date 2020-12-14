@@ -377,7 +377,10 @@ class zcDPU_Ajax extends base {
       if ($process_price_attributes && $product_att_query->RecordCount() >= 1) {
         $the_options_id = 'x';
         $new_attributes = [];
-//        $this->num_options = 0;
+          if (empty($this->num_options)) {
+              $this->num_options = 0;
+          }
+
         foreach ($product_att_query as $item) {
           if ($the_options_id != $item['options_id']) {
             $the_options_id = $item['options_id'];
