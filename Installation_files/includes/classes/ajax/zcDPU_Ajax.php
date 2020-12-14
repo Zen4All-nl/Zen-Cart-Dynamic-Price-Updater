@@ -164,11 +164,11 @@ class zcDPU_Ajax extends base {
       $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
       $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
       $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
-      /* use of number_format is governed by the instruction from the php manual: 
+      /* use of number_format is governed by the instruction from the php manual:
        *  http://php.net/manual/en/function.number-format.php
        * By providing below all four values, they will be assigned/used as provided above.
        *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
-       *   then just the number will come back with a comma used at every thousands group (ie. 1,000).  
+       *   then just the number will come back with a comma used at every thousands group (ie. 1,000).
        *  With the first two parameters provided, a comma will be used at every thousands group and a decimal (.) for every part of the whole number.
        *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
        *   decimal point and thousands group separater, respectively.
@@ -340,8 +340,8 @@ class zcDPU_Ajax extends base {
     }
 
     if (!empty($attributes) || zen_has_product_attributes_values($_POST['products_id'])) {
-      // If product is priced by attribute then determine which attributes had not been added, 
-      //  add them to the attribute list such that product added to the cart is fully defined with the minimum value(s), though 
+      // If product is priced by attribute then determine which attributes have not been added,
+      //  add them to the attribute list such that product added to the cart is fully defined with the minimum value(s), though
       //  at the moment seems that similar would be needed even for not priced by attribute possibly... Will see... Maybe someone will report if an issue.
 
       if (!defined('DPU_PROCESS_ATTRIBUTES')) {
@@ -356,7 +356,7 @@ class zcDPU_Ajax extends base {
         $product_check_result = $product_check->fields['products_priced_by_attribute'] === '1';
       }
 
-      // do not select display only attributes and do select attributes_price_base_included is true
+      // do NOT select display-only attributes but DO select attributes_price_base_included is true
       $this->product_attr_query = "SELECT pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type,
                                           ROUND(CONCAT(pa.price_prefix, pa.options_values_price), 5) AS value
                                    FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
@@ -371,8 +371,8 @@ class zcDPU_Ajax extends base {
 
       $product_att_query = $db->Execute($this->product_attr_query);
 
-// add attributes that are price dependent and in or not in the page's submission
-      // Support price determination for product that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
+// add attributes that are price-dependent and in or not in the page's submission
+// Support price determination for product that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
       $process_price_attributes = (DPU_PROCESS_ATTRIBUTES === 'all' ? true : $product_check_result);
       if ($process_price_attributes && $product_att_query->RecordCount() > 0) {
         $the_options_id = 'x';
@@ -618,11 +618,11 @@ class zcDPU_Ajax extends base {
             $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
             $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
             $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
-            /* use of number_format is governed by the instruction from the php manual: 
+            /* use of number_format is governed by the instruction from the php manual:
              *  http://php.net/manual/en/function.number-format.php
              * By providing below all four values, they will be assigned/used as provided above.
              *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
-             *   then just the number will come back with a comma used at every thousands group (ie. 1,000).  
+             *   then just the number will come back with a comma used at every thousands group (ie. 1,000).
              *  With the first two parameters provided, a comma will be used at every thousands group and a decimal (.) for every part of the whole number.
              *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
              *   decimal point and thousands group separater, respectively.
@@ -640,11 +640,11 @@ class zcDPU_Ajax extends base {
       $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
       $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
       $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
-      /* use of number_format is governed by the instruction from the php manual: 
+      /* use of number_format is governed by the instruction from the php manual:
        *  http://php.net/manual/en/function.number-format.php
        * By providing below all four values, they will be assigned/used as provided above.
        *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
-       *   then just the number will come back with a comma used at every thousands group (ie. 1,000).  
+       *   then just the number will come back with a comma used at every thousands group (ie. 1,000).
        *  With the first two parameters provided, a comma will be used at every thousands group and a decimal (.) for every part of the whole number.
        *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
        *   decimal point and thousands group separater, respectively.
@@ -663,7 +663,7 @@ class zcDPU_Ajax extends base {
   }
 
   /**
-   * 
+   *
    * @global object $db
    * @global string $request_type
    */
@@ -786,21 +786,12 @@ class zcDPU_Ajax extends base {
 }
 
 if (!function_exists('convertToFloat')) {
-
-  function convertToFloat($input = 0)
-  {
-    if ($input === null) {
-      return 0;
+    function convertToFloat($input = 0)
+    {
+        if ($input === null) return 0;
+        $val = preg_replace('/[^0-9,\.\-]/', '', $input);
+        // do a non-strict compare here:
+        if ($val == 0) return 0;
+        return (float)$val;
     }
-
-    $val = preg_replace('/[^0-9,\.\-]/', '', $input);
-
-    // do a non-strict compare here:
-    if ($val == 0) {
-      return 0;
-    }
-
-    return (float)$val;
-  }
-
 }
