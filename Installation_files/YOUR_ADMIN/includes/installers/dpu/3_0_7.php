@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package functions
  * @copyright Copyright 2003-2017 Zen Cart Development Team
@@ -15,13 +16,7 @@
       the appropriate information when returning to the product from the shopping cart.)
     Because the price is automatically calculated based on arriving at a product, if a product is
       priced by attributes and not all of the "mandatory" attributes are selected then the price
-      was only showing the price point of those that were selected.  The code now calculates the
+      was only showing the price point of those that were selected.  The code now calculates the 
       lowest available price based on the selections already made.  The displayed text has not been
       edited to account for this "feature" yet, but could be modified to support the condition.
 */
-
-
-$zc150 = ((int)PROJECT_VERSION_MAJOR > 1 || (PROJECT_VERSION_MAJOR == '1' && substr(PROJECT_VERSION_MINOR, 0, 3) >= 5));
-if ($zc150) { // continue Zen Cart 1.5.0
-
-} // END OF VERSION 1.5.x INSTALL
