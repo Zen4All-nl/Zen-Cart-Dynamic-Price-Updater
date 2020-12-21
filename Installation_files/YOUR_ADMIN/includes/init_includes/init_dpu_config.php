@@ -24,7 +24,7 @@ if (defined($module_constant)) {
   $current_version = "0.0.0";
   $db->Execute("INSERT INTO " . TABLE_CONFIGURATION_GROUP . " (configuration_group_title, configuration_group_description, sort_order, visible)
                 VALUES ('" . $module_name . "', '" . $module_name . " Settings', 1, 1);");
-  $configuration_group_id = $db->Insert_ID();
+  $configuration_group_id = $db->insert_ID();
 
   $db->Execute("UPDATE " . TABLE_CONFIGURATION_GROUP . "
                 SET sort_order = " . $configuration_group_id . "
