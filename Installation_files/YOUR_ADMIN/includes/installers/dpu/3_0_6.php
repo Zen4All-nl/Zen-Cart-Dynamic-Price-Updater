@@ -325,4 +325,3 @@ foreach ($sort_order as $config_key => $config_item) {
   $db->Execute($sql);
 }
 
-$messageStack->add("$module_name: configuration menu items added", 'success');
