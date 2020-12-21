@@ -49,10 +49,14 @@ $newest_version = substr($newest_version, 0, -4);
 sort($installers);
 if (version_compare($newest_version, $current_version) > 0) {
   foreach ($installers as $installer) {
-    if (version_compare($newest_version, substr($installer, 0, -4)) >= 0 && version_compare($current_version, substr($installer, 0, -4)) < 0) {
-      include($module_installer_directory . '/' . $installer);
-      $current_version = str_replace("_", ".", substr($installer, 0, -4));
-      $db->Execute("UPDATE " . TABLE_CONFIGURATION . " SET configuration_value = '" . $current_version . "' WHERE configuration_key = '" . $module_constant . "' LIMIT 1;");
+            $installer = substr($installer, 0, -4);
+            if ($installer === false) {
+                continue;
+            }
+            if (version_compare($newest_version, $installer) >= 0 && version_compare($current_version, $installer) < 0) {
+                include($module_installer_directory . '/' . $installer . '.php');
+                $current_version = str_replace("_", ".", $installer);
+                $db->Execute("UPDATE " . TABLE_CONFIGURATION . " SET configuration_value = '" . $current_version . "' WHERE configuration_key = '" . $module_constant . "' LIMIT 1");
       $messageStack->add("Installed " . $module_name . " v" . $current_version, 'success');
     }
   }
