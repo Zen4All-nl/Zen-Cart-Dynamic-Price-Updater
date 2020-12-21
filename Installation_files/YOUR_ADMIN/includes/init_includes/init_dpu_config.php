@@ -63,7 +63,7 @@ if (version_compare($newest_version, $current_version) > 0) {
 }
 
 // Version Checking
-$module_file_for_version_check = ($module_file_for_version_check != '') ? DIR_FS_ADMIN . $module_file_for_version_check : '';
+$module_file_for_version_check = empty($module_file_for_version_check) ? '' : DIR_FS_ADMIN . $module_file_for_version_check;
 if ($zencart_com_plugin_id != 0 && $module_file_for_version_check != '' && $_SERVER["PHP_SELF"] == $module_file_for_version_check) {
   $new_version_details = plugin_version_check_for_updates($zencart_com_plugin_id, $current_version);
   if ($_GET['gID'] == $configuration_group_id && $new_version_details != false) {
