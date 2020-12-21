@@ -14,6 +14,7 @@ if (!defined('IS_ADMIN_FLAG')) {
 $module_constant = 'DPU_VERSION';
 $module_installer_directory = DIR_FS_ADMIN . 'includes/installers/dpu';
 $module_name = "Dynamic Price Updater";
+$admin_page = 'DynamicPriceUpdater';
 $zencart_com_plugin_id = 1301;
 
 $configuration_group_id = '';
