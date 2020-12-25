@@ -7,6 +7,7 @@
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
  */
 class zcDPU_Ajax extends base {
+
   /**
    * Local instantiation of the shopping cart
    *
@@ -37,7 +38,7 @@ class zcDPU_Ajax extends base {
    */
   protected $new_attributes = [];
 
-  /*
+  /**
    * Array of temporary attributes.
    * @var array
    */
@@ -48,7 +49,7 @@ class zcDPU_Ajax extends base {
    */
   protected $product_attr_query;
 
-  /*
+  /**
    * Constructor
    */
   public function __construct()
@@ -334,8 +335,8 @@ class zcDPU_Ajax extends base {
     foreach ($temp as $item) {
       $tempArray = explode('~', $item);
       if ($tempArray !== false && is_array($tempArray)) {
-          preg_match("/\[([^\]]*)\]/", $tempArray[0], $matches);
-          $attributes[$matches[1]] = $tempArray[1];//string
+        preg_match("/\[([^\]]*)\]/", $tempArray[0], $matches);
+        $attributes[$matches[1]] = $tempArray[1]; //string
       }
     }
 
@@ -377,9 +378,9 @@ class zcDPU_Ajax extends base {
       if ($process_price_attributes && $product_att_query->RecordCount() > 0) {
         $the_options_id = 'x';
         $new_attributes = [];
-          if (empty($this->num_options)) {
-              $this->num_options = 0;
-          }
+        if (empty($this->num_options)) {
+          $this->num_options = 0;
+        }
 
         foreach ($product_att_query as $item) {
           if ($the_options_id !== $item['options_id']) {
@@ -473,7 +474,9 @@ class zcDPU_Ajax extends base {
 
       $this->new_attributes[$products_id] = $this->new_temp_attributes;
       $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
-      $this->shoppingCart->contents[$products_id] = ['qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))];
+      $this->shoppingCart->contents[$products_id] = [
+        'qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))
+      ];
 
       foreach ($attributes as $option => $value) {
         //CLR 020606 check if input was from text box.  If so, store additional attribute information
@@ -524,7 +527,9 @@ class zcDPU_Ajax extends base {
       $products_id = (int)$_POST['products_id'];
       $this->product_stock = zen_get_products_stock($products_id);
       $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
-      $this->shoppingCart->contents[$products_id] = ['qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))];
+      $this->shoppingCart->contents[$products_id] = [
+        'qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))
+      ];
     }
   }
 
@@ -564,8 +569,9 @@ class zcDPU_Ajax extends base {
                                            AND options_id = " . (int)$option . "
                                            AND options_values_id = " . (int)$value);
 
-          if ($attribute_price->EOF)
+          if ($attribute_price->EOF) {
             continue;
+          }
 
           $data = $db->Execute("SELECT products_options_values_name
                                 FROM " . TABLE_PRODUCTS_OPTIONS_VALUES . "
@@ -577,9 +583,7 @@ class zcDPU_Ajax extends base {
           $sale_maker_discount = '';
           $total = 0;
 
-          if ($attribute_price->fields['product_attribute_is_free'] == '1' && zen_get_products_price_is_free((int)$prid)) {
-            // no charge for attribute
-          } else {
+          if ($attribute_price->fields['product_attribute_is_free'] != '1' && !zen_get_products_price_is_free((int)$prid)) {
             // + or blank adds
             if ($attribute_price->fields['price_prefix'] == '-') {
               // appears to confuse products priced by attributes
@@ -641,7 +645,7 @@ class zcDPU_Ajax extends base {
       $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
       $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
       /* use of number_format is governed by the instruction from the php manual:
-       *  http://php.net/manual/en/function.number-format.php
+       *  https://php.net/manual/en/function.number-format.php
        * By providing below all four values, they will be assigned/used as provided above.
        *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
        *   then just the number will come back with a comma used at every thousands group (ie. 1,000).
@@ -726,7 +730,7 @@ class zcDPU_Ajax extends base {
                   host_address = '" . zen_db_input($_SESSION['customers_host_address']) . "',
                   user_agent = '" . zen_db_input($wo_user_agent) . "'
               WHERE session_id = '" . zen_db_input($wo_session_id) . "'
-              AND ip_address='" . zen_db_input($wo_ip_address) . "'";
+              AND ip_address = '" . zen_db_input($wo_ip_address) . "'";
 
       $db->Execute($sql);
     } else {
@@ -736,9 +740,14 @@ class zcDPU_Ajax extends base {
     }
   }
 
-  // Add backwards compatibility
-  /*
+  /**
+   * Add backwards compatibility
    *  Check if option name is not expected to have an option value (ie. text field, or File upload field)
+   * 
+   * @global object $db
+   * @global object $zco_notifier
+   * @param int $option_name_id
+   * @return boolean
    */
   public function zen_option_name_base_expects_no_values($option_name_id)
   {
@@ -746,7 +755,9 @@ class zcDPU_Ajax extends base {
 
     $option_name_no_value = true;
     if (!is_array($option_name_id)) {
-      $option_name_id = [$option_name_id];
+      $option_name_id = [
+        $option_name_id
+      ];
     }
 
     $sql = "SELECT products_options_type
@@ -786,12 +797,23 @@ class zcDPU_Ajax extends base {
 }
 
 if (!function_exists('convertToFloat')) {
-    function convertToFloat($input = 0)
-    {
-        if ($input === null) return 0;
-        $val = preg_replace('/[^0-9,\.\-]/', '', $input);
-        // do a non-strict compare here:
-        if ($val == 0) return 0;
-        return (float)$val;
+
+  /**
+   * 
+   * @param int $input
+   * @return int
+   */
+  function convertToFloat($input = 0)
+  {
+    if ($input === null) {
+      return 0;
     }
+    $val = preg_replace('/[^0-9,\.\-]/', '', $input);
+    // do a non-strict compare here:
+    if ($val == 0) {
+      return 0;
+    }
+    return (float)$val;
+  }
+
 }
