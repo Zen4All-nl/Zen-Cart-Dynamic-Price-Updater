@@ -76,10 +76,8 @@ class DPU extends base {
         $attribute_type = zen_get_attributes_type($attribute_price->fields['products_attributes_id']);
 
         switch ($attribute_type) {
-          case (PRODUCTS_OPTIONS_TYPE_TEXT):
-            $prefix_format = $db->bindVars($prefix_format, ':option_id:', TEXT_PREFIX . ':option_id:', 'noquotestring');
-            break;
           case (PRODUCTS_OPTIONS_TYPE_FILE):
+          case (PRODUCTS_OPTIONS_TYPE_TEXT):
             $prefix_format = $db->bindVars($prefix_format, ':option_id:', TEXT_PREFIX . ':option_id:', 'noquotestring');
             break;
           default:
