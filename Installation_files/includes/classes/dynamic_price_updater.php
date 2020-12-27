@@ -11,17 +11,20 @@ if (!defined('IS_ADMIN_FLAG')) {
   die('Illegal Access');
 }
 
+/**
+ * Class DPU
+ */
 class DPU extends base {
 /**
- * 
+ *
  * @global object $db
  * @param int $products_id
- * @return type
+ * @return array
  */
     public function getOptionPricedIds(int $products_id): array
   {
     global $db;
-    // Identify the attribute information associated with the provided $products_id.
+    // Identify the attribute information associated with the $products_id.
     $attribute_price_query = "SELECT *
                               FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
                               WHERE products_id = " . $products_id . "
@@ -34,7 +37,7 @@ class DPU extends base {
 
     // Populate $options_id to contain the options_ids that potentially affect price.
     while (!$attribute_price->EOF) {
-      // Basically if the options_id has already been captured, then don't try to process again.
+      // If this options_id has already been captured, don't try to process again.
       if ($last_id === $attribute_price->fields['options_id']) {
         $attribute_price->MoveNext();
         continue;
@@ -95,6 +98,13 @@ class DPU extends base {
     }
 
     return $options_id;
+/* $options_id example:
+ Array
+      (
+       [3] => id[3]
+       [4] => id[4]
+       )
+ */
   }
 
 }
