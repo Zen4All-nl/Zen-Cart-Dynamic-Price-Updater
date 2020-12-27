@@ -313,8 +313,9 @@ class zcDPU_Ajax extends base {
     foreach ($temp as $item) {
       $tempArray = explode('~', $item);
       if ($tempArray !== false && is_array($tempArray)) {
-        preg_match("/\[([^\]]*)\]/", $tempArray[0], $matches);
-        $attributes[$matches[1]] = $tempArray[1]; //string
+        $temp1 = str_replace('id[', '', $tempArray[0]); //remove "[id"
+        $temp2 = str_replace(']', '', $temp1); //remove "]", leaving id_number (and prefix txt_ for text/file)
+        $attributes[$temp2] = $tempArray[1]; //index may be integer
       }
     }
 
