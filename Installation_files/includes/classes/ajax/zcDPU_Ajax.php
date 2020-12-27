@@ -337,18 +337,6 @@ class zcDPU_Ajax extends base {
       //  add them to the attribute list such that product added to the cart is fully defined with the minimum value(s), though
       //  at the moment seems that similar would be needed even for not priced by attribute possibly... Will see... Maybe someone will report if an issue.
 
-      if (!defined('DPU_PROCESS_ATTRIBUTES')) {
-        define('DPU_PROCESS_ATTRIBUTES', 'all');
-      }
-
-      $product_check_result = false;
-      if (DPU_PROCESS_ATTRIBUTES !== 'all') {
-        $product_check = $db->Execute("SELECT products_priced_by_attribute
-                                       FROM " . TABLE_PRODUCTS . "
-                                       WHERE products_id = " . (int)$_POST['products_id']);
-        $product_check_result = $product_check->fields['products_priced_by_attribute'] === '1';
-      }
-
       // Get all this product's attributes but NOT the "display-only" attributes and DO select when attributes_price_base_included is true
       $this->product_attr_query = "SELECT pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type,
                                           ROUND(CONCAT(pa.price_prefix, pa.options_values_price), 5) AS value
@@ -366,21 +354,28 @@ class zcDPU_Ajax extends base {
 
 // add attributes that are price-dependent and in or not in the page's submission
 // Support price determination for product that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
-      $process_price_attributes = (DPU_PROCESS_ATTRIBUTES === 'all' ? true : $product_check_result);
+
+            if (!defined('DPU_PROCESS_ATTRIBUTES')) {
+                define('DPU_PROCESS_ATTRIBUTES', 'all'); //process all products that have attributes, whether priced by attribute or not
+            }
+            $process_price_attributes = DPU_PROCESS_ATTRIBUTES === 'all' ? true : zen_get_products_price_is_priced_by_attributes((int)$_POST['products_id']);
+
+            if ($this->DPUdebug) {
+                $this->logDPU(__LINE__ . ': DPU_PROCESS_ATTRIBUTES="' . DPU_PROCESS_ATTRIBUTES . '", $process_price_attributes=' .  $process_price_attributes . ', product_att_query->RecordCount()=' . $product_att_query->RecordCount());
+            }
 
 //Note:
 //product IS priced_by_attribute: each attribute displays the base price+attribute price
 //product IS NOT priced_by_attribute: each attribute displays the attribute price as a modification (addition/subtraction) of the displayed base price
 
 //this section produces an array "$new_attributes" containing all the product's attributes: the selected options/values from the ajax call and default/unselected option/values attributes
+
       if ($process_price_attributes && $product_att_query->RecordCount() > 0) {
         $the_options_id = 'x';
         $new_attributes = [];
-        if (empty($this->num_options)) {
-          $this->num_options = 0;
-        }
 
-        foreach ($product_att_query as $item) {
+
+        foreach ($product_att_query as $item) { // loop through all the values for each product option
                     // If this is the first parse of this option id, assign the first option value defined in the database with this option id as either
                     // it is the selected ajax POST value (by coincidence) or,
                     // it is the default value or
@@ -389,7 +384,7 @@ class zcDPU_Ajax extends base {
           if ($the_options_id !== $item['options_id']) {
             $the_options_id = $item['options_id'];
             $new_attributes[$the_options_id] = $item['options_values_id'];
-            $this->num_options++;
+            $this->num_options++; // the number of unique option ids
 
 //if this option id is already in the array, overwrite its option value with the SELECTED value, or continue.
 //So only ONE option id + option value is stored...no multiple checkboxes/values
@@ -440,20 +435,23 @@ class zcDPU_Ajax extends base {
           $this->display_only_value = isset($attributes[$options_id]) ? !zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id]) : true;
 
 //todo  why is test $attributes[$options_id] === 0 integer when $attributes[$options_id] is a string
-          if (isset($attributes[$options_id]) && $attributes[$options_id] === 0 && (function_exists('zen_option_name_base_expects_no_values') ? !zen_option_name_base_expects_no_values($options_id) : !$this->zen_option_name_base_expects_no_values($options_id)))
+          if (isset($attributes[$options_id]) && $attributes[$options_id] === 0 && !zen_option_name_base_expects_no_values($options_id)) {
             $this->display_only_value = true;
+                    }
 
           $this->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_DISPLAY_ONLY');
 
           if (array_key_exists($options_id, $attributes) && !$this->display_only_value) {
             // If the options_id selected is a valid attribute then add it to be part of the calculation
             $new_temp_attributes[$options_id] = $attributes[$options_id];
+
           } elseif (array_key_exists($options_id, $attributes) && $this->display_only_value) {
             // If the options_id selected is not a valid attribute, then add a valid attribute determined above and mark it
             //   to be deleted from the shopping cart after the price has been determined.
             $this->new_temp_attributes[$options_id] = $attributes[$options_id];
             $new_temp_attributes[$options_id] = $new_attributes[$options_id];
             $this->unused++;
+
           } elseif (array_key_exists($options_id, $new_attributes)) {
             // if it is not already in the $attributes, then it is something that needs to be added for "removal"
             //   and by adding it, makes the software consider how many files need to be edited.
@@ -549,22 +547,22 @@ class zcDPU_Ajax extends base {
     $out = [];
     $global_total = 0;
     $products = $this->shoppingCart->get_products();
-    for ($i = 0, $n = count($products); $i < $n; $i++) {
+      foreach ($products as $cartProduct) {
 
       $product = $db->Execute("SELECT products_id, products_price, products_tax_class_id, products_weight,
                                       products_priced_by_attribute, product_is_always_free_shipping, products_discount_type, products_discount_type_from,
                                       products_virtual, products_model
                                FROM " . TABLE_PRODUCTS . "
-                               WHERE products_id = " . (int)$products[$i]['id']);
+                                 WHERE products_id = " . (int)$cartProduct['id']);
 
       $prid = $product->fields['products_id'];
       $products_tax = zen_get_tax_rate(0);
       $products_price = $product->fields['products_price'];
-      $qty = convertToFloat($products[$i]['quantity']);
+        $qty = convertToFloat($cartProduct['quantity']);
 
-      if (isset($this->shoppingCart->contents[$products[$i]['id']]['attributes']) && is_array($this->shoppingCart->contents[$products[$i]['id']]['attributes'])) {
+        if (isset($this->shoppingCart->contents[$cartProduct['id']]['attributes']) && is_array($this->shoppingCart->contents[$cartProduct['id']]['attributes'])) {
 
-        foreach ($this->shoppingCart->contents[$products[$i]['id']]['attributes'] as $option => $value) {
+          foreach ($this->shoppingCart->contents[$cartProduct['id']]['attributes'] as $option => $value) {
 
           $attribute_price = $db->Execute("SELECT *
                                            FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
@@ -586,16 +584,17 @@ class zcDPU_Ajax extends base {
           $sale_maker_discount = '';
           $total = 0;
 
-          if ($attribute_price->fields['product_attribute_is_free'] != '1' && !zen_get_products_price_is_free((int)$prid)) {
+            if ($attribute_price->fields['product_attribute_is_free'] === '1' && zen_get_products_price_is_free((int)$prid)) {
               // no charge for attribute
+            } else {
             // + or blank adds
-            if ($attribute_price->fields['price_prefix'] == '-') {
+              if ($attribute_price->fields['price_prefix'] === '-') {
               // appears to confuse products priced by attributes
-              if ($product->fields['product_is_always_free_shipping'] == '1' || $product->fields['products_virtual'] == '1') {
+                if ($product->fields['product_is_always_free_shipping'] === '1' || $product->fields['products_virtual'] === '1') {
                 $shipping_attributes_price = zen_get_discount_calc($product->fields['products_id'], $attribute_price->fields['products_attributes_id'], $attribute_price->fields['options_values_price'], $qty);
                 $this->free_shipping_price -= $qty * zen_add_tax(($shipping_attributes_price), $products_tax);
               }
-              if ($attribute_price->fields['attributes_discounted'] == '1') {
+                if ($attribute_price->fields['attributes_discounted'] === '1') {
                 // calculate proper discount for attributes
                 $new_attributes_price = zen_get_discount_calc($product->fields['products_id'], $attribute_price->fields['products_attributes_id'], $attribute_price->fields['options_values_price'], $qty);
                 $total -= $qty * zen_add_tax(($new_attributes_price), $products_tax);
@@ -605,17 +604,17 @@ class zcDPU_Ajax extends base {
               $total = $total;
             } else {
               // appears to confuse products priced by attributes
-              if ($product->fields['product_is_always_free_shipping'] == '1' || $product->fields['products_virtual'] == '1') {
+                if ($product->fields['product_is_always_free_shipping'] === '1' || $product->fields['products_virtual'] === '1') {
                 $shipping_attributes_price = zen_get_discount_calc($product->fields['products_id'], $attribute_price->fields['products_attributes_id'], $attribute_price->fields['options_values_price'], $qty);
                 $this->free_shipping_price += $qty * zen_add_tax(($shipping_attributes_price), $products_tax);
               }
-              if ($attribute_price->fields['attributes_discounted'] == '1') {
+                if ($attribute_price->fields['attributes_discounted'] === '1') {
                 // calculate proper discount for attributes
                 $new_attributes_price = zen_get_discount_calc($product->fields['products_id'], $attribute_price->fields['products_attributes_id'], $attribute_price->fields['options_values_price'], $qty);
-                $total += $qty * zen_add_tax(($new_attributes_price), $products_tax);
+                  $total += $qty * convertToFloat(zen_add_tax(($new_attributes_price), $products_tax));
 
               } else {
-                $total += $qty * zen_add_tax($attribute_price->fields['options_values_price'], $products_tax);
+                  $total += $qty * convertToFloat(zen_add_tax($attribute_price->fields['options_values_price'], $products_tax));
               }
             }
           }
