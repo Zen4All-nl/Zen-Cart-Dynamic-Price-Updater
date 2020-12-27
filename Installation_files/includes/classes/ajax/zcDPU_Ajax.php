@@ -54,6 +54,8 @@ class zcDPU_Ajax extends base {
    */
   public function __construct()
   {
+      $this->unused = 0;
+      $this->num_options = 0;
     // grab the shopping cart class and instantiate it
     $this->shoppingCart = new shoppingCart();
   }
@@ -202,16 +204,15 @@ class zcDPU_Ajax extends base {
     if ($out_of_stock) {
       if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'quantity_replace') {
         $this->responseText['stock_quantity'] = $out_of_stock_image;
-      } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'after') {
+      } elseif (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'after') {
         $this->responseText['stock_quantity'] .= '&nbsp;' . $out_of_stock_image;
-      } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'before') {
+      } elseif (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'before') {
         $this->responseText['stock_quantity'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
-      } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
+      } elseif (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
         $this->responseText['priceTotal'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
         $this->responseText['preDiscPriceTotal'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
       }
     }
-
 
     $this->responseText['weight'] = (string)$this->shoppingCart->weight;
     if (DPU_SHOW_QUANTITY === 'true') {
@@ -242,11 +243,11 @@ class zcDPU_Ajax extends base {
             //CLR 030228 add htmlspecialchars processing.  This handles quotes and other special chars in the user input.
             $attr_value = NULL;
             $blank_value = FALSE;
-            if (strstr($option, TEXT_PREFIX)) {
-              if (trim($value) == NULL) {
+            if (strpos((string)$option, TEXT_PREFIX) !== false) { //TEXT_PREFIX is a hidden (gID=6) db constant, default value "txt_". Prefix used to differentiate between text option values and other option values.
+              if (trim($value) === NULL) {
                 $blank_value = TRUE;
               } else {
-                $option = substr($option, strlen(TEXT_PREFIX));
+                $option = substr((string)$option, strlen(TEXT_PREFIX));
                 $attr_value = stripslashes($value);
                 $value = PRODUCTS_OPTIONS_VALUES_TEXT_ID;
                 unset($this->shoppingCart->contents[$products_id]['attributes_values'][$option]); // = $attr_value;
@@ -275,9 +276,7 @@ class zcDPU_Ajax extends base {
   protected function attributesDisplayMultiplePrices(): bool
   {
 
-    $response = ($this->attributeDisplayStartAtPrices() && $this->attributeDisplayAtLeastPrices());
-
-    return $response;
+      return ($this->attributeDisplayStartAtPrices() && $this->attributeDisplayAtLeastPrices());
   }
 
   /**
@@ -287,9 +286,7 @@ class zcDPU_Ajax extends base {
   protected function attributeDisplayStartAtPrices(): bool
   {
 
-    $response = ($this->priceDisplay === 'start_at_least' || $this->priceDisplay === 'start_at');
-
-    return $response;
+      return ($this->priceDisplay === 'start_at_least' || $this->priceDisplay === 'start_at');
   }
 
   /**
@@ -299,9 +296,7 @@ class zcDPU_Ajax extends base {
   protected function attributeDisplayAtLeastPrices(): bool
   {
 
-    $response = ($this->priceDisplay === 'start_at_least' || $this->priceDisplay === 'at_least');
-
-    return $response;
+      return ($this->priceDisplay === 'start_at_least' || $this->priceDisplay === 'at_least');
   }
 
   /**
@@ -457,9 +452,7 @@ class zcDPU_Ajax extends base {
 
       $this->new_attributes[$products_id] = $this->new_temp_attributes;
       $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
-      $this->shoppingCart->contents[$products_id] = [
-        'qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))
-      ];
+            $this->shoppingCart->contents[$products_id] = ['qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))];
 
       foreach ($attributes as $option => $value) {
         //CLR 020606 check if input was from text box.  If so, store additional attribute information
@@ -467,11 +460,11 @@ class zcDPU_Ajax extends base {
         //CLR 030228 add htmlspecialchars processing.  This handles quotes and other special chars in the user input.
         $attr_value = NULL;
         $blank_value = FALSE;
-        if (strstr($option, TEXT_PREFIX)) {
-          if (trim($value) == NULL) {
+        if (strpos((string)$option, TEXT_PREFIX) !== false) {
+          if (trim($value) === NULL) {
             $blank_value = TRUE;
           } else {
-            $option = substr($option, strlen(TEXT_PREFIX));
+            $option = substr((string)$option, strlen(TEXT_PREFIX));
             $attr_value = stripslashes($value);
             $value = PRODUCTS_OPTIONS_VALUES_TEXT_ID;
 //            $product_info['attributes_values'][$option] = $attr_value;
@@ -510,9 +503,7 @@ class zcDPU_Ajax extends base {
       $products_id = (int)$_POST['products_id'];
       $this->product_stock = zen_get_products_stock($products_id);
       $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
-      $this->shoppingCart->contents[$products_id] = [
-        'qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))
-      ];
+            $this->shoppingCart->contents[$products_id] = ['qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))];
     }
   }
 
@@ -636,9 +627,9 @@ class zcDPU_Ajax extends base {
        *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
        *   decimal point and thousands group separater, respectively.
        */
-      $out[] = sprintf('<hr />' . DPU_SIDEBOX_TOTAL_FRAME, number_format($this->shoppingCart->total, $decimal_places, $decimal_point, $thousands_point));
+      $out[] = sprintf('<hr>' . DPU_SIDEBOX_TOTAL_FRAME, number_format($this->shoppingCart->total, $decimal_places, $decimal_point, $thousands_point));
     } else {
-      $out[] = sprintf('<hr />' . DPU_SIDEBOX_TOTAL_FRAME, $currencies->display_price($this->shoppingCart->total, 0));
+      $out[] = sprintf('<hr>' . DPU_SIDEBOX_TOTAL_FRAME, $currencies->display_price($this->shoppingCart->total, 0));
     }
 
     $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
