@@ -18,13 +18,13 @@ class DPU extends base {
  * @param int $products_id
  * @return type
  */
-  public function getOptionPricedIds($products_id)
+    public function getOptionPricedIds(int $products_id): array
   {
     global $db;
     // Identify the attribute information associated with the provided $products_id.
     $attribute_price_query = "SELECT *
                               FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
-                              WHERE products_id = " . (int)$products_id . "
+                              WHERE products_id = " . $products_id . "
                               ORDER BY options_id, options_values_price";
 
     $attribute_price = $db->Execute($attribute_price_query);
@@ -35,7 +35,7 @@ class DPU extends base {
     // Populate $options_id to contain the options_ids that potentially affect price.
     while (!$attribute_price->EOF) {
       // Basically if the options_id has already been captured, then don't try to process again.
-      if ($last_id == $attribute_price->fields['options_id']) {
+      if ($last_id === $attribute_price->fields['options_id']) {
         $attribute_price->MoveNext();
         continue;
       }
@@ -49,23 +49,22 @@ class DPU extends base {
         is a text field that has a word or letter price.
        */
       if (!(
-              $attribute_price->fields['options_values_price'] == 0 &&
+              $attribute_price->fields['options_values_price'] === '0' &&
               !zen_not_null($attribute_price->fields['attributes_qty_prices']) &&
               !zen_not_null($attribute_price->fields['attributes_qty_prices_onetime']) &&
-              $attribute_price->fields['attributes_price_onetime'] == 0 &&
+              $attribute_price->fields['attributes_price_onetime'] === '0' &&
               (
-              $attribute_price->fields['attributes_price_factor'] ==
+              $attribute_price->fields['attributes_price_factor'] ===
               $attribute_price->fields['attributes_price_factor_offset']
               ) &&
               (
-              $attribute_price->fields['attributes_price_factor_onetime'] ==
+              $attribute_price->fields['attributes_price_factor_onetime'] ===
               $attribute_price->fields['attributes_price_factor_onetime_offset']
               )
               ) ||
               (
-              zen_get_attributes_type($attribute_price->fields['products_attributes_id']) == PRODUCTS_OPTIONS_TYPE_TEXT &&
-              !($attribute_price->fields['attributes_price_words'] == 0 &&
-              $attribute_price->fields['attributes_price_letters'] == 0)
+              !($attribute_price->fields['attributes_price_words'] === '0' && $attribute_price->fields['attributes_price_letters'] === '0') &&
+              zen_get_attributes_type($attribute_price->fields['products_attributes_id']) === PRODUCTS_OPTIONS_TYPE_TEXT
               )
       ) {
 
