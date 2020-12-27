@@ -74,13 +74,13 @@ $sort_order = [
       'value' => $configuration_group_id,
       'type' => 'integer'],
     'configuration_key' => [
-      'value' => $module_constant . '_VERSION',
+      'value' => $module_constant,
       'type' => 'string'],
     'configuration_title' => [
       'value' => 'Dynamic Price Updater Version',
       'type' => 'string'],
     'configuration_value' => [
-      'value' => '3.0.5',
+      'value' => '3.0.6',
       'type' => 'string'],
     'configuration_description' => [
       'value' => 'Dynamic Price Updater version',
@@ -310,7 +310,7 @@ $sort_order = [
 
 foreach ($sort_order as $config_key => $config_item) {
 
-  $sql = "INSERT INTO " . TABLE_CONFIGURATION . " (configuration_group_id, configuration_key, configuration_title, configuration_value, configuration_description, sort_order, date_added, use_function, set_function) 
+  $sql = "INSERT INTO " . TABLE_CONFIGURATION . " (configuration_group_id, configuration_key, configuration_title, configuration_value, configuration_description, sort_order, date_added, use_function, set_function)
           VALUES (:configuration_group_id:, :configuration_key:, :configuration_title:, :configuration_value:, :configuration_description:, :sort_order:, :date_added:, :use_function:, :set_function:)
           ON DUPLICATE KEY UPDATE sort_order = :sort_order:";
   $sql = $db->bindVars($sql, ':configuration_group_id:', $config_item['configuration_group_id']['value'], $config_item['configuration_group_id']['type']);
@@ -325,4 +325,3 @@ foreach ($sort_order as $config_key => $config_item) {
   $db->Execute($sql);
 }
 
-$messageStack->add('Inserted configuration for ' . $module_name, 'success');
