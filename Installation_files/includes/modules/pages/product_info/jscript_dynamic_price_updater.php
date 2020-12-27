@@ -11,7 +11,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
   $pid = (!empty($_GET['products_id']) ? (int)$_GET['products_id'] : 0);
   if ($pid === 0) {
     $load = false;
-  } elseif (zen_get_products_price_is_call($pid) || (zen_get_products_price_is_free($pid) && empty($optionIds)) || STORE_STATUS > 0) {
+  } elseif (STORE_STATUS > 0 || zen_get_products_price_is_call($pid) || (zen_get_products_price_is_free($pid) && empty($optionIds)) ) {
     $load = false;
   } else {
     if (!class_exists('DPU')) {
@@ -47,7 +47,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
       define('DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY', 'productDetailsList_product_info_quantity');
     }
     ?>
-    <script type="text/javascript">
+    <script title="DPU">
       // Set some global vars
       const theFormName = "<?php echo DPU_PRODUCT_FORM; ?>";
       let theForm = false;
@@ -92,7 +92,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
           let a;
           let b = test.length;
 
-          for (a = 0; a < b; a += 1) {
+          for (a = 0; a < b; a++) { // parse for price modifier spans
             if (test[a].className === "productSpecialPrice" || test[a].className === "productSalePrice" || test[a].className === "productSpecialPriceSale") {
               psp = test[a];
             }
@@ -129,8 +129,9 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
         let el;
         let i;
         let aName;
+        let aValue;
 
-        for (i = 0; i < n; i += 1) {
+        for (i = 0; i < n; i++) { // parse the elements in the form
           el = theForm.elements[i];
           switch (el.type) {
             /* I'm not sure this even needed as a switch; testing needed*/
@@ -140,15 +141,24 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             case "text":
             case "number":
             case "hidden":
-              if (el.name.startsWith("id[")) { // Ensure not to replace an existing value. I.e. drop a duplicate value.
+              if (el.name.startsWith("id[") && el.value !== '') { // Ensure not to replace an existing value. i.e. drop a duplicate value.
                 aName = el.name;
                 attributes += aName + '~' + el.value + '|';
               }
               break;
             case "checkbox":
+                if (true === el.checked) { // get the radio that has been selected
+                    if (el.name.startsWith("id[") && el.value !== '') { // Ensure not to replace an existing value. i.e. drop a duplicate value.
+                        aName = el.name; // name is the option name
+                        aValue = el.value;
+                        aName = aName.replace("["+el.value+"]", "");
+                        attributes += aName + '~' + el.value + '|'; // value is the option value
+                    }
+                }
+                break;
             case "radio":
               if (true === el.checked) {
-                if (el.name.startsWith("id[")) { // Ensure not to replace an existing value. I.e. drop a duplicate value.
+                if (el.name.startsWith("id[") && el.value !== '') { // Ensure not to replace an existing value. i.e. drop a duplicate value.
                   aName = el.name;
                   attributes += aName + '~' + el.value + '|';
                 }
@@ -372,18 +382,20 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
       }
 
       function init() {
-        var selectName;
+        let selectName;
         let n = document.forms.length;
         let i;
-        for (i = 0; i < n; i += 1) {
+        for (i = 0; i < n; i++) {
           if (document.forms[i].name === theFormName) {
             theForm = document.forms[i];
+            break;
           }
         }
 
         n = theForm.elements.length;
-        for (i = 0; i < n; i += 1) {
-          // @todo: Here would be an area to potentially identify attribute related items to skip either combining PHP from top or some sort of script detect of the presented html.
+        for (i = 0; i < n; i++) { //parse the elements that the form may contain, and assign an appropriate event to be triggered on a change of the element
+          //todo: identify and ignore attributes that do not affect the price. Currently all changes trigger the ajax call and the ignoring is done in zcDPU_Ajax.
+
           switch (theForm.elements[i].type) {
             case "select":
             case "select-one":
@@ -399,7 +411,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             case "textarea":
             case "text":
               selectName = theForm.elements[i].getAttribute('name');
-              if (<?php if (!empty($optionIds)) { ?>["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1 || <?php } ?>selectName == "<?php echo DPU_PRODUCT_FORM; ?>") {
+              if (<?php if (!empty($optionIds)) { ?>["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1 || <?php } ?>selectName === "<?php echo DPU_PRODUCT_FORM; ?>") {
                 theForm.elements[i].addEventListener("input", function () {
                   getPrice();
                 });
