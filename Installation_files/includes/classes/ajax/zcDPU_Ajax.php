@@ -45,7 +45,7 @@ class zcDPU_Ajax extends base {
   protected array $new_temp_attributes = [];
 
   /**
-   * - query to be stored with class usable in observers with older Zen Cart versions.
+   * SQL query (string that is executed/becomes an object) to be stored with class, usable in observers with older Zen Cart versions.
    */
   protected $product_attr_query;
 
@@ -309,7 +309,13 @@ class zcDPU_Ajax extends base {
     global $db;
 
     $attributes = [];
-    $temp = array_filter(explode('|', $_POST['attributes']));
+//e.g.
+// checkboxes attribute 29+30+32 selected: attributes=id[1][32]~32|id[1][29]~29|id[1][30]~30|
+// todo this code does not work for multiple checkboxes...only gets the last one
+// radio: attributes=id[1]~29|
+//
+    $temp = array_filter(explode('|', $_POST['attributes'])); // e.g. radio [0] => id[1]~29
+
     foreach ($temp as $item) {
       $tempArray = explode('~', $item);
       if ($tempArray !== false && is_array($tempArray)) {
@@ -319,7 +325,14 @@ class zcDPU_Ajax extends base {
       }
     }
 
-    if (!empty($attributes) || zen_has_product_attributes_values($_POST['products_id'])) {
+
+        //checkbox, 1 selection: [1] => 29
+        //mv_printVar($attributes);
+
+// $attributes e.g. [1] => 29 //
+//todo what about multiple checkboxes: cannot have the same option name [1] as key, so elements need to be arrays/array processing needs to be changed!
+
+    if (!empty($attributes) || zen_has_product_attributes_values($_POST['products_id'])) { // zen function returns true if any option value price is a modifier (<> 0)
       // If product is priced by attribute then determine which attributes have not been added,
       //  add them to the attribute list such that product added to the cart is fully defined with the minimum value(s), though
       //  at the moment seems that similar would be needed even for not priced by attribute possibly... Will see... Maybe someone will report if an issue.
@@ -336,7 +349,7 @@ class zcDPU_Ajax extends base {
         $product_check_result = $product_check->fields['products_priced_by_attribute'] === '1';
       }
 
-      // do NOT select display-only attributes but DO select attributes_price_base_included is true
+      // Get all this product's attributes but NOT the "display-only" attributes and DO select when attributes_price_base_included is true
       $this->product_attr_query = "SELECT pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type,
                                           ROUND(CONCAT(pa.price_prefix, pa.options_values_price), 5) AS value
                                    FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
@@ -354,6 +367,12 @@ class zcDPU_Ajax extends base {
 // add attributes that are price-dependent and in or not in the page's submission
 // Support price determination for product that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
       $process_price_attributes = (DPU_PROCESS_ATTRIBUTES === 'all' ? true : $product_check_result);
+
+//Note:
+//product IS priced_by_attribute: each attribute displays the base price+attribute price
+//product IS NOT priced_by_attribute: each attribute displays the attribute price as a modification (addition/subtraction) of the displayed base price
+
+//this section produces an array "$new_attributes" containing all the product's attributes: the selected options/values from the ajax call and default/unselected option/values attributes
       if ($process_price_attributes && $product_att_query->RecordCount() > 0) {
         $the_options_id = 'x';
         $new_attributes = [];
@@ -362,17 +381,25 @@ class zcDPU_Ajax extends base {
         }
 
         foreach ($product_att_query as $item) {
+                    // If this is the first parse of this option id, assign the first option value defined in the database with this option id as either
+                    // it is the selected ajax POST value (by coincidence) or,
+                    // it is the default value or
+                    // it will be overwritten on a subsequent pass with the ACTUAL selected ajax POST value
+                    // note: option type "file" and "text" have only one option_value_id = 0. This is dealt with later.
           if ($the_options_id !== $item['options_id']) {
             $the_options_id = $item['options_id'];
             $new_attributes[$the_options_id] = $item['options_values_id'];
             $this->num_options++;
-          } elseif (array_key_exists($the_options_id, $attributes) && $attributes[$the_options_id] === $item['options_values_id']) {
+
+//if this option id is already in the array, overwrite its option value with the SELECTED value, or continue.
+//So only ONE option id + option value is stored...no multiple checkboxes/values
+          } elseif (array_key_exists($the_options_id, $attributes) && $attributes[$the_options_id] === $item['options_values_id']) { // this option id AND option value is currently selected/is in the ajax POST
             $new_attributes[$the_options_id] = $item['options_values_id'];
           }
         }
 
-        // Need to now resort the attributes as one would have expected them to be presented which is to sort the option name(s)
-        if (PRODUCTS_OPTIONS_SORT_ORDER === '0') {
+        // set the sort order
+        if (PRODUCTS_OPTIONS_SORT_ORDER === '0') { //Admin Product Info:, 0= Sort Order, Option Name / 1= Option Name
           $options_order_by = ' ORDER BY LPAD(popt.products_options_sort_order,11,"0"), popt.products_options_name';
         } else {
           $options_order_by = ' ORDER BY popt.products_options_name';
@@ -394,8 +421,7 @@ class zcDPU_Ajax extends base {
         //  To appear in the cart, $new_temp_attributes[$options_id]
         // must contain either the selection or the lowest priced selection
         // if an "invalid" selection had been made.
-        //  To get removed from the cart for display purposes
-        // the $options_id must be added to $this->new_temp_attributes
+        // To get removed from the cart for display purposes the $options_id must be added to $this->new_temp_attributes
         foreach ($products_options_names as $item) {
           $options_id = $item['products_options_id'];
           $options_type = $item['products_options_type'];
@@ -413,6 +439,7 @@ class zcDPU_Ajax extends base {
 
           $this->display_only_value = isset($attributes[$options_id]) ? !zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id]) : true;
 
+//todo  why is test $attributes[$options_id] === 0 integer when $attributes[$options_id] is a string
           if (isset($attributes[$options_id]) && $attributes[$options_id] === 0 && (function_exists('zen_option_name_base_expects_no_values') ? !zen_option_name_base_expects_no_values($options_id) : !$this->zen_option_name_base_expects_no_values($options_id)))
             $this->display_only_value = true;
 
@@ -432,6 +459,7 @@ class zcDPU_Ajax extends base {
             //   and by adding it, makes the software consider how many files need to be edited.
             $this->new_temp_attributes[$options_id] = $new_attributes[$options_id];
             $new_temp_attributes[$options_id] = false; //$new_attributes[$options_id];
+//TODO test on Home ::  New v1.2 ::  Real ::  Golf Clubs pageload gives error as $this->unused is not defined...there are no checkbox attributes selected
             $this->unused++;
           }
           /* elseif (array_key_exists($options_id, $attributes) && array_key_exists($options_id, $new_attributes) && !zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id])) {
@@ -535,7 +563,7 @@ class zcDPU_Ajax extends base {
       $qty = convertToFloat($products[$i]['quantity']);
 
       if (isset($this->shoppingCart->contents[$products[$i]['id']]['attributes']) && is_array($this->shoppingCart->contents[$products[$i]['id']]['attributes'])) {
-//    while (isset($this->shoppingCart->contents[$_POST['products_id']]['attributes']) && list($option, $value) = each($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
+
         foreach ($this->shoppingCart->contents[$products[$i]['id']]['attributes'] as $option => $value) {
 
           $attribute_price = $db->Execute("SELECT *
@@ -559,6 +587,7 @@ class zcDPU_Ajax extends base {
           $total = 0;
 
           if ($attribute_price->fields['product_attribute_is_free'] != '1' && !zen_get_products_price_is_free((int)$prid)) {
+              // no charge for attribute
             // + or blank adds
             if ($attribute_price->fields['price_prefix'] == '-') {
               // appears to confuse products priced by attributes
@@ -584,7 +613,7 @@ class zcDPU_Ajax extends base {
                 // calculate proper discount for attributes
                 $new_attributes_price = zen_get_discount_calc($product->fields['products_id'], $attribute_price->fields['products_attributes_id'], $attribute_price->fields['options_values_price'], $qty);
                 $total += $qty * zen_add_tax(($new_attributes_price), $products_tax);
-                // echo $product->fields['products_id'].' - '.$attribute_price->fields['products_attributes_id'].' - '. $attribute_price->fields['options_values_price'].' - '.$qty."\n";
+
               } else {
                 $total += $qty * zen_add_tax($attribute_price->fields['options_values_price'], $products_tax);
               }
