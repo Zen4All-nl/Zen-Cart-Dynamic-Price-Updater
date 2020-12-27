@@ -143,7 +143,7 @@ class zcDPU_Ajax extends base {
                                    FROM " . TABLE_PRODUCTS . "
                                    WHERE products_id = " . (int)$_POST['products_id'] . "
                                    LIMIT 1");
-    if (DPU_SHOW_CURRENCY_SYMBOLS == 'false') {
+    if (DPU_SHOW_CURRENCY_SYMBOLS === 'false') {
       $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
       $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
       $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
@@ -169,11 +169,11 @@ class zcDPU_Ajax extends base {
 
     $out_of_stock_image = '';
     $out_of_stock = false;
-    if ((STOCK_CHECK == 'true') && (STOCK_ALLOW_CHECKOUT != 'true')) {
+    if ((STOCK_CHECK === 'true') && (STOCK_ALLOW_CHECKOUT !== 'true')) {
       $out_of_stock = true;
     }
 
-    $this->responseText['stock_quantity'] = $this->product_stock . sprintf(DPU_TEXT_PRODUCT_QUANTITY, (abs($this->product_stock) == 1 ? DPU_TEXT_PRODUCT_QUANTITY_SINGLE : DPU_TEXT_PRODUCT_QUANTITY_MULTIPLE));
+    $this->responseText['stock_quantity'] = $this->product_stock . sprintf(DPU_TEXT_PRODUCT_QUANTITY, (abs($this->product_stock) === 1 ? DPU_TEXT_PRODUCT_QUANTITY_SINGLE : DPU_TEXT_PRODUCT_QUANTITY_MULTIPLE));
 
     switch (true) {
       case ($this->product_stock > 0): // No consideration made yet on allowing quantity to go less than 0.
@@ -181,10 +181,11 @@ class zcDPU_Ajax extends base {
         break;
       case (false):
         $out_of_stock = false;
-        if ((STOCK_CHECK == 'true') && (STOCK_ALLOW_CHECKOUT != 'true')) {
+        if ((STOCK_CHECK === 'true') && (STOCK_ALLOW_CHECKOUT !== 'true')) {
           $out_of_stock = true;
         }
-      case ($out_of_stock && $this->num_options == $this->unused && !empty($this->new_temp_attributes)):
+        //todo break here??
+      case ($out_of_stock && $this->num_options === $this->unused && !empty($this->new_temp_attributes)):
         // No selections made yet, stock is 0 or less and not allowed to checkout.
         $out_of_stock_image = sprintf(DPU_OUT_OF_STOCK_IMAGE, zen_image_button(BUTTON_IMAGE_SOLD_OUT_SMALL, BUTTON_SOLD_OUT_SMALL_ALT));
         break;
@@ -213,7 +214,7 @@ class zcDPU_Ajax extends base {
 
 
     $this->responseText['weight'] = (string)$this->shoppingCart->weight;
-    if (DPU_SHOW_QUANTITY == 'true') {
+    if (DPU_SHOW_QUANTITY === 'true') {
       foreach ($this->shoppingCart->contents as $key => $value) {
         if (array_key_exists($key, $_SESSION['cart']->contents) && $_SESSION['cart']->contents[$key]['qty'] > 0) { // Hides quantity if the selected variant/options are not in the existing cart.
           $this->responseText['quantity'] = sprintf(DPU_SHOW_QUANTITY_FRAME, convertToFloat($_SESSION['cart']->contents[$key]['qty']));
@@ -600,7 +601,7 @@ class zcDPU_Ajax extends base {
           $global_total += $total;
           $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
           $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', convertToFloat($cart_quantity));
-          if (defined('DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS') && DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS == 'false') {
+            if (defined('DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS') && DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS === 'false') {
             $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
             $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
             $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
@@ -622,7 +623,7 @@ class zcDPU_Ajax extends base {
       }
     } // EOF FOR loop of product
 
-    if (defined('DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS') && DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS == 'false') {
+    if (defined('DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS') && DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS === 'false') {
       $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
       $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
       $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
