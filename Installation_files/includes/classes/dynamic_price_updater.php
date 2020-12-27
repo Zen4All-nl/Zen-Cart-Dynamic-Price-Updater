@@ -1,5 +1,6 @@
 <?php
 
+define('DPU_DEBUG', 'true');
 /**
  * Dynamic Price Updater V4.0
  * @copyright Dan Parry (Chrome) / Erik Kerkhoven (Design75)
