@@ -20,7 +20,7 @@ class zcDPU_Ajax extends base {
    *
    * @var string
    */
-  protected $responseType = 'success';
+  protected string $responseType = 'success';
 
   /**
    * Array of lines to be sent back.  The key of the array provides the attribute to identify it at the client side
@@ -28,7 +28,7 @@ class zcDPU_Ajax extends base {
    *
    * @var array
    */
-  var $responseText = [];
+  public array $responseText = [];
 
   /**
    * Array of attributes that could be associated with the product but have not been added by the customer to support
@@ -36,13 +36,13 @@ class zcDPU_Ajax extends base {
    *   been selected.  (This is a setup contrary to recommendations by ZC, but is a condition that perhaps is best addressed regardless.)
    * @var array
    */
-  protected $new_attributes = [];
+  protected array $new_attributes = [];
 
   /**
    * Array of temporary attributes.
    * @var array
    */
-  protected $new_temp_attributes = [];
+  protected array $new_temp_attributes = [];
 
   /**
    * - query to be stored with class usable in observers with older Zen Cart versions.
@@ -63,7 +63,7 @@ class zcDPU_Ajax extends base {
    *
    * @return array
    */
-  public function getDetails()
+  public function getDetails(): array
   {
     $this->setCurrentPage();
     $this->insertProduct();
@@ -92,7 +92,7 @@ class zcDPU_Ajax extends base {
    * @global object $currencies
    * @global object $db
    */
-  protected function prepareOutput()
+  protected function prepareOutput(): void
   {
     global $db, $currencies;
     $this->prefix = '';
@@ -244,7 +244,7 @@ class zcDPU_Ajax extends base {
    * Removes attributes that were added to help calculate the total price in absence of attributes having a default selection
    *   and the product being priced by attributes.
    */
-  protected function removeExtraSelections()
+    protected function removeExtraSelections(): void
   {
     if (!empty($this->new_attributes)) {
       foreach ($this->shoppingCart->contents as $products_id => $cart_contents) {
@@ -289,7 +289,7 @@ class zcDPU_Ajax extends base {
    * Tests for the need to show all types of prices to be displayed by and of each individual function to display text of a price.
    * @return bool
    */
-  protected function attributesDisplayMultiplePrices()
+  protected function attributesDisplayMultiplePrices(): bool
   {
 
     $response = ($this->attributeDisplayStartAtPrices() && $this->attributeDisplayAtLeastPrices());
@@ -301,7 +301,7 @@ class zcDPU_Ajax extends base {
    * Helper function to test for the need to show Start At price text.
    * @return bool
    */
-  protected function attributeDisplayStartAtPrices()
+  protected function attributeDisplayStartAtPrices(): bool
   {
 
     $response = ($this->priceDisplay === 'start_at_least' || $this->priceDisplay === 'start_at');
@@ -313,7 +313,7 @@ class zcDPU_Ajax extends base {
    * Helper function to test for the need to show At Least price text.
    * @return bool
    */
-  protected function attributeDisplayAtLeastPrices()
+  protected function attributeDisplayAtLeastPrices(): bool
   {
 
     $response = ($this->priceDisplay === 'start_at_least' || $this->priceDisplay === 'at_least');
@@ -326,7 +326,7 @@ class zcDPU_Ajax extends base {
    *
    * @global object $db
    */
-  protected function insertProduct(): void
+    public function insertProduct(): void
   {
     global $db;
 
@@ -539,7 +539,7 @@ class zcDPU_Ajax extends base {
    * @global object $currencies
    * @global object $db
    */
-  protected function getSideboxContent()
+    protected function getSideboxContent(): void
   {
     global $currencies, $db;
 
@@ -666,154 +666,19 @@ class zcDPU_Ajax extends base {
     $this->responseText['sideboxContent'] = implode('', $out);
   }
 
-  /**
-   *
-   * @global object $db
-   * @global string $request_type
-   */
-  function setCurrentPage()
-  {
-    global $db, $request_type;
-
-    if (isset($_SESSION['customer_id']) && $_SESSION['customer_id']) {
-      $wo_customer_id = $_SESSION['customer_id'];
-
-      $customer_query = "SELECT customers_firstname, customers_lastname
-                         FROM " . TABLE_CUSTOMERS . "
-                         WHERE customers_id = " . (int)$_SESSION['customer_id'];
-
-      $customer = $db->Execute($customer_query);
-
-      $wo_full_name = $customer->fields['customers_lastname'] . ', ' . $customer->fields['customers_firstname'];
-    } else {
-      $wo_customer_id = '';
-      $wo_full_name = '&yen;' . 'Guest';
-    }
-
-    $wo_session_id = zen_session_id();
-    $wo_ip_address = (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'Unknown');
-    $wo_user_agent = substr(zen_db_prepare_input($_SERVER['HTTP_USER_AGENT']), 0, 254);
-
-    $page = zen_get_info_page((int)$_POST['products_id']);
-    $uri = zen_href_link($page, zen_get_all_get_params(), $request_type);
-    if (substr($uri, -1) == '?') {
-      $uri = substr($uri, 0, strlen($uri) - 1);
-    }
-    $wo_last_page_url = (zen_not_null($uri) ? substr($uri, 0, 254) : 'Unknown');
-    $current_time = time();
-    $xx_mins_ago = ($current_time - 900);
-
-    // remove entries that have expired
-    $sql = "DELETE FROM " . TABLE_WHOS_ONLINE . "
-            WHERE time_last_click < '" . $xx_mins_ago . "'";
-
-    $db->Execute($sql);
-
-    $stored_customer_query = "SELECT COUNT(*) AS count
-                              FROM " . TABLE_WHOS_ONLINE . "
-                              WHERE session_id = '" . zen_db_input($wo_session_id) . "'
-                              AND ip_address='" . zen_db_input($wo_ip_address) . "'";
-
-    $stored_customer = $db->Execute($stored_customer_query);
-
-    if (empty($wo_session_id)) {
-      $wo_full_name = '&yen;' . 'Spider';
-    }
-
-    if ($stored_customer->fields['count'] > 0) {
-      $sql = "UPDATE " . TABLE_WHOS_ONLINE . "
-              SET customer_id = " . (int)$wo_customer_id . ",
-                  full_name = '" . zen_db_input($wo_full_name) . "',
-                  ip_address = '" . zen_db_input($wo_ip_address) . "',
-                  time_last_click = '" . zen_db_input($current_time) . "',
-                  last_page_url = '" . zen_db_input($wo_last_page_url) . "',
-                  host_address = '" . zen_db_input($_SESSION['customers_host_address']) . "',
-                  user_agent = '" . zen_db_input($wo_user_agent) . "'
-              WHERE session_id = '" . zen_db_input($wo_session_id) . "'
-              AND ip_address = '" . zen_db_input($wo_ip_address) . "'";
-
-      $db->Execute($sql);
-    } else {
-      $sql = "INSERT INTO " . TABLE_WHOS_ONLINE . " (customer_id, full_name, session_id, ip_address, time_entry, time_last_click, last_page_url, host_address, user_agent)
-              VALUES (" . (int)$wo_customer_id . ", '" . zen_db_input($wo_full_name) . "', '" . zen_db_input($wo_session_id) . "', '" . zen_db_input($wo_ip_address) . "', '" . zen_db_input($current_time) . "', '" . zen_db_input($current_time) . "', '" . zen_db_input($wo_last_page_url) . "', '" . zen_db_input($_SESSION['customers_host_address']) . "', '" . zen_db_input($wo_user_agent) . "')";
-      $db->Execute($sql);
-    }
-  }
-
-  /**
-   * Add backwards compatibility
-   *  Check if option name is not expected to have an option value (ie. text field, or File upload field)
-   * 
-   * @global object $db
-   * @global object $zco_notifier
-   * @param int $option_name_id
-   * @return boolean
-   */
-  public function zen_option_name_base_expects_no_values($option_name_id)
-  {
-    global $db, $zco_notifier;
-
-    $option_name_no_value = true;
-    if (!is_array($option_name_id)) {
-      $option_name_id = [
-        $option_name_id
-      ];
-    }
-
-    $sql = "SELECT products_options_type
-            FROM " . TABLE_PRODUCTS_OPTIONS . "
-            WHERE products_options_id :option_name_id:";
-    if (count($option_name_id) > 1) {
-      $sql2 = 'in (';
-      foreach ($option_name_id as $option_id) {
-        $sql2 .= ':option_id:,';
-        $sql2 = $db->bindVars($sql2, ':option_id:', $option_id, 'integer');
-      }
-      $sql2 = rtrim($sql2, ','); // Need to remove the final comma off of the above.
-      $sql2 .= ')';
-    } else {
-      $sql2 = ' = :option_id:';
-      $sql2 = $db->bindVars($sql2, ':option_id:', $option_name_id[0], 'integer');
-    }
-
-    $sql = $db->bindVars($sql, ':option_name_id:', $sql2, 'noquotestring');
-
-    $sql_result = $db->Execute($sql);
-
-    foreach ($sql_result as $opt_type) {
-
-      $test_var = true; // Set to false in observer if the name is not supposed to have a value associated
-      $zco_notifier->notify('FUNCTIONS_LOOKUPS_OPTION_NAME_NO_VALUES_OPT_TYPE', $opt_type, $test_var);
-
-      if ($test_var && $opt_type['products_options_type'] != PRODUCTS_OPTIONS_TYPE_TEXT && $opt_type['products_options_type'] != PRODUCTS_OPTIONS_TYPE_FILE) {
-        $option_name_no_value = false;
-        break;
-      }
-    }
-
-    return $option_name_no_value;
-  }
-
 }
 
-if (!function_exists('convertToFloat')) {
-
-  /**
-   * 
-   * @param int $input
-   * @return int
-   */
-  function convertToFloat($input = 0)
-  {
-    if ($input === null) {
-      return 0;
+if (!function_exists('convertToFloat')) { // this function is core/may be removed from ZC158 onwards
+    /**
+     * @param int $input
+     * @return float|int
+     */
+    function convertToFloat($input = 0)
+    {
+        if ($input === null) return 0;
+        $val = preg_replace('/[^0-9,\.\-]/', '', $input);
+        // do a non-strict compare here:
+        if ($val == 0) return 0;
+        return (float)$val;
     }
-    $val = preg_replace('/[^0-9,\.\-]/', '', $input);
-    // do a non-strict compare here:
-    if ($val == 0) {
-      return 0;
-    }
-    return (float)$val;
-  }
-
 }
