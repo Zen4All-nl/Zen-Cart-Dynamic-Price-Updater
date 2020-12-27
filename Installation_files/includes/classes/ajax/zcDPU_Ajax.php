@@ -65,12 +65,11 @@ class zcDPU_Ajax extends base {
    */
   public function getDetails(): array
   {
-    $this->setCurrentPage();
     $this->insertProduct();
     $this->shoppingCart->calculate();
     $this->removeExtraSelections();
-    $show_dynamic_price_updater_sidebox = true;
-    if ($show_dynamic_price_updater_sidebox == true) {
+    $show_dynamic_price_updater_sidebox = true;//todo why no check?
+    if ($show_dynamic_price_updater_sidebox === true) {
       $this->getSideboxContent();
     }
     $this->prepareOutput();
@@ -107,7 +106,8 @@ class zcDPU_Ajax extends base {
 
     switch (true) {
       //case ($this->product_stock <= 0 && (($this->num_options == $this->unused && !empty($this->new_temp_attributes)) || ($this->num_options > $this->unused && !empty($this->unused)))):
-      case ($this->attributeDisplayStartAtPrices() && !empty($this->new_temp_attributes) && ((!isset($this->num_options) && !isset($this->unused)) || (isset($this->num_options) && isset($this->unused) && ($this->num_options == $this->unused)))):
+      case ($this->attributeDisplayStartAtPrices() && !empty($this->new_temp_attributes)
+          && ((!isset($this->num_options) && !isset($this->unused)) || (isset($this->num_options, $this->unused) && ($this->num_options === $this->unused)))):
         $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT_STARTING_AT);
         $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT_STARTING_AT);
         break;
@@ -115,38 +115,20 @@ class zcDPU_Ajax extends base {
         $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT_AT_LEAST);
         $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT_AT_LEAST);
         break;
-      case (!isset($_POST['pspClass'])):
-        $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        break;
-      case ($_POST['pspClass'] == "productSpecialPrice"):
-        $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        break;
-      case ($_POST['pspClass'] == "productSalePrice"):
+      case ($_POST['pspClass'] === "productSalePrice"):
         $this->prefix = html_entity_decode(PRODUCT_PRICE_SALE);
         $this->preDiscPrefix = html_entity_decode(PRODUCT_PRICE_SALE);
         break;
-      case ($_POST['pspClass'] == "productSpecialPriceSale"):
-        $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        break;
-      case ($_POST['pspClass'] == "productPriceDiscount"):
+      case ($_POST['pspClass'] === "productPriceDiscount"):
         $this->prefix = html_entity_decode(PRODUCT_PRICE_DISCOUNT_PREFIX);
         $this->preDiscPrefix = html_entity_decode(PRODUCT_PRICE_DISCOUNT_PREFIX);
         break;
-      case ($_POST['pspClass'] == "normalprice"):
-        $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        break;
-      case ($_POST['pspClass'] == "productFreePrice"):
-        $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        break;
-      case ($_POST['pspClass'] == "productBasePrice"):
-        $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        break;
+    case (!isset($_POST['pspClass'])):
+    case ($_POST['pspClass'] === "productBasePrice"):
+    case ($_POST['pspClass'] === "productFreePrice"):
+    case ($_POST['pspClass'] === "productSpecialPrice"):
+    case ($_POST['pspClass'] === "productSpecialPriceSale"):
+    case ($_POST['pspClass'] === "normalprice"):
       default:
         $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
         $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
