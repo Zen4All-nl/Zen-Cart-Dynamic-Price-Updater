@@ -56,6 +56,15 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
     }
     ?>
     <script title="DPU">
+ if (typeof console === "undefined") { //if a console is not present, handle the calls, to not break code
+     console = {
+         log: function() { },
+         group: function() { },
+         groupEnd: function() { }
+     };
+ }
+      const DPUdebug = <?php echo DPU_DEBUG; ?> === !!'true';
+      if (DPUdebug) console.group("DPUdebug: jscript_dynamic_price_updater.php");
       // Set some global vars
       const theFormName = "<?php echo DPU_PRODUCT_FORM; //default: cart_quantity ?>";
       let theForm = false;
@@ -89,31 +98,43 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
     <?php } ?>
 
       function getPrice() { // called on initial page load, every attribute and quantity change
+          if (DPUdebug){ console.group("fn: getPrice");}
         let pspClass = false;
     <?php if (DPU_SHOW_LOADING_IMAGE === 'true') { ?>
           let psp = false;
           let thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; // id of the displayed price. default: productPrices ?>");
+
+          if (DPUdebug){ console.log("113: thePrice="); console.log(thePrice);}
+
           let test = false;
           if (thePrice) {
             test = thePrice.getElementsByTagName("span"); // get the possible price modifiers inside the Product Price block
           }
+
+          if (DPUdebug) {console.log("120: test=");console.log(test);}
+
           let a;
           let b = test.length;
           // On initial page load, the default ZC span+text is inside the Product Price block. eg. "Starting at: <span class="productBasePrice">&euro;14.99</span>
           // so b = 1. But as this span subsequently gets replaced by DPU, the length property of the "test" live htmlcollection subsequently becomes 0. Confusing.
           // Changes of attribute selection result in b = 0
 
+          if (DPUdebug) {console.log("128: b="+b + ", " + "test.length="+test.length);}
+
           for (a = 0; a < b; a++) { // parse for price modifier spans
             if (test[a].className === "productSpecialPrice" || test[a].className === "productSalePrice" || test[a].className === "productSpecialPriceSale") {
               psp = test[a];
+                if (DPUdebug) {console.group("133: loop psp=");console.log(psp);console.groupEnd()}
             }
           }
           if (!psp) { // no span price modifiers found...use the displayed price
             psp = thePrice;
+              if (DPUdebug) {console.group("138: psp=");console.log(psp);console.groupEnd()}
           }
           if (psp) {
             pspClass = psp.className;
             origPrice = psp.innerHTML;
+              if (DPUdebug) { console.log("143: pspClass=" + pspClass + ", origPrice=" + origPrice);}
           }
           if (psp && imgLoc === "replace") { // REPLACE price with loading image
             if (thePrice) {
@@ -207,9 +228,12 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
               break;
           }
         }
+          if (DPUdebug) {console.log("237: attributes="+attributes);}
+
         const products_id = <?php echo (int)$pid; ?>;
         let cartQuantity = $('input[name="cart_quantity"]').val();
         // send data to DPU_Ajax, method=getDetails to process the change and return the new price data to handlePrice
+          if (DPUdebug) {console.log("242: ajax DPU_Ajax&method=getDetails");}
         zcJS.ajax({
           url: 'ajax.php?act=DPU_Ajax&method=getDetails',
           data: {
@@ -221,6 +245,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
         }).done(function (resultArray) {
           handlePrice(resultArray);
         }).fail(function () {
+       if (DPUdebug) {console.log("254: ajax call FAIL");}
     <?php if (DPU_SHOW_LOADING_IMAGE === 'true') { ?>
             const thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: productPrices ?>");
             let test = thePrice.getElementsByTagName("span");
@@ -250,6 +275,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
     <?php } ?>
           //alert("Status returned - " + textStatus);
         });
+          if (DPUdebug){console.groupEnd();}
       }
 
       function updateInnerHTML(storeVal, psp, obj, replace) {
@@ -278,7 +304,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
       }
 
       function handlePrice(results) {
-        let thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
+        let thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: productPrices ?>");
         if (typeof (loadImg) !== "undefined" && loadImg.parentNode !== null && loadImg.parentNode.id === thePrice.id && imgLoc !== "replace") {
           thePrice.removeChild(loadImg);
         }
@@ -424,14 +450,18 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
       }
 
       function init() { //loaded by body tag
+        if (DPUdebug){ console.group("fn: init");}
         let selectName;
         let n = document.forms.length;
         let i;
         for (i = 0; i < n; i++) {
+            if (DPUdebug){ console.log('464: loop: form name='+document.forms[i].name);}
             if (document.forms[i].name === theFormName) { //locate the cart_quantity form
             theForm = document.forms[i];
+            if (DPUdebug){ console.group('467: theFormName "'+theFormName+'" FOUND:');console.log(theForm);console.groupEnd();}
             break;
           }//todo if form not found??
+            if (DPUdebug){ console.log('470: theFormName "'+theFormName+'" NOT FOUND')}
         }
 
         n = theForm.elements.length;
@@ -466,6 +496,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 if (theForm.elements[i].type === "checkbox") {
                   selectName = selectName.substring(0, selectName.indexOf("]") + 1);
                 }
+                if (DPUdebug){ console.log("505: selectName=" + selectName);}
                 if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) {//e.g. if (["id[1]"].indexOf(selectName) !== -1
                   theForm.elements[i].addEventListener("click", function () {
                     getPrice();
@@ -494,7 +525,9 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
         createSB();
 
         getPrice();
+          if (DPUdebug){ console.groupEnd();}
       }
+ if (DPUdebug){console.groupEnd();}
     </script>
     <?php
   }
