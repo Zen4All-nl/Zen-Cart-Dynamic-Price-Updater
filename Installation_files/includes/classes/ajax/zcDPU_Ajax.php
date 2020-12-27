@@ -7,6 +7,7 @@
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
  */
 class zcDPU_Ajax extends base {
+
   /**
    * Local instantiation of the shopping cart
    *
@@ -37,7 +38,7 @@ class zcDPU_Ajax extends base {
    */
   protected $new_attributes = [];
 
-  /*
+  /**
    * Array of temporary attributes.
    * @var array
    */
@@ -48,7 +49,7 @@ class zcDPU_Ajax extends base {
    */
   protected $product_attr_query;
 
-  /*
+  /**
    * Constructor
    */
   public function __construct()
@@ -164,11 +165,11 @@ class zcDPU_Ajax extends base {
       $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
       $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
       $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
-      /* use of number_format is governed by the instruction from the php manual: 
+      /* use of number_format is governed by the instruction from the php manual:
        *  http://php.net/manual/en/function.number-format.php
        * By providing below all four values, they will be assigned/used as provided above.
        *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
-       *   then just the number will come back with a comma used at every thousands group (ie. 1,000).  
+       *   then just the number will come back with a comma used at every thousands group (ie. 1,000).
        *  With the first two parameters provided, a comma will be used at every thousands group and a decimal (.) for every part of the whole number.
        *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
        *   decimal point and thousands group separater, respectively.
@@ -325,22 +326,23 @@ class zcDPU_Ajax extends base {
    *
    * @global object $db
    */
-  protected function insertProduct()
+  protected function insertProduct(): void
   {
     global $db;
-    $tempAttributes = [];
-    $temp = explode('|', $_POST['attributes']);
+
+    $attributes = [];
+    $temp = array_filter(explode('|', $_POST['attributes']));
     foreach ($temp as $item) {
       $tempArray = explode('~', $item);
-      $temp1 = str_replace('id[', '', $tempArray[0]);
-      $temp2 = str_replace(']', '', $temp1);
-      $tempAttributes[$temp2] = $tempArray[1];
+      if ($tempArray !== false && is_array($tempArray)) {
+        preg_match("/\[([^\]]*)\]/", $tempArray[0], $matches);
+        $attributes[$matches[1]] = $tempArray[1]; //string
+      }
     }
-    $attributes = array_filter($tempAttributes);
 
     if (!empty($attributes) || zen_has_product_attributes_values($_POST['products_id'])) {
-      // If product is priced by attribute then determine which attributes had not been added, 
-      //  add them to the attribute list such that product added to the cart is fully defined with the minimum value(s), though 
+      // If product is priced by attribute then determine which attributes have not been added,
+      //  add them to the attribute list such that product added to the cart is fully defined with the minimum value(s), though
       //  at the moment seems that similar would be needed even for not priced by attribute possibly... Will see... Maybe someone will report if an issue.
 
       if (!defined('DPU_PROCESS_ATTRIBUTES')) {
@@ -352,10 +354,10 @@ class zcDPU_Ajax extends base {
         $product_check = $db->Execute("SELECT products_priced_by_attribute
                                        FROM " . TABLE_PRODUCTS . "
                                        WHERE products_id = " . (int)$_POST['products_id']);
-        $product_check_result = $product_check->fields['products_priced_by_attribute'] == '1';
+        $product_check_result = $product_check->fields['products_priced_by_attribute'] === '1';
       }
 
-      // do not select display only attributes and do select attributes_price_base_included is true
+      // do NOT select display-only attributes but DO select attributes_price_base_included is true
       $this->product_attr_query = "SELECT pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type,
                                           ROUND(CONCAT(pa.price_prefix, pa.options_values_price), 5) AS value
                                    FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
@@ -370,25 +372,28 @@ class zcDPU_Ajax extends base {
 
       $product_att_query = $db->Execute($this->product_attr_query);
 
-// add attributes that are price dependent and in or not in the page's submission
-      // Support price determination for product that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
-      $process_price_attributes = (defined('DPU_PROCESS_ATTRIBUTES') && DPU_PROCESS_ATTRIBUTES === 'all') ? true : $product_check_result;
-      if ($process_price_attributes && $product_att_query->RecordCount() >= 1) {
+// add attributes that are price-dependent and in or not in the page's submission
+// Support price determination for product that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
+      $process_price_attributes = (DPU_PROCESS_ATTRIBUTES === 'all' ? true : $product_check_result);
+      if ($process_price_attributes && $product_att_query->RecordCount() > 0) {
         $the_options_id = 'x';
         $new_attributes = [];
-//        $this->num_options = 0;
+        if (empty($this->num_options)) {
+          $this->num_options = 0;
+        }
+
         foreach ($product_att_query as $item) {
-          if ($the_options_id != $item['options_id']) {
+          if ($the_options_id !== $item['options_id']) {
             $the_options_id = $item['options_id'];
             $new_attributes[$the_options_id] = $item['options_values_id'];
             $this->num_options++;
-          } elseif (array_key_exists($the_options_id, $attributes) && $attributes[$the_options_id] == $item['options_values_id']) {
+          } elseif (array_key_exists($the_options_id, $attributes) && $attributes[$the_options_id] === $item['options_values_id']) {
             $new_attributes[$the_options_id] = $item['options_values_id'];
           }
         }
 
         // Need to now resort the attributes as one would have expected them to be presented which is to sort the option name(s)
-        if (PRODUCTS_OPTIONS_SORT_ORDER == '0') {
+        if (PRODUCTS_OPTIONS_SORT_ORDER === '0') {
           $options_order_by = ' ORDER BY LPAD(popt.products_options_sort_order,11,"0"), popt.products_options_name';
         } else {
           $options_order_by = ' ORDER BY popt.products_options_name';
@@ -419,8 +424,6 @@ class zcDPU_Ajax extends base {
           // Taken from the expected format in includes/modules/attributes.
           switch ($options_type) {
             case (PRODUCTS_OPTIONS_TYPE_TEXT):
-              $options_id = TEXT_PREFIX . $options_id;
-              break;
             case (PRODUCTS_OPTIONS_TYPE_FILE):
               $options_id = TEXT_PREFIX . $options_id;
               break;
@@ -467,11 +470,13 @@ class zcDPU_Ajax extends base {
 
       $products_id = zen_get_uprid((int)$_POST['products_id'], $attributes);
 
-      $this->product_stock = zen_get_products_stock($_POST['products_id'], $attributes);
+      $this->product_stock = zen_get_products_stock($_POST['products_id']);
 
       $this->new_attributes[$products_id] = $this->new_temp_attributes;
       $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
-      $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity)));
+      $this->shoppingCart->contents[$products_id] = [
+        'qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))
+      ];
 
       foreach ($attributes as $option => $value) {
         //CLR 020606 check if input was from text box.  If so, store additional attribute information
@@ -522,7 +527,9 @@ class zcDPU_Ajax extends base {
       $products_id = (int)$_POST['products_id'];
       $this->product_stock = zen_get_products_stock($products_id);
       $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
-      $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity)));
+      $this->shoppingCart->contents[$products_id] = [
+        'qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))
+      ];
     }
   }
 
@@ -562,8 +569,9 @@ class zcDPU_Ajax extends base {
                                            AND options_id = " . (int)$option . "
                                            AND options_values_id = " . (int)$value);
 
-          if ($attribute_price->EOF)
+          if ($attribute_price->EOF) {
             continue;
+          }
 
           $data = $db->Execute("SELECT products_options_values_name
                                 FROM " . TABLE_PRODUCTS_OPTIONS_VALUES . "
@@ -575,9 +583,7 @@ class zcDPU_Ajax extends base {
           $sale_maker_discount = '';
           $total = 0;
 
-          if ($attribute_price->fields['product_attribute_is_free'] == '1' && zen_get_products_price_is_free((int)$prid)) {
-            // no charge for attribute
-          } else {
+          if ($attribute_price->fields['product_attribute_is_free'] != '1' && !zen_get_products_price_is_free((int)$prid)) {
             // + or blank adds
             if ($attribute_price->fields['price_prefix'] == '-') {
               // appears to confuse products priced by attributes
@@ -616,11 +622,11 @@ class zcDPU_Ajax extends base {
             $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
             $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
             $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
-            /* use of number_format is governed by the instruction from the php manual: 
+            /* use of number_format is governed by the instruction from the php manual:
              *  http://php.net/manual/en/function.number-format.php
              * By providing below all four values, they will be assigned/used as provided above.
              *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
-             *   then just the number will come back with a comma used at every thousands group (ie. 1,000).  
+             *   then just the number will come back with a comma used at every thousands group (ie. 1,000).
              *  With the first two parameters provided, a comma will be used at every thousands group and a decimal (.) for every part of the whole number.
              *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
              *   decimal point and thousands group separater, respectively.
@@ -638,11 +644,11 @@ class zcDPU_Ajax extends base {
       $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
       $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
       $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
-      /* use of number_format is governed by the instruction from the php manual: 
-       *  http://php.net/manual/en/function.number-format.php
+      /* use of number_format is governed by the instruction from the php manual:
+       *  https://php.net/manual/en/function.number-format.php
        * By providing below all four values, they will be assigned/used as provided above.
        *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
-       *   then just the number will come back with a comma used at every thousands group (ie. 1,000).  
+       *   then just the number will come back with a comma used at every thousands group (ie. 1,000).
        *  With the first two parameters provided, a comma will be used at every thousands group and a decimal (.) for every part of the whole number.
        *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
        *   decimal point and thousands group separater, respectively.
@@ -661,7 +667,7 @@ class zcDPU_Ajax extends base {
   }
 
   /**
-   * 
+   *
    * @global object $db
    * @global string $request_type
    */
@@ -688,7 +694,7 @@ class zcDPU_Ajax extends base {
     $wo_ip_address = (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'Unknown');
     $wo_user_agent = substr(zen_db_prepare_input($_SERVER['HTTP_USER_AGENT']), 0, 254);
 
-    $page = zen_get_info_page((int)$_GET['products_id']);
+    $page = zen_get_info_page((int)$_POST['products_id']);
     $uri = zen_href_link($page, zen_get_all_get_params(), $request_type);
     if (substr($uri, -1) == '?') {
       $uri = substr($uri, 0, strlen($uri) - 1);
@@ -724,7 +730,7 @@ class zcDPU_Ajax extends base {
                   host_address = '" . zen_db_input($_SESSION['customers_host_address']) . "',
                   user_agent = '" . zen_db_input($wo_user_agent) . "'
               WHERE session_id = '" . zen_db_input($wo_session_id) . "'
-              AND ip_address='" . zen_db_input($wo_ip_address) . "'";
+              AND ip_address = '" . zen_db_input($wo_ip_address) . "'";
 
       $db->Execute($sql);
     } else {
@@ -734,9 +740,14 @@ class zcDPU_Ajax extends base {
     }
   }
 
-  // Add backwards compatibility
-  /*
+  /**
+   * Add backwards compatibility
    *  Check if option name is not expected to have an option value (ie. text field, or File upload field)
+   * 
+   * @global object $db
+   * @global object $zco_notifier
+   * @param int $option_name_id
+   * @return boolean
    */
   public function zen_option_name_base_expects_no_values($option_name_id)
   {
@@ -744,7 +755,9 @@ class zcDPU_Ajax extends base {
 
     $option_name_no_value = true;
     if (!is_array($option_name_id)) {
-      $option_name_id = array($option_name_id);
+      $option_name_id = [
+        $option_name_id
+      ];
     }
 
     $sql = "SELECT products_options_type
@@ -785,19 +798,21 @@ class zcDPU_Ajax extends base {
 
 if (!function_exists('convertToFloat')) {
 
+  /**
+   * 
+   * @param int $input
+   * @return int
+   */
   function convertToFloat($input = 0)
   {
     if ($input === null) {
       return 0;
     }
-
     $val = preg_replace('/[^0-9,\.\-]/', '', $input);
-
     // do a non-strict compare here:
     if ($val == 0) {
       return 0;
     }
-
     return (float)$val;
   }
 
