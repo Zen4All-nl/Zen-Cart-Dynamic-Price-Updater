@@ -24,7 +24,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
     if (class_exists('DPU')) {
       $dpu = new DPU();
-    }
+
 // Check that there are conditions that need to trigger DPU:
 //  - quantity box in use or quantity not limited to 1
 //  - any attribute options that affect the price. Assign only these option name ids to $optionIds, to subsequently attach events to only these options.
@@ -49,7 +49,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
   if (empty($pidp) && empty($optionIds)) {
     $load = false;
   }
-
+  }
   if ($load) {
     if (!defined('DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY')) {
       define('DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY', 'productDetailsList_product_info_quantity');
