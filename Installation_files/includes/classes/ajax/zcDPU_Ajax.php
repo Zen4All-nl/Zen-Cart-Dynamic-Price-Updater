@@ -409,7 +409,7 @@ class zcDPU_Ajax extends base {
                         $tmp = __LINE__ . ': $the_options_id=' . $the_options_id . "\n" . '$item=' . print_r($item, true);
                         $this->logDPU($tmp);
                     }
-					
+
                     // If this is the first parse of this option id, assign the first option value defined in the database with this option id as either
                     // it is the selected ajax POST value (by coincidence) or,
                     // it is the default value or
@@ -434,10 +434,10 @@ class zcDPU_Ajax extends base {
                             $tmp = __LINE__ . ': using ajax POST' . "\n" . '$new_attributes=' . print_r($new_attributes, true);
                             $this->logDPU($tmp);
           }
-		  
+
         }
                 }
-				
+
                 if ($this->DPUdebug) {
                     $tmp = __LINE__ . ': $new_attributes=' . print_r($new_attributes, true) . '$this->num_options=' . $this->num_options;
                     $this->logDPU($tmp);
@@ -467,7 +467,7 @@ class zcDPU_Ajax extends base {
         // must contain either the selection or the lowest priced selection
         // if an "invalid" selection had been made.
         // To get removed from the cart for display purposes the $options_id must be added to $this->new_temp_attributes
-          
+
 		  if ($this->DPUdebug) {
               $tmp = __LINE__ . ': $products_options_names as $item';
               $this->logDPU($tmp);
@@ -499,7 +499,7 @@ class zcDPU_Ajax extends base {
           if ($this->DPUdebug) {
               $this->logDPU(__LINE__ . ': $options_id=' . $options_id . ', $attributes[$options_id]=' . (!empty($attributes[$options_id]) ? $attributes[$options_id] : 'NOT SET'));
                     }
-					
+
 //todo  why is test $attributes[$options_id] === 0 integer when $attributes[$options_id] is a string
           if (isset($attributes[$options_id]) && $attributes[$options_id] === 0 && !zen_option_name_base_expects_no_values($options_id)) {
             $this->display_only_value = true;
