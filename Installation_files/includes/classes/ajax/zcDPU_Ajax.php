@@ -48,8 +48,12 @@ class zcDPU_Ajax extends base {
    * SQL query (string that is executed/becomes an object) to be stored with class, usable in observers with older Zen Cart versions.
    */
   protected $product_attr_query;
+    /**
+     * @var int
+     */
+    protected $product_stock;
 
-  /**
+    /**
    * Constructor
    */
   public function __construct()
@@ -540,7 +544,7 @@ class zcDPU_Ajax extends base {
 
       $products_id = zen_get_uprid((int)$_POST['products_id'], $attributes);
 
-      $this->product_stock = zen_get_products_stock($_POST['products_id']);
+      $this->product_stock = (int)zen_get_products_stock($_POST['products_id']);
 
       $this->new_attributes[$products_id] = $this->new_temp_attributes;
       $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
@@ -593,7 +597,7 @@ class zcDPU_Ajax extends base {
       }
     } else {
       $products_id = (int)$_POST['products_id'];
-      $this->product_stock = zen_get_products_stock($products_id);
+      $this->product_stock = (int)zen_get_products_stock($products_id);
       $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
             $this->shoppingCart->contents[$products_id] = ['qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))];
     }
