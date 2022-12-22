@@ -53,6 +53,8 @@ class zcDPU_Ajax extends base {
      */
     protected $product_stock;
 
+    protected $clearLog, $display_only_value, $DPUdebug, $num_options, $preDiscPrefix, $prefix, $priceDisplay, $unused;
+
     /**
    * Constructor
    */
