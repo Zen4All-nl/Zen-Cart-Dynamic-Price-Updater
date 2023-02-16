@@ -1,9 +1,10 @@
 <?php
 
 /**
- * Dynamic Price Updater V4.0
+ * Dynamic Price Updater V5.0
  * @copyright Dan Parry (Chrome) / Erik Kerkhoven (Design75)
  * @original author Dan Parry (Chrome)
+ * @modified by dbltoe 02-16-2023
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
  */
 class zcDPU_Ajax extends base {
@@ -20,7 +21,7 @@ class zcDPU_Ajax extends base {
    *
    * @var string
    */
-  protected $responseType = 'success';
+  protected string $responseType = 'success';
 
   /**
    * Array of lines to be sent back.  The key of the array provides the attribute to identify it at the client side
@@ -28,7 +29,7 @@ class zcDPU_Ajax extends base {
    *
    * @var array
    */
-  var $responseText = [];
+  public array $responseText = [];
 
   /**
    * Array of attributes that could be associated with the product but have not been added by the customer to support
@@ -36,24 +37,36 @@ class zcDPU_Ajax extends base {
    *   been selected.  (This is a setup contrary to recommendations by ZC, but is a condition that perhaps is best addressed regardless.)
    * @var array
    */
-  protected $new_attributes = [];
+  protected array $new_attributes = [];
 
-  /*
+  /**
    * Array of temporary attributes.
    * @var array
    */
-  protected $new_temp_attributes = array();
+  protected array $new_temp_attributes = [];
 
   /**
-   * - query to be stored with class usable in observers with older Zen Cart versions.
+   * SQL query (string that is executed/becomes an object) to be stored with class, usable in observers with older Zen Cart versions.
    */
   protected $product_attr_query;
+    /**
+     * @var int
+     */
+    protected $product_stock;
 
-  /*
+    /**
    * Constructor
    */
   public function __construct()
   {
+      //debugging
+      $this->DPUdebug = DPU_DEBUG === 'true'; // create a DPU_debug.log
+      $this->clearLog = true; // empty file before logging a change of attribute
+      if ($this->DPUdebug && $this->clearLog) {
+          $this->logDPU('', true);
+      }
+      $this->unused = 0;
+      $this->num_options = 0;
     // grab the shopping cart class and instantiate it
     $this->shoppingCart = new shoppingCart();
   }
@@ -63,14 +76,13 @@ class zcDPU_Ajax extends base {
    *
    * @return array
    */
-  public function getDetails()
+  public function getDetails(): array
   {
-    $this->setCurrentPage();
     $this->insertProduct();
     $this->shoppingCart->calculate();
     $this->removeExtraSelections();
-    $show_dynamic_price_updater_sidebox = true;
-    if ($show_dynamic_price_updater_sidebox == true) {
+    $show_dynamic_price_updater_sidebox = true;//todo why no check?
+    if ($show_dynamic_price_updater_sidebox === true) {
       $this->getSideboxContent();
     }
     $this->prepareOutput();
@@ -92,7 +104,7 @@ class zcDPU_Ajax extends base {
    * @global object $currencies
    * @global object $db
    */
-  protected function prepareOutput()
+  protected function prepareOutput(): void
   {
     global $db, $currencies;
     $this->prefix = '';
@@ -107,7 +119,8 @@ class zcDPU_Ajax extends base {
 
     switch (true) {
       //case ($this->product_stock <= 0 && (($this->num_options == $this->unused && !empty($this->new_temp_attributes)) || ($this->num_options > $this->unused && !empty($this->unused)))):
-      case ($this->attributeDisplayStartAtPrices() && !empty($this->new_temp_attributes) && ((!isset($this->num_options) && !isset($this->unused)) || (isset($this->num_options) && isset($this->unused) && ($this->num_options == $this->unused)))):
+      case ($this->attributeDisplayStartAtPrices() && !empty($this->new_temp_attributes)
+          && ((!isset($this->num_options) && !isset($this->unused)) || (isset($this->num_options, $this->unused) && ($this->num_options === $this->unused)))):
         $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT_STARTING_AT);
         $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT_STARTING_AT);
         break;
@@ -115,38 +128,20 @@ class zcDPU_Ajax extends base {
         $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT_AT_LEAST);
         $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT_AT_LEAST);
         break;
-      case (!isset($_POST['pspClass'])):
-        $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        break;
-      case ($_POST['pspClass'] == "productSpecialPrice"):
-        $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        break;
-      case ($_POST['pspClass'] == "productSalePrice"):
+      case ($_POST['pspClass'] === "productSalePrice"):
         $this->prefix = html_entity_decode(PRODUCT_PRICE_SALE);
         $this->preDiscPrefix = html_entity_decode(PRODUCT_PRICE_SALE);
         break;
-      case ($_POST['pspClass'] == "productSpecialPriceSale"):
-        $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        break;
-      case ($_POST['pspClass'] == "productPriceDiscount"):
+      case ($_POST['pspClass'] === "productPriceDiscount"):
         $this->prefix = html_entity_decode(PRODUCT_PRICE_DISCOUNT_PREFIX);
         $this->preDiscPrefix = html_entity_decode(PRODUCT_PRICE_DISCOUNT_PREFIX);
         break;
-      case ($_POST['pspClass'] == "normalprice"):
-        $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        break;
-      case ($_POST['pspClass'] == "productFreePrice"):
-        $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        break;
-      case ($_POST['pspClass'] == "productBasePrice"):
-        $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
-        break;
+    case (!isset($_POST['pspClass'])):
+    case ($_POST['pspClass'] === "productBasePrice"):
+    case ($_POST['pspClass'] === "productFreePrice"):
+    case ($_POST['pspClass'] === "productSpecialPrice"):
+    case ($_POST['pspClass'] === "productSpecialPriceSale"):
+    case ($_POST['pspClass'] === "normalprice"):
       default:
         $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
         $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
@@ -161,15 +156,15 @@ class zcDPU_Ajax extends base {
                                    FROM " . TABLE_PRODUCTS . "
                                    WHERE products_id = " . (int)$_POST['products_id'] . "
                                    LIMIT 1");
-    if (DPU_SHOW_CURRENCY_SYMBOLS == 'false') {
+    if (DPU_SHOW_CURRENCY_SYMBOLS === 'false') {
       $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
       $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
       $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
-      /* use of number_format is governed by the instruction from the php manual: 
+      /* use of number_format is governed by the instruction from the php manual:
        *  http://php.net/manual/en/function.number-format.php
        * By providing below all four values, they will be assigned/used as provided above.
        *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
-       *   then just the number will come back with a comma used at every thousands group (ie. 1,000).  
+       *   then just the number will come back with a comma used at every thousands group (ie. 1,000).
        *  With the first two parameters provided, a comma will be used at every thousands group and a decimal (.) for every part of the whole number.
        *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
        *   decimal point and thousands group separater, respectively.
@@ -178,7 +173,7 @@ class zcDPU_Ajax extends base {
       $this->responseText['preDiscPriceTotal'] = number_format(zen_add_tax($this->shoppingCart->total_before_discounts, zen_get_tax_rate($product_check->fields['products_tax_class_id'])), $decimal_places, $decimal_point, $thousands_point);
     } else {
       $this->responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, 0 /* zen_get_tax_rate($product_check->fields['products_tax_class_id']) *//* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
-      $this->responseText['preDiscPriceTotal'] = $currencies->display_price($this->shoppingCart->total_before_discounts, zen_get_tax_rate($product_check->fields['products_tax_class_id']));
+      $this->responseText['preDiscPriceTotal'] = $currencies->display_price($this->shoppingCart->show_total_before_discounts, zen_get_tax_rate($product_check->fields['products_tax_class_id']));
     }
 
     if (!defined('DPU_OUT_OF_STOCK_IMAGE')) {
@@ -187,11 +182,11 @@ class zcDPU_Ajax extends base {
 
     $out_of_stock_image = '';
     $out_of_stock = false;
-    if ((STOCK_CHECK == 'true') && (STOCK_ALLOW_CHECKOUT != 'true')) {
+    if ((STOCK_CHECK === 'true') && (STOCK_ALLOW_CHECKOUT !== 'true')) {
       $out_of_stock = true;
     }
 
-    $this->responseText['stock_quantity'] = $this->product_stock . sprintf(DPU_TEXT_PRODUCT_QUANTITY, (abs($this->product_stock) == 1 ? DPU_TEXT_PRODUCT_QUANTITY_SINGLE : DPU_TEXT_PRODUCT_QUANTITY_MULTIPLE));
+    $this->responseText['stock_quantity'] = $this->product_stock . sprintf(DPU_TEXT_PRODUCT_QUANTITY, (abs($this->product_stock) === 1 ? DPU_TEXT_PRODUCT_QUANTITY_SINGLE : DPU_TEXT_PRODUCT_QUANTITY_MULTIPLE));
 
     switch (true) {
       case ($this->product_stock > 0): // No consideration made yet on allowing quantity to go less than 0.
@@ -199,10 +194,11 @@ class zcDPU_Ajax extends base {
         break;
       case (false):
         $out_of_stock = false;
-        if ((STOCK_CHECK == 'true') && (STOCK_ALLOW_CHECKOUT != 'true')) {
+        if ((STOCK_CHECK === 'true') && (STOCK_ALLOW_CHECKOUT !== 'true')) {
           $out_of_stock = true;
         }
-      case ($out_of_stock && $this->num_options == $this->unused && !empty($this->new_temp_attributes)):
+        //todo break here??
+      case ($out_of_stock && $this->num_options === $this->unused && !empty($this->new_temp_attributes)):
         // No selections made yet, stock is 0 or less and not allowed to checkout.
         $out_of_stock_image = sprintf(DPU_OUT_OF_STOCK_IMAGE, zen_image_button(BUTTON_IMAGE_SOLD_OUT_SMALL, BUTTON_SOLD_OUT_SMALL_ALT));
         break;
@@ -219,19 +215,18 @@ class zcDPU_Ajax extends base {
     if ($out_of_stock) {
       if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'quantity_replace') {
         $this->responseText['stock_quantity'] = $out_of_stock_image;
-      } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'after') {
+      } elseif (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'after') {
         $this->responseText['stock_quantity'] .= '&nbsp;' . $out_of_stock_image;
-      } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'before') {
+      } elseif (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'before') {
         $this->responseText['stock_quantity'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
-      } else if (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
+      } elseif (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
         $this->responseText['priceTotal'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
         $this->responseText['preDiscPriceTotal'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
       }
     }
 
-
     $this->responseText['weight'] = (string)$this->shoppingCart->weight;
-    if (DPU_SHOW_QUANTITY == 'true') {
+    if (DPU_SHOW_QUANTITY === 'true') {
       foreach ($this->shoppingCart->contents as $key => $value) {
         if (array_key_exists($key, $_SESSION['cart']->contents) && $_SESSION['cart']->contents[$key]['qty'] > 0) { // Hides quantity if the selected variant/options are not in the existing cart.
           $this->responseText['quantity'] = sprintf(DPU_SHOW_QUANTITY_FRAME, convertToFloat($_SESSION['cart']->contents[$key]['qty']));
@@ -244,7 +239,7 @@ class zcDPU_Ajax extends base {
    * Removes attributes that were added to help calculate the total price in absence of attributes having a default selection
    *   and the product being priced by attributes.
    */
-  protected function removeExtraSelections()
+    protected function removeExtraSelections(): void
   {
     if (!empty($this->new_attributes)) {
       foreach ($this->shoppingCart->contents as $products_id => $cart_contents) {
@@ -259,11 +254,11 @@ class zcDPU_Ajax extends base {
             //CLR 030228 add htmlspecialchars processing.  This handles quotes and other special chars in the user input.
             $attr_value = NULL;
             $blank_value = FALSE;
-            if (strstr($option, TEXT_PREFIX)) {
-              if (trim($value) == NULL) {
+            if (strpos((string)$option, TEXT_PREFIX) !== false) { //TEXT_PREFIX is a hidden (gID=6) db constant, default value "txt_". Prefix used to differentiate between text option values and other option values.
+              if (trim($value) === NULL) {
                 $blank_value = TRUE;
               } else {
-                $option = substr($option, strlen(TEXT_PREFIX));
+                $option = substr((string)$option, strlen(TEXT_PREFIX));
                 $attr_value = stripslashes($value);
                 $value = PRODUCTS_OPTIONS_VALUES_TEXT_ID;
                 unset($this->shoppingCart->contents[$products_id]['attributes_values'][$option]); // = $attr_value;
@@ -289,36 +284,30 @@ class zcDPU_Ajax extends base {
    * Tests for the need to show all types of prices to be displayed by and of each individual function to display text of a price.
    * @return bool
    */
-  protected function attributesDisplayMultiplePrices()
+  protected function attributesDisplayMultiplePrices(): bool
   {
 
-    $response = ($this->attributeDisplayStartAtPrices() && $this->attributeDisplayAtLeastPrices());
-
-    return $response;
+      return ($this->attributeDisplayStartAtPrices() && $this->attributeDisplayAtLeastPrices());
   }
 
   /**
    * Helper function to test for the need to show Start At price text.
    * @return bool
    */
-  protected function attributeDisplayStartAtPrices()
+  protected function attributeDisplayStartAtPrices(): bool
   {
 
-    $response = ($this->priceDisplay === 'start_at_least' || $this->priceDisplay === 'start_at');
-
-    return $response;
+      return ($this->priceDisplay === 'start_at_least' || $this->priceDisplay === 'start_at');
   }
 
   /**
    * Helper function to test for the need to show At Least price text.
    * @return bool
    */
-  protected function attributeDisplayAtLeastPrices()
+  protected function attributeDisplayAtLeastPrices(): bool
   {
 
-    $response = ($this->priceDisplay === 'start_at_least' || $this->priceDisplay === 'at_least');
-
-    return $response;
+      return ($this->priceDisplay === 'start_at_least' || $this->priceDisplay === 'at_least');
   }
 
   /**
@@ -326,44 +315,65 @@ class zcDPU_Ajax extends base {
    *
    * @global object $db
    */
-  protected function insertProduct()
+    public function insertProduct(): void
   {
     global $db;
-    $tempAttributes = [];
-    $temp = explode('|', $_POST['attributes']);
+
+    $attributes = [];
+        if ($this->DPUdebug) {
+            $this->logDPU("fn insertproduct:\nproduct_id=" . $_POST['products_id'] . ', $_POST[\'attributes\']=' . $_POST['attributes']);
+        }
+//e.g.
+// checkboxes attribute 29+30+32 selected: attributes=id[1][32]~32|id[1][29]~29|id[1][30]~30|
+// todo this code does not work for multiple checkboxes...only gets the last one
+// radio: attributes=id[1]~29|
+//
+    $temp = array_filter(explode('|', $_POST['attributes'])); // e.g. radio [0] => id[1]~29
+
+        if ($this->DPUdebug) {
+            $tmp = __LINE__ . ': $temp=' . print_r($temp, true);
+            $this->logDPU($tmp);
+        }
+
     foreach ($temp as $item) {
       $tempArray = explode('~', $item);
-      $temp1 = str_replace('id[', '', $tempArray[0]);
-      $temp2 = str_replace(']', '', $temp1);
-      $tempAttributes[$temp2] = $tempArray[1];
-    }
-    $attributes = array_filter($tempAttributes);
 
-    if (!empty($attributes) || zen_has_product_attributes_values($_POST['products_id'])) {
-      // If product is priced by attribute then determine which attributes had not been added, 
-      //  add them to the attribute list such that product added to the cart is fully defined with the minimum value(s), though 
+            if ($this->DPUdebug) {
+                $tmp = __LINE__ . ': $tempArray=' . print_r($tempArray, true);
+                $this->logDPU($tmp);
+            }
+
+      if ($tempArray !== false && is_array($tempArray)) {
+        $temp1 = str_replace('id[', '', $tempArray[0]); //remove "[id"
+        $temp2 = str_replace(']', '', $temp1); //remove "]", leaving id_number (and prefix txt_ for text/file)
+        $attributes[$temp2] = $tempArray[1]; //index may be integer
+      }
+    }
+
+        if ($this->DPUdebug) {
+            $tmp = __LINE__ . ': $attributes=' . print_r($attributes, true);
+            $this->logDPU($tmp);
+        }
+
+        //checkbox, 1 selection: [1] => 29
+        //mv_printVar($attributes);
+
+// $attributes e.g. [1] => 29 //
+//todo what about multiple checkboxes: cannot have the same option name [1] as key, so elements need to be arrays/array processing needs to be changed!
+
+    if (!empty($attributes) || zen_has_product_attributes_values($_POST['products_id'])) { // zen function returns true if any option value price is a modifier (<> 0)
+      // If product is priced by attribute then determine which attributes have not been added,
+      //  add them to the attribute list such that product added to the cart is fully defined with the minimum value(s), though
       //  at the moment seems that similar would be needed even for not priced by attribute possibly... Will see... Maybe someone will report if an issue.
 
-      if (!defined('DPU_PROCESS_ATTRIBUTES')) {
-        define('DPU_PROCESS_ATTRIBUTES', 'all');
-      }
-
-      $product_check_result = false;
-      if (DPU_PROCESS_ATTRIBUTES !== 'all') {
-        $product_check = $db->Execute("SELECT products_priced_by_attribute
-                                       FROM " . TABLE_PRODUCTS . "
-                                       WHERE products_id = " . (int)$_POST['products_id']);
-        $product_check_result = $product_check->fields['products_priced_by_attribute'] == '1';
-      }
-
-      // do not select display only attributes and do select attributes_price_base_included is true
+      // Get all this product's attributes but NOT the "display-only" attributes and DO select when attributes_price_base_included is true
       $this->product_attr_query = "SELECT pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type,
-                                          ROUND(CONCAT(pa.price_prefix, pa.options_values_price), 5) as value
+                                          ROUND(CONCAT(pa.price_prefix, pa.options_values_price), 5) AS value
                                    FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
                                    LEFT JOIN " . TABLE_PRODUCTS_OPTIONS . " po ON (po.products_options_id = pa.options_id)
                                    WHERE products_id = " . (int)$_POST['products_id'] . "
-                                   AND attributes_display_only != 1
-                                   AND attributes_price_base_included= 1
+                                   AND pa.attributes_display_only != 1
+                                   AND pa.attributes_price_base_included = 1
                                    ORDER BY pa.options_id, value";
 
       $query_handled = false;
@@ -371,25 +381,71 @@ class zcDPU_Ajax extends base {
 
       $product_att_query = $db->Execute($this->product_attr_query);
 
-// add attributes that are price dependent and in or not in the page's submission
-      // Support price determination for product that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
-      $process_price_attributes = (defined('DPU_PROCESS_ATTRIBUTES') && DPU_PROCESS_ATTRIBUTES === 'all') ? true : $product_check_result;
-      if ($process_price_attributes && $product_att_query->RecordCount() >= 1) {
+// add attributes that are price-dependent and in or not in the page's submission
+// Support price determination for product that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
+
+            if (!defined('DPU_PROCESS_ATTRIBUTES')) {
+                define('DPU_PROCESS_ATTRIBUTES', 'all'); //process all products that have attributes, whether priced by attribute or not
+            }
+            $process_price_attributes = DPU_PROCESS_ATTRIBUTES === 'all' ? true : zen_get_products_price_is_priced_by_attributes((int)$_POST['products_id']);
+
+            if ($this->DPUdebug) {
+                $this->logDPU(__LINE__ . ': DPU_PROCESS_ATTRIBUTES="' . DPU_PROCESS_ATTRIBUTES . '", $process_price_attributes=' .  $process_price_attributes . ', product_att_query->RecordCount()=' . $product_att_query->RecordCount());
+            }
+
+//Note:
+//product IS priced_by_attribute: each attribute displays the base price+attribute price
+//product IS NOT priced_by_attribute: each attribute displays the attribute price as a modification (addition/subtraction) of the displayed base price
+
+//this section produces an array "$new_attributes" containing all the product's attributes: the selected options/values from the ajax call and default/unselected option/values attributes
+
+      if ($process_price_attributes && $product_att_query->RecordCount() > 0) {
         $the_options_id = 'x';
         $new_attributes = [];
-//        $this->num_options = 0;
-        foreach ($product_att_query as $item) {
-          if ($the_options_id != $item['options_id']) {
+
+
+        foreach ($product_att_query as $item) { // loop through all the values for each product option
+
+                    if ($this->DPUdebug) {
+                        $tmp = __LINE__ . ': $the_options_id=' . $the_options_id . "\n" . '$item=' . print_r($item, true);
+                        $this->logDPU($tmp);
+                    }
+
+                    // If this is the first parse of this option id, assign the first option value defined in the database with this option id as either
+                    // it is the selected ajax POST value (by coincidence) or,
+                    // it is the default value or
+                    // it will be overwritten on a subsequent pass with the ACTUAL selected ajax POST value
+                    // note: option type "file" and "text" have only one option_value_id = 0. This is dealt with later.
+          if ($the_options_id !== $item['options_id']) {
             $the_options_id = $item['options_id'];
             $new_attributes[$the_options_id] = $item['options_values_id'];
-            $this->num_options++;
-          } elseif (array_key_exists($the_options_id, $attributes) && $attributes[$the_options_id] == $item['options_values_id']) {
-            $new_attributes[$the_options_id] = $item['options_values_id'];
-          }
-        }
+            $this->num_options++; // the number of unique option ids
 
-        // Need to now resort the attributes as one would have expected them to be presented which is to sort the option name(s)
-        if (PRODUCTS_OPTIONS_SORT_ORDER == '0') {
+                        if ($this->DPUdebug) {
+                            $tmp = __LINE__ . ': $new_attributes=' . print_r($new_attributes, true);
+                            $this->logDPU($tmp);
+                        }
+
+//if this option id is already in the array, overwrite its option value with the SELECTED value, or continue.
+//So only ONE option id + option value is stored...no multiple checkboxes/values
+          } elseif (array_key_exists($the_options_id, $attributes) && $attributes[$the_options_id] === $item['options_values_id']) { // this option id AND option value is currently selected/is in the ajax POST
+            $new_attributes[$the_options_id] = $item['options_values_id'];
+
+                        if ($this->DPUdebug) {
+                            $tmp = __LINE__ . ': using ajax POST' . "\n" . '$new_attributes=' . print_r($new_attributes, true);
+                            $this->logDPU($tmp);
+          }
+
+        }
+                }
+
+                if ($this->DPUdebug) {
+                    $tmp = __LINE__ . ': $new_attributes=' . print_r($new_attributes, true) . '$this->num_options=' . $this->num_options;
+                    $this->logDPU($tmp);
+                }
+
+        // set the sort order
+        if (PRODUCTS_OPTIONS_SORT_ORDER === '0') { //Admin Product Info:, 0= Sort Order, Option Name / 1= Option Name
           $options_order_by = ' ORDER BY LPAD(popt.products_options_sort_order,11,"0"), popt.products_options_name';
         } else {
           $options_order_by = ' ORDER BY popt.products_options_name';
@@ -411,17 +467,26 @@ class zcDPU_Ajax extends base {
         //  To appear in the cart, $new_temp_attributes[$options_id]
         // must contain either the selection or the lowest priced selection
         // if an "invalid" selection had been made.
-        //  To get removed from the cart for display purposes
-        // the $options_id must be added to $this->new_temp_attributes
+        // To get removed from the cart for display purposes the $options_id must be added to $this->new_temp_attributes
+
+		  if ($this->DPUdebug) {
+              $tmp = __LINE__ . ': $products_options_names as $item';
+              $this->logDPU($tmp);
+          }
+
         foreach ($products_options_names as $item) {
+
+                    if ($this->DPUdebug) {
+                        $tmp = __LINE__ . ': $item=' . print_r($item, true);
+                        $this->logDPU($tmp);
+                    }
+
           $options_id = $item['products_options_id'];
           $options_type = $item['products_options_type'];
 
           // Taken from the expected format in includes/modules/attributes.
           switch ($options_type) {
             case (PRODUCTS_OPTIONS_TYPE_TEXT):
-              $options_id = TEXT_PREFIX . $options_id;
-              break;
             case (PRODUCTS_OPTIONS_TYPE_FILE):
               $options_id = TEXT_PREFIX . $options_id;
               break;
@@ -432,25 +497,34 @@ class zcDPU_Ajax extends base {
 
           $this->display_only_value = isset($attributes[$options_id]) ? !zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id]) : true;
 
-          if (isset($attributes[$options_id]) && $attributes[$options_id] === 0 && (function_exists('zen_option_name_base_expects_no_values') ? !zen_option_name_base_expects_no_values($options_id) : !$this->zen_option_name_base_expects_no_values($options_id)))
+          if ($this->DPUdebug) {
+              $this->logDPU(__LINE__ . ': $options_id=' . $options_id . ', $attributes[$options_id]=' . (!empty($attributes[$options_id]) ? $attributes[$options_id] : 'NOT SET'));
+                    }
+
+//todo  why is test $attributes[$options_id] === 0 integer when $attributes[$options_id] is a string
+          if (isset($attributes[$options_id]) && $attributes[$options_id] === 0 && !zen_option_name_base_expects_no_values($options_id)) {
             $this->display_only_value = true;
+                    }
 
           $this->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_DISPLAY_ONLY');
 
           if (array_key_exists($options_id, $attributes) && !$this->display_only_value) {
             // If the options_id selected is a valid attribute then add it to be part of the calculation
             $new_temp_attributes[$options_id] = $attributes[$options_id];
+
           } elseif (array_key_exists($options_id, $attributes) && $this->display_only_value) {
             // If the options_id selected is not a valid attribute, then add a valid attribute determined above and mark it
             //   to be deleted from the shopping cart after the price has been determined.
             $this->new_temp_attributes[$options_id] = $attributes[$options_id];
             $new_temp_attributes[$options_id] = $new_attributes[$options_id];
             $this->unused++;
+
           } elseif (array_key_exists($options_id, $new_attributes)) {
             // if it is not already in the $attributes, then it is something that needs to be added for "removal"
             //   and by adding it, makes the software consider how many files need to be edited.
             $this->new_temp_attributes[$options_id] = $new_attributes[$options_id];
             $new_temp_attributes[$options_id] = false; //$new_attributes[$options_id];
+//TODO test on Home ::  New v1.2 ::  Real ::  Golf Clubs pageload gives error as $this->unused is not defined...there are no checkbox attributes selected
             $this->unused++;
           }
           /* elseif (array_key_exists($options_id, $attributes) && array_key_exists($options_id, $new_attributes) && !zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id])) {
@@ -465,15 +539,17 @@ class zcDPU_Ajax extends base {
 
         $attributes = $new_temp_attributes;
       }
+            elseif ($this->DPUdebug) {
+                $this->logDPU(__LINE__ . ': DPU_PROCESS_ATTRIBUTES="' . DPU_PROCESS_ATTRIBUTES . '", $process_price_attributes=' .  $process_price_attributes . ', product_att_query->RecordCount()=' . $product_att_query->RecordCount());
+            }
 
       $products_id = zen_get_uprid((int)$_POST['products_id'], $attributes);
 
-      $this->product_stock = zen_get_products_stock($_POST['products_id'], $attributes);
+      $this->product_stock = (int)zen_get_products_stock($_POST['products_id']);
 
       $this->new_attributes[$products_id] = $this->new_temp_attributes;
       $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
-      $this->shoppingCart->contents[$products_id] = array('qty' => ((convertToFloat($cart_quantity) <= 0) ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity)),
-      );
+            $this->shoppingCart->contents[$products_id] = ['qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))];
 
       foreach ($attributes as $option => $value) {
         //CLR 020606 check if input was from text box.  If so, store additional attribute information
@@ -481,11 +557,11 @@ class zcDPU_Ajax extends base {
         //CLR 030228 add htmlspecialchars processing.  This handles quotes and other special chars in the user input.
         $attr_value = NULL;
         $blank_value = FALSE;
-        if (strstr($option, TEXT_PREFIX)) {
-          if (trim($value) == NULL) {
+        if (strpos((string)$option, TEXT_PREFIX) !== false) {
+          if (trim($value) === NULL) {
             $blank_value = TRUE;
           } else {
-            $option = substr($option, strlen(TEXT_PREFIX));
+            $option = substr((string)$option, strlen(TEXT_PREFIX));
             $attr_value = stripslashes($value);
             $value = PRODUCTS_OPTIONS_VALUES_TEXT_ID;
 //            $product_info['attributes_values'][$option] = $attr_value;
@@ -522,9 +598,9 @@ class zcDPU_Ajax extends base {
       }
     } else {
       $products_id = (int)$_POST['products_id'];
-      $this->product_stock = zen_get_products_stock($products_id);
+      $this->product_stock = (int)zen_get_products_stock($products_id);
       $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
-      $this->shoppingCart->contents[$products_id] = array('qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity)));
+            $this->shoppingCart->contents[$products_id] = ['qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))];
     }
   }
 
@@ -534,29 +610,29 @@ class zcDPU_Ajax extends base {
    * @global object $currencies
    * @global object $db
    */
-  protected function getSideboxContent()
+    protected function getSideboxContent(): void
   {
     global $currencies, $db;
 
     $out = [];
     $global_total = 0;
     $products = $this->shoppingCart->get_products();
-    for ($i = 0, $n = count($products); $i < $n; $i++) {
+      foreach ($products as $cartProduct) {
 
       $product = $db->Execute("SELECT products_id, products_price, products_tax_class_id, products_weight,
                                       products_priced_by_attribute, product_is_always_free_shipping, products_discount_type, products_discount_type_from,
                                       products_virtual, products_model
                                FROM " . TABLE_PRODUCTS . "
-                               WHERE products_id = " . (int)$products[$i]['id']);
+                                 WHERE products_id = " . (int)$cartProduct['id']);
 
       $prid = $product->fields['products_id'];
       $products_tax = zen_get_tax_rate(0);
       $products_price = $product->fields['products_price'];
-      $qty = convertToFloat($products[$i]['quantity']);
+        $qty = convertToFloat($cartProduct['quantity']);
 
-      if (isset($this->shoppingCart->contents[$products[$i]['id']]['attributes']) && is_array($this->shoppingCart->contents[$products[$i]['id']]['attributes'])) {
-//    while (isset($this->shoppingCart->contents[$_POST['products_id']]['attributes']) && list($option, $value) = each($this->shoppingCart->contents[$_POST['products_id']]['attributes'])) {
-        foreach ($this->shoppingCart->contents[$products[$i]['id']]['attributes'] as $option => $value) {
+        if (isset($this->shoppingCart->contents[$cartProduct['id']]['attributes']) && is_array($this->shoppingCart->contents[$cartProduct['id']]['attributes'])) {
+
+          foreach ($this->shoppingCart->contents[$cartProduct['id']]['attributes'] as $option => $value) {
 
           $attribute_price = $db->Execute("SELECT *
                                            FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
@@ -564,8 +640,9 @@ class zcDPU_Ajax extends base {
                                            AND options_id = " . (int)$option . "
                                            AND options_values_id = " . (int)$value);
 
-          if ($attribute_price->EOF)
+          if ($attribute_price->EOF) {
             continue;
+          }
 
           $data = $db->Execute("SELECT products_options_values_name
                                 FROM " . TABLE_PRODUCTS_OPTIONS_VALUES . "
@@ -577,17 +654,17 @@ class zcDPU_Ajax extends base {
           $sale_maker_discount = '';
           $total = 0;
 
-          if ($attribute_price->fields['product_attribute_is_free'] == '1' && zen_get_products_price_is_free((int)$prid)) {
-            // no charge for attribute
-          } else {
+            if ($attribute_price->fields['product_attribute_is_free'] === '1' && zen_get_products_price_is_free((int)$prid)) {
+              // no charge for attribute
+            } else {
             // + or blank adds
-            if ($attribute_price->fields['price_prefix'] == '-') {
+              if ($attribute_price->fields['price_prefix'] === '-') {
               // appears to confuse products priced by attributes
-              if ($product->fields['product_is_always_free_shipping'] == '1' || $product->fields['products_virtual'] == '1') {
+                if ($product->fields['product_is_always_free_shipping'] === '1' || $product->fields['products_virtual'] === '1') {
                 $shipping_attributes_price = zen_get_discount_calc($product->fields['products_id'], $attribute_price->fields['products_attributes_id'], $attribute_price->fields['options_values_price'], $qty);
                 $this->free_shipping_price -= $qty * zen_add_tax(($shipping_attributes_price), $products_tax);
               }
-              if ($attribute_price->fields['attributes_discounted'] == '1') {
+                if ($attribute_price->fields['attributes_discounted'] === '1') {
                 // calculate proper discount for attributes
                 $new_attributes_price = zen_get_discount_calc($product->fields['products_id'], $attribute_price->fields['products_attributes_id'], $attribute_price->fields['options_values_price'], $qty);
                 $total -= $qty * zen_add_tax(($new_attributes_price), $products_tax);
@@ -597,32 +674,38 @@ class zcDPU_Ajax extends base {
               $total = $total;
             } else {
               // appears to confuse products priced by attributes
-              if ($product->fields['product_is_always_free_shipping'] == '1' || $product->fields['products_virtual'] == '1') {
+                if ($product->fields['product_is_always_free_shipping'] === '1' || $product->fields['products_virtual'] === '1') {
                 $shipping_attributes_price = zen_get_discount_calc($product->fields['products_id'], $attribute_price->fields['products_attributes_id'], $attribute_price->fields['options_values_price'], $qty);
                 $this->free_shipping_price += $qty * zen_add_tax(($shipping_attributes_price), $products_tax);
               }
-              if ($attribute_price->fields['attributes_discounted'] == '1') {
+                if ($attribute_price->fields['attributes_discounted'] === '1') {
                 // calculate proper discount for attributes
                 $new_attributes_price = zen_get_discount_calc($product->fields['products_id'], $attribute_price->fields['products_attributes_id'], $attribute_price->fields['options_values_price'], $qty);
-                $total += $qty * zen_add_tax(($new_attributes_price), $products_tax);
-                // echo $product->fields['products_id'].' - '.$attribute_price->fields['products_attributes_id'].' - '. $attribute_price->fields['options_values_price'].' - '.$qty."\n";
+                  $total += $qty * convertToFloat(zen_add_tax(($new_attributes_price), $products_tax));
+
+                  if ($this->DPUdebug) {
+                      $tmp = convertToFloat(zen_add_tax(($new_attributes_price), $products_tax));
+                      $tmp = __LINE__ . ': $option=' . $option . ' ' . gettype($option) . "\n" . '$value=' . $value . ' ' . gettype($value) . ', $total=' . $total . ' ' . gettype($total) . ', $qty=' . $qty . ' ' . gettype($qty) . ', $new_attributes_price=' . $new_attributes_price . ' ' . gettype($new_attributes_price) . ', $products_tax=' . $products_tax . ' ' . gettype($products_tax) . ', fn zen_add_tax=' . $tmp . ' ' . gettype($tmp) . ', $total=' . $total;
+                      $this->logDPU($tmp);
+                  }
+
               } else {
-                $total += $qty * zen_add_tax($attribute_price->fields['options_values_price'], $products_tax);
+                  $total += $qty * convertToFloat(zen_add_tax($attribute_price->fields['options_values_price'], $products_tax));
               }
             }
           }
           $global_total += $total;
           $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
           $qty2 = sprintf('<span class="DPUSideboxQuantity">' . DPU_SIDEBOX_QUANTITY_FRAME . '</span>', convertToFloat($cart_quantity));
-          if (defined('DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS') && DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS == 'false') {
+            if (defined('DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS') && DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS === 'false') {
             $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
             $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
             $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
-            /* use of number_format is governed by the instruction from the php manual: 
+            /* use of number_format is governed by the instruction from the php manual:
              *  http://php.net/manual/en/function.number-format.php
              * By providing below all four values, they will be assigned/used as provided above.
              *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
-             *   then just the number will come back with a comma used at every thousands group (ie. 1,000).  
+             *   then just the number will come back with a comma used at every thousands group (ie. 1,000).
              *  With the first two parameters provided, a comma will be used at every thousands group and a decimal (.) for every part of the whole number.
              *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
              *   decimal point and thousands group separater, respectively.
@@ -636,22 +719,22 @@ class zcDPU_Ajax extends base {
       }
     } // EOF FOR loop of product
 
-    if (defined('DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS') && DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS == 'false') {
+    if (defined('DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS') && DPU_SHOW_SIDEBOX_CURRENCY_SYMBOLS === 'false') {
       $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
       $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
       $thousands_point = $currencies->currencies[$_SESSION['currency']]['thousands_point'];
-      /* use of number_format is governed by the instruction from the php manual: 
-       *  http://php.net/manual/en/function.number-format.php
+      /* use of number_format is governed by the instruction from the php manual:
+       *  https://php.net/manual/en/function.number-format.php
        * By providing below all four values, they will be assigned/used as provided above.
        *  At time of this comment, if only one parameter is used below (remove/comment out the comma to the end of $thousands_point)
-       *   then just the number will come back with a comma used at every thousands group (ie. 1,000).  
+       *   then just the number will come back with a comma used at every thousands group (ie. 1,000).
        *  With the first two parameters provided, a comma will be used at every thousands group and a decimal (.) for every part of the whole number.
        *  The only other option to use this function is to provide all four parameters with the third and fourth parameters identifying the
        *   decimal point and thousands group separater, respectively.
        */
-      $out[] = sprintf('<hr />' . DPU_SIDEBOX_TOTAL_FRAME, number_format($this->shoppingCart->total, $decimal_places, $decimal_point, $thousands_point));
+      $out[] = sprintf('<hr>' . DPU_SIDEBOX_TOTAL_FRAME, number_format($this->shoppingCart->total, $decimal_places, $decimal_point, $thousands_point));
     } else {
-      $out[] = sprintf('<hr />' . DPU_SIDEBOX_TOTAL_FRAME, $currencies->display_price($this->shoppingCart->total, 0));
+      $out[] = sprintf('<hr>' . DPU_SIDEBOX_TOTAL_FRAME, $currencies->display_price($this->shoppingCart->total, 0));
     }
 
     $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
@@ -662,143 +745,35 @@ class zcDPU_Ajax extends base {
     $this->responseText['sideboxContent'] = implode('', $out);
   }
 
-  /**
-   * 
-   * @global object $db
-   * @global string $request_type
-   */
-  function setCurrentPage()
-  {
-    global $db, $request_type;
-
-    if (isset($_SESSION['customer_id']) && $_SESSION['customer_id']) {
-      $wo_customer_id = $_SESSION['customer_id'];
-
-      $customer_query = "SELECT customers_firstname, customers_lastname
-                         FROM " . TABLE_CUSTOMERS . "
-                         WHERE customers_id = " . (int)$_SESSION['customer_id'];
-
-      $customer = $db->Execute($customer_query);
-
-      $wo_full_name = $customer->fields['customers_lastname'] . ', ' . $customer->fields['customers_firstname'];
-    } else {
-      $wo_customer_id = '';
-      $wo_full_name = '&yen;' . 'Guest';
+    /** optionally create a debugging log
+     * @param $message
+     * @param bool $clearLog
+     * @return string
+     */
+    protected function logDPU($message, $clearLog = false): string
+    {
+        $logfilename = DIR_FS_LOGS . '/DPU_debug.log';
+        $mode = $clearLog ? 'wb' : 'ab';
+        $fp = fopen($logfilename, $mode);
+        if ($fp) {
+            fwrite($fp, $message . "\n");
+            fclose($fp);
+        }
+        return $logfilename;
     }
-
-    $wo_session_id = zen_session_id();
-    $wo_ip_address = (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'Unknown');
-    $wo_user_agent = substr(zen_db_prepare_input($_SERVER['HTTP_USER_AGENT']), 0, 254);
-
-    $page = zen_get_info_page((int)$_GET['products_id']);
-    $uri = zen_href_link($page, zen_get_all_get_params(), $request_type);
-    if (substr($uri, -1) == '?') {
-      $uri = substr($uri, 0, strlen($uri) - 1);
-    }
-    $wo_last_page_url = (zen_not_null($uri) ? substr($uri, 0, 254) : 'Unknown');
-    $current_time = time();
-    $xx_mins_ago = ($current_time - 900);
-
-    // remove entries that have expired
-    $sql = "DELETE FROM " . TABLE_WHOS_ONLINE . "
-            WHERE time_last_click < '" . $xx_mins_ago . "'";
-
-    $db->Execute($sql);
-
-    $stored_customer_query = "SELECT COUNT(*) AS count
-                              FROM " . TABLE_WHOS_ONLINE . "
-                              WHERE session_id = '" . zen_db_input($wo_session_id) . "'
-                              AND ip_address='" . zen_db_input($wo_ip_address) . "'";
-
-    $stored_customer = $db->Execute($stored_customer_query);
-
-    if (empty($wo_session_id)) {
-      $wo_full_name = '&yen;' . 'Spider';
-    }
-
-    if ($stored_customer->fields['count'] > 0) {
-      $sql = "UPDATE " . TABLE_WHOS_ONLINE . "
-              SET customer_id = " . (int)$wo_customer_id . ",
-                  full_name = '" . zen_db_input($wo_full_name) . "',
-                  ip_address = '" . zen_db_input($wo_ip_address) . "',
-                  time_last_click = '" . zen_db_input($current_time) . "',
-                  last_page_url = '" . zen_db_input($wo_last_page_url) . "',
-                  host_address = '" . zen_db_input($_SESSION['customers_host_address']) . "',
-                  user_agent = '" . zen_db_input($wo_user_agent) . "'
-              WHERE session_id = '" . zen_db_input($wo_session_id) . "'
-              AND ip_address='" . zen_db_input($wo_ip_address) . "'";
-
-      $db->Execute($sql);
-    } else {
-      $sql = "INSERT INTO " . TABLE_WHOS_ONLINE . " (customer_id, full_name, session_id, ip_address, time_entry, time_last_click, last_page_url, host_address, user_agent)
-              VALUES (" . (int)$wo_customer_id . ", '" . zen_db_input($wo_full_name) . "', '" . zen_db_input($wo_session_id) . "', '" . zen_db_input($wo_ip_address) . "', '" . zen_db_input($current_time) . "', '" . zen_db_input($current_time) . "', '" . zen_db_input($wo_last_page_url) . "', '" . zen_db_input($_SESSION['customers_host_address']) . "', '" . zen_db_input($wo_user_agent) . "')";
-      $db->Execute($sql);
-    }
-  }
-
-  // Add backwards compatibility
-  /*
-   *  Check if option name is not expected to have an option value (ie. text field, or File upload field)
-   */
-  public function zen_option_name_base_expects_no_values($option_name_id)
-  {
-    global $db, $zco_notifier;
-
-    $option_name_no_value = true;
-    if (!is_array($option_name_id)) {
-      $option_name_id = array($option_name_id);
-    }
-
-    $sql = "SELECT products_options_type FROM " . TABLE_PRODUCTS_OPTIONS . " WHERE products_options_id :option_name_id:";
-    if (count($option_name_id) > 1) {
-      $sql2 = 'in (';
-      foreach ($option_name_id as $option_id) {
-        $sql2 .= ':option_id:,';
-        $sql2 = $db->bindVars($sql2, ':option_id:', $option_id, 'integer');
-      }
-      $sql2 = rtrim($sql2, ','); // Need to remove the final comma off of the above.
-      $sql2 .= ')';
-    } else {
-      $sql2 = ' = :option_id:';
-      $sql2 = $db->bindVars($sql2, ':option_id:', $option_name_id[0], 'integer');
-    }
-
-    $sql = $db->bindVars($sql, ':option_name_id:', $sql2, 'noquotestring');
-
-    $sql_result = $db->Execute($sql);
-
-    foreach ($sql_result as $opt_type) {
-
-      $test_var = true; // Set to false in observer if the name is not supposed to have a value associated
-      $zco_notifier->notify('FUNCTIONS_LOOKUPS_OPTION_NAME_NO_VALUES_OPT_TYPE', $opt_type, $test_var);
-
-      if ($test_var && $opt_type['products_options_type'] != PRODUCTS_OPTIONS_TYPE_TEXT && $opt_type['products_options_type'] != PRODUCTS_OPTIONS_TYPE_FILE) {
-        $option_name_no_value = false;
-        break;
-      }
-    }
-
-    return $option_name_no_value;
-  }
-
 }
 
-if (!function_exists('convertToFloat')) {
-
-  function convertToFloat($input = 0)
-  {
-    if ($input === null) {
-      return 0;
+if (!function_exists('convertToFloat')) { // this function is core/may be removed from ZC158 onwards
+    /**
+     * @param int $input
+     * @return float|int
+     */
+    function convertToFloat($input = 0)
+    {
+        if ($input === null) return 0;
+        $val = preg_replace('/[^0-9,\.\-]/', '', $input);
+        // do a non-strict compare here:
+        if ($val == 0) return 0;
+        return (float)$val;
     }
-
-    $val = preg_replace('/[^0-9,\.\-]/', '', $input);
-
-    // do a non-strict compare here:
-    if ($val == 0) {
-      return 0;
-    }
-
-    return (float)$val;
-  }
-
 }
