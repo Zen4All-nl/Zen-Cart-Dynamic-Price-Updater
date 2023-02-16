@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Dynamic Price Updater V4.0
+ * Dynamic Price Updater V5.0
  * @copyright Dan Parry (Chrome) / Erik Kerkhoven (Design75)
  * @original author Dan Parry (Chrome)
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
