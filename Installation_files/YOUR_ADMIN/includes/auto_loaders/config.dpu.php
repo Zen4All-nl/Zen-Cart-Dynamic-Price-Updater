@@ -1,5 +1,5 @@
 <?php
-// Dynamic Price Updater
+// Dynamic Price Updater 5.0
 
 if (!defined('IS_ADMIN_FLAG')) {
   die('Illegal Access');
