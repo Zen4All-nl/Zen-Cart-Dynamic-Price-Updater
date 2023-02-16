@@ -1,4 +1,4 @@
-# Dynamic Price Updater v5
+# Dynamic Price Updater v4.0.0 Beta3
 ## Introduction
 The Dynamic Price Updater is a module for Zen Cart that automatically updates the price display on product pages when a visitor changes an attribute or adjusts the cart quantity
 ## Changelog:
