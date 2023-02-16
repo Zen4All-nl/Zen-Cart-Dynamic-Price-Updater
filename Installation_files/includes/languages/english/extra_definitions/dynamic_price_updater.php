@@ -2,7 +2,7 @@
 /**
 * @package Dynamic Price Updater
 * @author Design75
-* @version 3.0
+* @version 5.0
 * @licence This module is released under the GNU/GPL licence
 */
 
