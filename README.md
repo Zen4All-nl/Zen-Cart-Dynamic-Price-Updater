@@ -2,6 +2,9 @@
 ## Introduction
 The Dynamic Price Updater is a module for Zen Cart that automatically updates the price display on product pages when a visitor changes an attribute or adjusts the cart quantity
 ## Changelog:
+5.0:
+- changed Installation_files/includes/classes/ajax/zcDPU_Ajax.php line 176 to change total_before_discounts to show_total_before_discouts.
+- Dropped Support for <1.5.8
 4.0.0 Beta3:
 - moving the class code from ```includes/classes/dynamic_price_updater.php``` to ```includes/classes/ajax/zcDPU_Ajax.php```
 - Removing the ancient code, using JSON or XML, and replaced it with the build in native Zen Cart Ajax functionality
