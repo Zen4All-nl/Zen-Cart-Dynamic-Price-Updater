@@ -3,7 +3,7 @@
  * @package Dynamic Price Updater
  * @copyright Dan Parry (Chrome) / Erik Kerkhoven (Design75)
  * @original author Dan Parry (Chrome)
- * @version 4.0
+ * @version 5.0
  * @licence This module is released under the GNU/GPL licence
  */
 if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
