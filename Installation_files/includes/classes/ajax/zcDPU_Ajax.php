@@ -170,10 +170,10 @@ class zcDPU_Ajax extends base {
        *   decimal point and thousands group separater, respectively.
        */
       $this->responseText['priceTotal'] .= number_format($this->shoppingCart->total, $decimal_places, $decimal_point, $thousands_point);
-      $this->responseText['preDiscPriceTotal'] = number_format(zen_add_tax($this->shoppingCart->total_before_discounts, zen_get_tax_rate($product_check->fields['products_tax_class_id'])), $decimal_places, $decimal_point, $thousands_point);
+      $this->responseText['preDiscPriceTotal'] = number_format(zen_add_tax($this->shoppingCart->total_before_discounts(), zen_get_tax_rate($product_check->fields['products_tax_class_id'])), $decimal_places, $decimal_point, $thousands_point);
     } else {
       $this->responseText['priceTotal'] .= $currencies->display_price($this->shoppingCart->total, 0 /* zen_get_tax_rate($product_check->fields['products_tax_class_id']) *//* 0 */ /* DISPLAY_PRICE_WITH_TAX */);
-      $this->responseText['preDiscPriceTotal'] = $currencies->display_price($this->shoppingCart->show_total_before_discounts, zen_get_tax_rate($product_check->fields['products_tax_class_id']));
+      $this->responseText['preDiscPriceTotal'] = $currencies->display_price($this->shoppingCart->show_total_before_discounts(), zen_get_tax_rate($product_check->fields['products_tax_class_id']));
     }
 
     if (!defined('DPU_OUT_OF_STOCK_IMAGE')) {
