@@ -140,20 +140,20 @@ class zcDPU_Ajax extends base
                 $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT_AT_LEAST);
                 $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT_AT_LEAST);
                 break;
-            case ($_POST['pspClass'] === "productSalePrice"):
+            case ($_POST['pspClass'] === 'productSalePrice'):
                 $this->prefix = html_entity_decode(PRODUCT_PRICE_SALE);
                 $this->preDiscPrefix = html_entity_decode(PRODUCT_PRICE_SALE);
                 break;
-            case ($_POST['pspClass'] === "productPriceDiscount"):
+            case ($_POST['pspClass'] === 'productPriceDiscount'):
                 $this->prefix = html_entity_decode(PRODUCT_PRICE_DISCOUNT_PREFIX);
                 $this->preDiscPrefix = html_entity_decode(PRODUCT_PRICE_DISCOUNT_PREFIX);
                 break;
             case (!isset($_POST['pspClass'])):
-            case ($_POST['pspClass'] === "productBasePrice"):
-            case ($_POST['pspClass'] === "productFreePrice"):
-            case ($_POST['pspClass'] === "productSpecialPrice"):
-            case ($_POST['pspClass'] === "productSpecialPriceSale"):
-            case ($_POST['pspClass'] === "normalprice"):
+            case ($_POST['pspClass'] === 'productBasePrice'):
+            case ($_POST['pspClass'] === 'productFreePrice'):
+            case ($_POST['pspClass'] === 'productSpecialPrice'):
+            case ($_POST['pspClass'] === 'productSpecialPriceSale'):
+            case ($_POST['pspClass'] === 'normalprice'):
             default:
                 $this->prefix = html_entity_decode(UPDATER_PREFIX_TEXT);
                 $this->preDiscPrefix = html_entity_decode(UPDATER_PREFIX_TEXT);
@@ -165,11 +165,12 @@ class zcDPU_Ajax extends base
         $this->responseText['preDiscPriceTotalText'] = $this->preDiscPrefix;
 
         $product_check = $db->Execute(
-            "SELECT products_tax_class_id
-                                   FROM " . TABLE_PRODUCTS . "
-                                   WHERE products_id = " . (int)$_POST['products_id'] . "
-                                   LIMIT 1"
+            'SELECT products_tax_class_id
+                      FROM ' . TABLE_PRODUCTS . '
+                      WHERE products_id = ' . (int)$_POST['products_id'] . '
+                      LIMIT 1'
         );
+
         if (DPU_SHOW_CURRENCY_SYMBOLS === 'false') {
             $decimal_places = $currencies->get_decimal_places($_SESSION['currency']);
             $decimal_point = $currencies->currencies[$_SESSION['currency']]['decimal_point'];
@@ -232,10 +233,10 @@ class zcDPU_Ajax extends base
             } elseif (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'after') {
                 $this->responseText['stock_quantity'] .= '&nbsp;' . $out_of_stock_image;
             } elseif (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'before') {
-                $this->responseText['stock_quantity'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
+                $this->responseText['stock_quantity'] = $out_of_stock_image . '&nbsp;' . $this->responseText['stock_quantity'];
             } elseif (DPU_SHOW_OUT_OF_STOCK_IMAGE === 'price_replace_only') {
-                $this->responseText['priceTotal'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
-                $this->responseText['preDiscPriceTotal'] = $out_of_stock_image . "&nbsp;" . $this->responseText['stock_quantity'];
+                $this->responseText['priceTotal'] = $out_of_stock_image . '&nbsp;' . $this->responseText['stock_quantity'];
+                $this->responseText['preDiscPriceTotal'] = $out_of_stock_image . '&nbsp;' . $this->responseText['stock_quantity'];
             }
         }
 
@@ -375,11 +376,11 @@ class zcDPU_Ajax extends base
             //  at the moment seems that similar would be needed even for not priced by attribute possibly... Will see... Maybe someone will report if an issue.
 
             // Get all this product's attributes but NOT the "display-only" attributes and DO select when attributes_price_base_included is true
-            $this->product_attr_query = "SELECT pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type,
-                                          ROUND(CONCAT(pa.price_prefix, pa.options_values_price), 5) AS value
-                                   FROM " . TABLE_PRODUCTS_ATTRIBUTES . " pa
-                                   LEFT JOIN " . TABLE_PRODUCTS_OPTIONS . " po ON (po.products_options_id = pa.options_id)
-                                   WHERE products_id = " . (int)$_POST['products_id'] . "
+            $this->product_attr_query = 'SELECT pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type,
+                                   ROUND(CONCAT(pa.price_prefix, pa.options_values_price), 5) AS value
+                                   FROM ' . TABLE_PRODUCTS_ATTRIBUTES . ' pa
+                                   LEFT JOIN ' . TABLE_PRODUCTS_OPTIONS . ' po ON (po.products_options_id = pa.options_id)
+                                   WHERE products_id = ' . (int)$_POST['products_id'] . '
                                    AND pa.attributes_display_only != 1
                                    AND pa.attributes_price_base_included = 1
                                    ORDER BY pa.options_id, value";
@@ -466,14 +467,12 @@ class zcDPU_Ajax extends base
                     $options_order_by = ' ORDER BY popt.products_options_name';
                 }
 
-                $sql = "SELECT DISTINCT popt.products_options_id, popt.products_options_name, popt.products_options_sort_order, popt.products_options_type
-                FROM " . TABLE_PRODUCTS_OPTIONS . " popt,
-                     " . TABLE_PRODUCTS_ATTRIBUTES . " patrib
-                WHERE patrib.products_id=" . (int)$_POST['products_id'] . "
-                AND patrib.options_id = popt.products_options_id
-                AND popt.language_id = " . (int)$_SESSION['languages_id'] . "
-                " . $options_order_by;
-
+                $sql = 'SELECT DISTINCT popt.products_options_id, popt.products_options_name, popt.products_options_sort_order, popt.products_options_type
+                        FROM ' . TABLE_PRODUCTS_OPTIONS . ' popt, ' . TABLE_PRODUCTS_ATTRIBUTES . ' patrib
+                        WHERE patrib.products_id=' . (int)$_POST['products_id'] . '
+                        AND patrib.options_id = popt.products_options_id
+                        AND popt.language_id = ' . (int)$_SESSION['languages_id'] . '
+                        ' . $options_order_by;
                 $products_options_names = $db->Execute($sql);
 
                 $new_temp_attributes = [];
@@ -492,7 +491,7 @@ class zcDPU_Ajax extends base
 
                 foreach ($products_options_names as $item) {
                     if ($this->DPUdebug) {
-                        $this->logDPU(__LINE__ . ": key=$key/" . $products_options_names_count - 1 . ' $item=' . print_r($item, true));
+                        $this->logDPU(__LINE__ . ': key=' . $key . '/' . ($products_options_names_count-1) . ' $item=' . print_r($item, true));
                         $key++;
                     }
 
@@ -587,10 +586,9 @@ class zcDPU_Ajax extends base
                         // Disabling javascript would have also disabled operation of this plugin so primarily by copy&paste.
                         //
                         $check = $db->Execute(
-                            "SELECT products_options_length
-                                   FROM " . TABLE_PRODUCTS_OPTIONS . "
-                                   WHERE products_options_id = " . (int)$option . "
-                                   LIMIT 1"
+                            'SELECT products_options_length
+                                      FROM ' . TABLE_PRODUCTS_OPTIONS . '
+                                      WHERE products_options_id = ' . (int)$option . ' LIMIT 1'
                         );
                         if (!$check->EOF) {
                             if (strlen($attr_value) > $check->fields['products_options_length']) {
@@ -636,11 +634,9 @@ class zcDPU_Ajax extends base
         $products = $this->shoppingCart->get_products();
         foreach ($products as $cartProduct) {
             $product = $db->Execute(
-                "SELECT products_id, products_price, products_tax_class_id, products_weight,
-                                      products_priced_by_attribute, product_is_always_free_shipping, products_discount_type, products_discount_type_from,
-                                      products_virtual, products_model
-                               FROM " . TABLE_PRODUCTS . "
-                                 WHERE products_id = " . (int)$cartProduct['id']
+                'SELECT products_id, products_price, products_tax_class_id, products_weight, products_priced_by_attribute, product_is_always_free_shipping, products_discount_type, products_discount_type_from, products_virtual, products_model
+                          FROM ' . TABLE_PRODUCTS . '
+                          WHERE products_id = ' . (int)$cartProduct['id']
             );
 
             $prid = $product->fields['products_id'];
@@ -651,11 +647,11 @@ class zcDPU_Ajax extends base
             if (isset($this->shoppingCart->contents[$cartProduct['id']]['attributes']) && is_array($this->shoppingCart->contents[$cartProduct['id']]['attributes'])) {
                 foreach ($this->shoppingCart->contents[$cartProduct['id']]['attributes'] as $option => $value) {
                     $attribute_price = $db->Execute(
-                        "SELECT *
-                                           FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
-                                           WHERE products_id = " . (int)$prid . "
-                                           AND options_id = " . (int)$option . "
-                                           AND options_values_id = " . (int)$value
+                        'SELECT *
+                                  FROM ' . TABLE_PRODUCTS_ATTRIBUTES . '
+                                  WHERE products_id = ' . (int)$prid . '
+                                  AND options_id = ' . (int)$option . '
+                                  AND options_values_id = ' . (int)$value
                     );
 
                     if ($attribute_price->EOF) {
@@ -663,9 +659,9 @@ class zcDPU_Ajax extends base
                     }
 
                     $data = $db->Execute(
-                        "SELECT products_options_values_name
-                                FROM " . TABLE_PRODUCTS_OPTIONS_VALUES . "
-                                WHERE products_options_values_id = " . (int)$value
+                        'SELECT products_options_values_name
+                                FROM ' . TABLE_PRODUCTS_OPTIONS_VALUES . '
+                                WHERE products_options_values_id = ' . (int)$value
                     );
                     $name = $data->fields['products_options_values_name'];
 
@@ -771,7 +767,7 @@ class zcDPU_Ajax extends base
      * @param bool $clearLog
      * @return string
      */
-    protected function logDPU($message, $clearLog = false): string
+    protected function logDPU($message, bool $clearLog = false): string
     {
         $logfilename = DIR_FS_LOGS . '/DPU_debug.log';
         $mode = $clearLog ? 'wb' : 'ab'; // wb: wipe file, binary mode. ab: append, binary mode
