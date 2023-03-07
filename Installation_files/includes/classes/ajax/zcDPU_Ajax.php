@@ -784,21 +784,3 @@ class zcDPU_Ajax extends base
     }
 }
 
-if (!function_exists('convertToFloat')) { // this function is core/may be removed from ZC158 onwards
-    /**
-     * @param int $input
-     * @return float|int
-     */
-    function convertToFloat($input = 0)
-    {
-        if ($input === null) {
-            return 0;
-        }
-        $val = preg_replace('/[^0-9,\.\-]/', '', $input);
-        // do a non-strict compare here:
-        if ($val == 0) {
-            return 0;
-        }
-        return (float)$val;
-    }
-}
