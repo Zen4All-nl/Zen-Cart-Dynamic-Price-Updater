@@ -396,7 +396,7 @@ class zcDPU_Ajax extends base
             if (!defined('DPU_PROCESS_ATTRIBUTES')) { // constant should already be defined in Admin
                 define('DPU_PROCESS_ATTRIBUTES', 'all'); //process all products that have attributes, whether priced by attribute or not
             }
-            $process_price_attributes = DPU_PROCESS_ATTRIBUTES === 'all' ? true : zen_get_products_price_is_priced_by_attributes((int)$_POST['products_id']);
+            $process_price_attributes = DPU_PROCESS_ATTRIBUTES === 'all' || zen_get_products_price_is_priced_by_attributes((int)$_POST['products_id']);
             $product_att_query_count = $product_att_query->RecordCount();
             if ($this->DPUdebug) {
                 $tmp = '';
