@@ -396,9 +396,18 @@ class zcDPU_Ajax extends base
                 define('DPU_PROCESS_ATTRIBUTES', 'all'); //process all products that have attributes, whether priced by attribute or not
             }
             $process_price_attributes = DPU_PROCESS_ATTRIBUTES === 'all' ? true : zen_get_products_price_is_priced_by_attributes((int)$_POST['products_id']);
-
+            $product_att_query_count = $product_att_query->RecordCount();
             if ($this->DPUdebug) {
-                $this->logDPU(__LINE__ . ': DPU_PROCESS_ATTRIBUTES="' . DPU_PROCESS_ATTRIBUTES . '", $process_price_attributes=' . $process_price_attributes . ', product_att_query->RecordCount()=' . $product_att_query->RecordCount());
+                $tmp = '';
+                if ($this->clearLog) {
+                    $tmp .= "product_att_query results, ordered by options_id, options_values_price (value)\n";
+                    foreach ($product_att_query as $key => $array) {
+                        $tmp .= "key=$key/" . $product_att_query_count - 1 . ' ' . print_r($array, true) . "\n";
+                    }
+                } else {
+                    $tmp = '(product_att_query results not shown for cumulative DPU log)';
+                }
+                $this->logDPU(__LINE__ . ': DPU_PROCESS_ATTRIBUTES="' . DPU_PROCESS_ATTRIBUTES . '", $process_price_attributes=' . $process_price_attributes . ', product_att_query->RecordCount()=' . $product_att_query_count . "\n" . $tmp);
             }
 
 // Note:
@@ -407,7 +416,10 @@ class zcDPU_Ajax extends base
 
 // This section produces an array "$new_attributes" containing all the product's attributes: both the selected options+values from the ajax call and default/unselected option/values attributes
 
-            if ($process_price_attributes && $product_att_query->RecordCount() > 0) {
+            if ($process_price_attributes && $product_att_query_count > 0) {
+                if ($this->DPUdebug) {
+                    $this->logDPU(__LINE__ . ": parsing $product_att_query_count option value id results...");
+                }
                 $the_options_id = 'x';
                 $new_attributes = [];
                 // loop through all the values for each product option
