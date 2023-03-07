@@ -12,19 +12,19 @@ if (!defined('IS_ADMIN_FLAG')) {
 
 class DPU extends base {
 /**
- * 
+ *
  * @global object $db
  * @param int $products_id
- * @return type
+ * @return array
  */
   public function getOptionPricedIds($products_id)
   {
     global $db;
     // Identify the attribute information associated with the provided $products_id.
-    $attribute_price_query = "SELECT *
-                              FROM " . TABLE_PRODUCTS_ATTRIBUTES . "
-                              WHERE products_id = " . (int)$products_id . "
-                              ORDER BY options_id, options_values_price";
+    $attribute_price_query = 'SELECT *
+                              FROM ' . TABLE_PRODUCTS_ATTRIBUTES . '
+                              WHERE products_id = ' . (int)$products_id . '
+                              ORDER BY options_id, options_values_price';
 
     $attribute_price = $db->Execute($attribute_price_query);
 
