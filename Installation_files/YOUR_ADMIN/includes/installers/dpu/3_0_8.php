@@ -35,7 +35,6 @@
       loaded to load jquery 1.12.4
 */
 
-
 $zc150 = (PROJECT_VERSION_MAJOR > 1 || (PROJECT_VERSION_MAJOR == 1 && substr(PROJECT_VERSION_MINOR, 0, 3) >= 5));
 if ($zc150) { // continue Zen Cart 1.5.0
 
@@ -94,4 +93,5 @@ if ($zc150) { // continue Zen Cart 1.5.0
         $sql = $db->bindVars($sql, ':set_function:', $config_item['set_function']['value'], $config_item['set_function']['type']);
         $db->Execute($sql);
     }
+        $messageStack->add('Inserted configuration for ' . $module_name . ' (3_0_8)', 'success');
 } // END OF VERSION 1.5.x INSTALL

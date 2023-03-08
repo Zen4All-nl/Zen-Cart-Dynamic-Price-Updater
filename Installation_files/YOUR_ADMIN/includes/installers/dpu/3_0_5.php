@@ -73,7 +73,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_title' => [
-                'value' => 'Dynamic Price Updater Status',
+                'value' => 'Dynamic Price Updater Enabled?',
                 'type' => 'string'
             ],
             'configuration_value' => [
@@ -149,7 +149,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_description' => [
-                'value' => 'This is the ID of the element where your price is displayed.<br /><strong>default => productPrices</strong>',
+                'value' => 'This is the ID of the element where your price is displayed.<br><strong>default => productPrices</strong>',
                 'type' => 'string'
             ],
             'date_added' => [
@@ -183,7 +183,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_description' => [
-                'value' => 'This should never change<br /><strong>default => cart_quantity</strong>',
+                'value' => 'This should never change<br><strong>default => cart_quantity</strong>',
                 'type' => 'string'
             ],
             'date_added' => [
@@ -217,7 +217,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_description' => [
-                'value' => 'This is the ID where your weight is displayed.<br /><strong>default => productWeight</strong>',
+                'value' => 'This is the ID where the weight is displayed.<br><strong>default => productWeight</strong>',
                 'type' => 'string'
             ],
             'date_added' => [
@@ -243,7 +243,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_title' => [
-                'value' => 'show a small loading graphic',
+                'value' => 'Show a small loading graphic',
                 'type' => 'string'
             ],
             'configuration_value' => [
@@ -251,7 +251,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_description' => [
-                'value' => 'true to show a small loading graphic so the user knows something is happening',
+                'value' => 'true to show a small loading graphic while the new price is retrieved',
                 'type' => 'string'
             ],
             'date_added' => [
@@ -407,7 +407,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
             $db->Execute($sql);
         }
 
-        $messageStack->add('Inserted configuration for ' . $module_name, 'success');
+        $messageStack->add('Inserted configuration for ' . $module_name . ' (3_0_5)', 'success');
     } else {
         foreach ($sort_order as $config_key => $config_item) {
             $sql = "UPDATE " . TABLE_CONFIGURATION . " SET sort_order = :sort_order:, configuration_group_id = :configuration_group_id: WHERE configuration_key = :configuration_key:";

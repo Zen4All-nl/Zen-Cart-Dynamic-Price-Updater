@@ -70,7 +70,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_description' => [
-                'value' => 'When selections are being made that affect the price of the product, what alternate text if any should be shown to the customer.  For example if when no selections have been made, the ZC starting at text may be displayed.  When one selection of many has been made, then the text may be changed to at least this amount indicating that there are selections to be made that could increase the price.  Then once all selections have been made as expected/required the text is or should change to something like Your Price:.<br /><br /><b>Default: start_at_least</b><br /><br />start_at_least: display applicable start at or at least text<br />start_at: display start_at text until all selections have been made<br />at_least: once a selection has been made that does not complete selection display the at_least text.',
+                'value' => 'When selections are being made that affect the price of the product, what alternate text (if any) should be shown to the customer.<br>For example, when no selections have been made, the ZC "Starting At" text may be displayed.<br>When one selection of many has been made, then the text may be changed to at least this amount indicating that there are selections to be made that could increase the price.<br>Then once all selections have been made as expected/required the text is or should change to something like Your Price:.<br><br><b>Default: start_at_least</b><br><br>start_at_least: display applicable start at or at least text<br>start_at: display start_at text until all selections have been made<br>at_least: once a selection has been made that does not complete selection display the at_least text.',
                 'type' => 'string'
             ],
             'date_added' => [
@@ -104,7 +104,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_description' => [
-                'value' => 'Allows display of the current stock status of a product while the customer remains on the product information page and offers control about the ajax update when the product is identified as out-of-stock.<br /><br /><b>default: quantity_replace</b><br /><br />quantity_replace: if incorporated, instead of showing the quantity of product, display DPU_OUT_OF_STOCK_IMAGE.<br />after: display DPU_OUT_OF_STOCK_IMAGE after the quantity display.<br />before: display DPU_OUT_OF_STOCK_IMAGE before the quantity display.<br />price_replace_only: update the price of the product to display DPU_OUT_OF_STOCK_IMAGE',
+                'value' => 'Allows display of the current stock status of a product while the customer remains on the product information page and offers control about the ajax update when the product is identified as out-of-stock.<br><br><b>default: quantity_replace</b><br><br>quantity_replace: if incorporated, instead of showing the quantity of product, display DPU_OUT_OF_STOCK_IMAGE.<br>after: display DPU_OUT_OF_STOCK_IMAGE after the quantity display.<br>before: display DPU_OUT_OF_STOCK_IMAGE before the quantity display.<br>price_replace_only: update the price of the product to display DPU_OUT_OF_STOCK_IMAGE',
                 'type' => 'string'
             ],
             'date_added' => [
@@ -138,7 +138,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_description' => [
-                'value' => 'On what should the minimum display price be based for product with attributes? <br /><br />Only product that are priced by attribute or for all product that have attributes?<br /><br /><b>Default: all</b>',
+                'value' => 'On what should the minimum display price be based for product with attributes? <br><br>Only product that are priced by attribute or for all product that have attributes?<br><br><b>Default: all</b>',
                 'type' => 'string'
             ],
             'date_added' => [
@@ -172,7 +172,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_description' => [
-                'value' => 'This is the ID where your product quantity is displayed.<br /><br /><b>default => productDetailsList_product_info_quantity</b>',
+                'value' => 'This is the ID where your product quantity is displayed.<br><br><b>default => productDetailsList_product_info_quantity</b>',
                 'type' => 'string'
             ],
             'date_added' => [
@@ -208,4 +208,5 @@ if ($zc150) { // continue Zen Cart 1.5.0
         $sql = $db->bindVars($sql, ':set_function:', $config_item['set_function']['value'], $config_item['set_function']['type']);
         $db->Execute($sql);
     }
+        $messageStack->add('Inserted configuration for ' . $module_name . ' (3_2_0)', 'success');
 } // END OF VERSION 1.5.x INSTALL

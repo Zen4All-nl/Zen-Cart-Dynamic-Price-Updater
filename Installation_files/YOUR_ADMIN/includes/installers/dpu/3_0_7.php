@@ -21,7 +21,6 @@
       edited to account for this "feature" yet, but could be modified to support the condition.
 */
 
-
 $zc150 = (PROJECT_VERSION_MAJOR > 1 || (PROJECT_VERSION_MAJOR == 1 && substr(PROJECT_VERSION_MINOR, 0, 3) >= 5));
 if ($zc150) { // continue Zen Cart 1.5.0
 

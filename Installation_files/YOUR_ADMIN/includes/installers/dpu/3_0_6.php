@@ -20,7 +20,6 @@
     Corrected installer code to validate new version exists.
 */
 
-
 $zc150 = (PROJECT_VERSION_MAJOR > 1 || (PROJECT_VERSION_MAJOR == 1 && substr(PROJECT_VERSION_MINOR, 0, 3) >= 5));
 if ($zc150) { // continue Zen Cart 1.5.0
 
@@ -37,6 +36,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 $DPUPageExists = TRUE;
             }
         }*/
+
 
     // Initialize the variable.
     $sort_order = [];
@@ -60,7 +60,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_title' => [
-                'value' => 'Dynamic Price Updater Status',
+                'value' => 'Dynamic Price Updater Enabled?',
                 'type' => 'string'
             ],
             'configuration_value' => [
@@ -136,7 +136,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_description' => [
-                'value' => 'Enable DPU to be able to check the ZC site for an updated copy.  Default is true.',
+                'value' => 'Allow DPU to check the Zen Cart site for an updated version of DPU.  Default is true.',
                 'type' => 'string'
             ],
             'date_added' => [
@@ -170,7 +170,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_description' => [
-                'value' => 'This is the ID of the element where your price is displayed.<br /><strong>default => productPrices</strong>',
+                'value' => 'This is the ID of the element where your price is displayed.<br><strong>default => productPrices</strong>',
                 'type' => 'string'
             ],
             'date_added' => [
@@ -204,7 +204,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_description' => [
-                'value' => 'This should never change<br /><strong>default => cart_quantity</strong>',
+                'value' => 'This should never change<br><strong>default => cart_quantity</strong>',
                 'type' => 'string'
             ],
             'date_added' => [
@@ -238,7 +238,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_description' => [
-                'value' => 'This is the ID where your weight is displayed.<br /><strong>default => productWeight</strong>',
+                'value' => 'This is the ID where the weight is displayed.<br><strong>default => productWeight</strong>',
                 'type' => 'string'
             ],
             'date_added' => [
@@ -264,7 +264,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_title' => [
-                'value' => 'show a small loading graphic',
+                'value' => 'Show a small loading graphic',
                 'type' => 'string'
             ],
             'configuration_value' => [
@@ -272,7 +272,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_description' => [
-                'value' => 'true to show a small loading graphic so the user knows something is happening',
+                'value' => 'true to show a small loading graphic while the new price is retrieved',
                 'type' => 'string'
             ],
             'date_added' => [
@@ -392,7 +392,6 @@ if ($zc150) { // continue Zen Cart 1.5.0
         ],
     ];
 
-
     // if the admin page is not installed, then insert it using either the ZC function or straight SQL.
 
     foreach ($sort_order as $config_key => $config_item) {
@@ -411,5 +410,5 @@ if ($zc150) { // continue Zen Cart 1.5.0
         $db->Execute($sql);
     }
 
-    $messageStack->add('Inserted configuration for ' . $module_name, 'success');
+    $messageStack->add('Inserted configuration for ' . $module_name . ' (3_0_6)', 'success');
 } // END OF VERSION 1.5.x INSTALL
