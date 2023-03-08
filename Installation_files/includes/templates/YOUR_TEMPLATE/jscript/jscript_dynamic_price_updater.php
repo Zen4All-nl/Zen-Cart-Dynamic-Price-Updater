@@ -1,4 +1,4 @@
-<?php
+<?php //torvista:  work in progress
 declare(strict_types=1);
 /**
  * @package Dynamic Price Updater
@@ -62,9 +62,23 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
         ?>
 
         <script title="DPU">
+            if (typeof console === "undefined") { //if a console is not present, handle the calls, to not break code
+                console = {
+                    log: function () {
+                    },
+                    group: function () {
+                    },
+                    groupEnd: function () {
+                    }
+                };
+            }
+            const DPUdebug = ('<?php echo DPU_DEBUG; ?>' === 'true'); // DPU_DEBUG set in class dynamic_price_updater.php
+            if (DPUdebug) {
+                console.log("DPUdebug: jscript_dynamic_price_updater.php (set in class)");
+            }
 
             // Set some global vars
-            const theFormName = "<?php echo DPU_PRODUCT_FORM; ?>";
+            const theFormName = "<?php echo DPU_PRODUCT_FORM; // which form to watch? default: cart_quantity ?>";
             let theForm = false;
             let _secondPrice = <?php echo(DPU_SECOND_PRICE !== '' ? '"' . DPU_SECOND_PRICE . '"' : 'false'); //default: cartAdd ?>;
             let objSP = false; // please don't adjust this
@@ -96,6 +110,9 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             <?php } ?>
             // called on initial page load / change of quantity / change of price-affecting-attribute
             function getPrice() {
+                if (DPUdebug) {
+                    console.log('<?= __LINE__; ?>: fn: getPrice');
+                }
 
                 let pspClass = false;
 
@@ -103,6 +120,10 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 //loadImg/loadImgSB object has already been created
                 let psp = false;
                 let thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; // id of price block (normal/discount/sales...). default: productPrices ?>");
+                if (DPUdebug) {
+                    console.log('<?= __LINE__; ?>: thePrice=');
+                    console.log(thePrice);
+                }
 
                 let test = false;
                 //TODO wrap all code in this initial test  
@@ -110,17 +131,27 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                      // get the price spans (modifiers/discounts) inside the productPrices block 
                     test = thePrice.getElementsByTagName("span");
                 }
+                if (DPUdebug) {
+                    console.log('<?= __LINE__; ?>: test=');
+                    console.log(test);
+                }
 
                 let a;
                 let b = test.length; // how many price spans are there ?
                 // On initial page load, the default ZC span+text is inside productPrices. eg. "Starting at: <span class="productBasePrice">&euro;14.99</span>
                 // so b = 1. But when this span subsequently gets replaced by DPU, the length property of the "test" live htmlcollection subsequently becomes 0. Confusing.
                 // Changes of attribute selection result in b = 0
-
+                if (DPUdebug) {
+                    console.log('<?= __LINE__; ?>: num of spans b=' + b + ', ' + 'test.length=' + test.length);
+                }
                 // parse spans
                 for (a = 0; a < b; a += 1) {
                     if (test[a].className === "productSpecialPrice" || test[a].className === "productSalePrice" || test[a].className === "productSpecialPriceSale") {
                         psp = test[a];
+                        if (DPUdebug) {
+                            console.log('<?= __LINE__; ?>: discount span psp=');
+                            console.log(psp);
+                        }
                     }
                 }
 
@@ -129,10 +160,16 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 // no discount spans were found
                 if (!psp) {
                     psp = thePrice;
-                }
-                if (psp) {
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: psp=');
+                        console.log(psp);
+                    }
+                } else {
                     pspClass = psp.className;
                     origPrice = psp.innerHTML; // origPrice could be the complete span of productBasePrice (no discounts) OR the discount price text inside the discount span. Not the same thing!
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: pspClass=' + pspClass + ', origPrice=' + origPrice);
+                    }
                 }
 
                 if (psp && imgLoc === "replace") { // REPLACE price with loading image
@@ -145,7 +182,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     }
 
                 } else { // APPEND price with loading image
-                    document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>").appendChild(loadImg);
+                    document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: productPrices ?>").appendChild(loadImg);
                 }
 //sidebox
                 let theSB;
@@ -215,6 +252,9 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             break;
                     }
                 }
+                if (DPUdebug) {
+                    console.log('<?= __LINE__; ?>: attributes=' + (attributes === '' ? 'not set' : attributes));
+                }
 
                     // If no default set, on first page load attributes ==='', so DPU call returns 0.
                     // Too complex to deal with it in the ajax class, so just clause it here.
@@ -223,6 +263,9 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 const products_id = <?php echo (int)$pid; ?>;
                 let cartQuantity = $('input[name="cart_quantity"]').val();
                     // send data to DPU_Ajax, method=getDetails to process the change and return the new price data to handlePrice
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: ajax DPU_Ajax&method=getDetails');
+                    }
                 zcJS.ajax({
                     url: 'ajax.php?act=DPU_Ajax&method=getDetails',
                     data: {
@@ -232,8 +275,15 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                         cart_quantity: cartQuantity
                     }
                 }).done(function (resultArray) {
+                        if (DPUdebug) {
+                            console.log('<?= __LINE__; ?>: ajax resultArray ' + JSON.stringify(resultArray));
+                        }
                     handlePrice(resultArray);
                 }).fail(function () {
+                        if (DPUdebug) {
+                            console.log('<?= __LINE__; ?>: ajax call FAIL');
+                        }
+
                     <?php if (DPU_SHOW_LOADING_IMAGE === 'true') { ?>
                     const thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: productPrices ?>");
                     let test = thePrice.getElementsByTagName("span");
@@ -266,17 +316,28 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             }
 
             function updateInnerHTML(storeVal, psp, obj, replace) {
+                if (DPUdebug) {
+                    console.log("<?= __LINE__; ?>: fn: updateInnerHtml:\n" + storeVal);
+                }
                 if (typeof (replace) === "undefined") {
                     replace = true;
                 }
                 if (storeVal !== "") {
                     if (psp) {
+                        if (DPUdebug) {
+                            console.log('<?= __LINE__; ?>: psp=');
+                            console.log(psp);
+                        }
                         if (replace) {
                             psp.innerHTML = storeVal;
                         } else {
                             psp.innerHTML += storeVal;
                         }
                     } else {
+                        if (DPUdebug) {
+                            console.log('<?= __LINE__; ?>: obj=NEED TO SHOW LOG LEVEL');
+                            console.log(obj);
+                        }
                         if (replace) {
                             obj.innerHTML = storeVal;
                         } else {
@@ -291,8 +352,11 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             }
 
             function handlePrice(results) {
+                if (DPUdebug) {
+                    console.log('<?= __LINE__; ?>: fn: handlePrice');
+                }
 
-                var thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; ?>");
+                var thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: id productPrices contains all price spans ?>");
                 if (typeof (loadImg) !== "undefined" && loadImg.parentNode !== null && loadImg.parentNode.id === thePrice.id && imgLoc !== "replace") {
                     thePrice.removeChild(loadImg);
                 }
@@ -307,9 +371,17 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 for (a = 0; a < b; a += 1) {
                     if (test[a].className === "normalprice") {//normalprice is a strikeout, shown when there is another span with a discount
                         pdpt = test[a];
+                        if (DPUdebug) {
+                            console.log('<?= __LINE__; ?>: found normalprice, pdpt=');
+                            console.log(pdpt);
+                        }
                     }
                     if (test[a].className === "productSpecialPrice" || test[a].className === "productSalePrice" || test[a].className === "productSpecialPriceSale") {
                         psp = test[a];
+                        if (DPUdebug) {
+                            console.log('<?= __LINE__; ?>: found discounts, psp=');
+                            console.log(psp);
+                        }
                     }
                 }
 
@@ -347,7 +419,12 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             case "preDiscPriceTotal":
                                 if (pdpt) {
                                     // a normalprice/strikeout span exists
+                                    // TODO check is it replace or in front of?
+                                    // this replaces the undiscounted/original price text inside the span normalprice strikeout     
                                     // this replaces any TEXT in front of the span normalprice: use the observer NOTIFY_DYNAMIC_PRICE_UPDATER_PREPARE_OUTPUT_PSP_CLASS to maintain any custom texts
+                                    if (DPUdebug) {
+                                        console.log('<?= __LINE__; ?>: case preDiscPriceTotal, storeVal=' + storeVal + "\npdpt=" + pdpt);
+                                    }
                                     updateInnerHTML(storeVal, pdpt, thePrice, true);
                                 }
                                 break;
@@ -355,45 +432,71 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             case "preDiscPriceTotalText":
                                 if (pdpt) {
                                     // a normalprice/strikeout span exists
+                                    // TODO check is it replace or in front of?
                                     // this replaces the undiscounted/original price text inside the span normalprice strikeout
-                                    if (thePrice.firstChild.nodeType === 3) {
+                                    // this replaces any TEXT in front of the span normalprice: use the observer NOTIFY_DYNAMIC_PRICE_UPDATER_PREPARE_OUTPUT_PSP_CLASS to maintain any custom texts
+                                    if (DPUdebug) {
+                                        console.log('<?= __LINE__; ?>: case preDiscPriceTotalText (normalprice), storeVal=' + storeVal + ', node replacement');
+                                    }
+                                    if (thePrice.firstChild.nodeType === 3) {//3 is text
                                         thePrice.firstChild.nodeValue = storeVal;
                                     }
                                 }
                                 break;
 
                             case "priceTotal": //the final/actual/total price located in span "productSpecialPrice"/ "productSalePrice"/ "productSpecialPriceSale"
+                                if (DPUdebug) {
+                                    console.log('<?= __LINE__; ?>: case priceTotal, storeVal=' + storeVal + "\npsp=");
+                                    console.log(psp);
+                                }
                                 updateInnerHTML(storeVal, psp, thePrice, true);
                                 break;
 
                             case "quantity":
+                                if (DPUdebug) {
+                                    console.log('<?= __LINE__; ?>: case quantity, storeVal=' + storeVal);
+                                }
                                 updateInnerHTML(storeVal, psp, thePrice, false);
                                 break;
 
                             case "weight":
                                 var theWeight = document.getElementById("<?php echo DPU_WEIGHT_ELEMENT_ID; ?>");
                                 if (theWeight) {
+                                    if (DPUdebug) {
+                                        console.log('<?= __LINE__; ?>: case weight, storeVal=' + storeVal);
+                                    }
                                     updateInnerHTML(storeVal, false, theWeight, true);
                                 }
                                 break;
 
 
                             case "sideboxContent":
+                                if (DPUdebug) {
+                                    console.log('<?= __LINE__; ?>: case sideboxContent, storeVal=' + storeVal);
+                                }
                                 if (updateSidebox) {
                                     sbContent += storeVal;
                                 }
                                 break;
+
                             case "stock_quantity":
                                 var theStockQuantity = document.getElementById("<?php echo DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY; ?>");
                                 if (theStockQuantity) {
+                                    if (DPUdebug) {
+                                        console.log('<?= __LINE__; ?>: case stock_quantity, storeVal=' + storeVal);
+                                    }
                                     updateInnerHTML(storeVal, false, theStockQuantity, true);
                                 }
                                 break;
                         }
                     }
-                }
+
                 if (updateSidebox) {//TODO why is this not in the switch above?
                     updateInnerHTML(sbContent, false, theSB, true);
+                    }
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: END fn handlePrice');
+                    }
                 }
             }
 
@@ -453,14 +556,27 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             }
 
             function init() { // called by on_load_dpu.js
+                if (DPUdebug) {
+                    console.log('<?= __LINE__; ?>: fn: init');
+                }
                 var selectName;
                 let n = document.forms.length; // get the number of forms on the page
                 let i;
                 for (i = 0; i < n; i += 1) { // parse the forms to find which one is cart_quantity
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: parsing forms: name ' + i + ' "' + document.forms[i].name + '"');
+                    }
 
                     if (document.forms[i].name === theFormName) { // matches
                         theForm = document.forms[i]; // get the cart_quantity form data
+                        if (DPUdebug) {
+                            console.log('<?= __LINE__; ?>: theFormName "' + theFormName + '" FOUND:');
+                            console.log(theForm);
+                        }
                     } // TODO what if form not found??
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: theFormName "' + theFormName + '" NOT FOUND')
+                    }
                 }
 
                 n = theForm.elements.length;
@@ -468,12 +584,24 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 for (i = 0; i < n; i += 1) {
                    // TODO: identify and ignore attributes that do not affect the price. Currently all changes trigger the ajax call and the ignoring is done in zcDPU_Ajax. 
                    // TODO: Here would be an area to potentially identify attribute related items to skip either combining PHP from top or some sort of script detect of the presented html.
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: parsing form element ' + i);
+                    }
 
                     switch (theForm.elements[i].type) {
                         case "select":
+                            if (DPUdebug) {
+                                console.log('<?= __LINE__; ?>: case select');
+                            }
                         case "select-one":
+                            if (DPUdebug) {
+                                console.log('<?= __LINE__; ?>: case select-one');
+                            }
                         <?php if (!empty($optionIds)) { ?>
                             selectName = theForm.elements[i].getAttribute('name');
+                            if (DPUdebug) {
+                                console.log('<?= __LINE__; ?>: case select/select-one: selectName=' + selectName + "\nattach to" + theForm.elements[i]);
+                            }
                             if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) {
                                 theForm.elements[i].addEventListener("change", function () {
                                     getPrice();
@@ -482,8 +610,14 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                         <?php } ?>
                             break;
                         case "textarea":
+                            if (DPUdebug) {
+                                console.log('<?= __LINE__; ?>: case textarea');
+                            }
                         case "text":
                             selectName = theForm.elements[i].getAttribute('name');
+                            if (DPUdebug) {
+                                console.log('<?= __LINE__; ?>: case text: selectName=' + selectName);
+                            }
                             if (<?php if (!empty($optionIds)) { ?>["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1 || <?php } ?>selectName == "<?php echo DPU_PRODUCT_FORM; ?>") {
                                 theForm.elements[i].addEventListener("input", function () {
                                     getPrice();
@@ -491,13 +625,26 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             }
                             break;
                         case "checkbox": // e.g. checkbox: name="id[1][15]"
+                            if (DPUdebug) {
+                                console.log('<?= __LINE__; ?>: case checkbox');
+                            }
                         case "radio":    // e.g.    radio: name="id[1]"
+                            if (DPUdebug) {
+                                console.log('<?= __LINE__; ?>: case radio');
+                            }
                         <?php if (!empty($optionIds)) { ?>
                             if (theForm.elements[i].type == "radio") {
                                 selectName = theForm.elements[i].getAttribute('name');
                             } else if (theForm.elements[i].type == "checkbox") {
                                 selectName = theForm.elements[i].getAttribute('name');
                                 selectName = selectName.substring(0, selectName.indexOf("]") + 1);
+                                if (DPUdebug) {
+                                    console.log('<?= __LINE__; ?>: case checkbox: selectName=' + selectName);
+                                }
+                            } else {
+                                if (DPUdebug) {
+                                    console.log('<?= __LINE__; ?>: case radio: selectName not coded');
+                                }
                             }
 
                             if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) {//e.g. if (["id[1]"].indexOf(selectName) !== -1
@@ -508,6 +655,9 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                         <?php } ?>
                             break;
                         case "number":
+                            if (DPUdebug) {
+                                console.log('<?= __LINE__; ?>: case number');
+                            }
                         <?php if (!empty($optionIds)) { ?>
                             if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) {
                                 theForm.elements[i].addEventListener("change", function () {
