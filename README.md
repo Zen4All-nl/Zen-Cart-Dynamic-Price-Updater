@@ -55,6 +55,16 @@ $products_quantity .
 '<span id="productDetailsList_product_info_quantity">' . $products_quantity . '</span>' .  
    6.d. perform the same for each PRODUCT_TYPE file such as product_music_info, etc...
 
+## Uninstall
+1) Remove all the DPU files.
+2) Copy and Paste the following lines into Admin->Tools->Install SQl Patches and Run/Send
+
+SELECT @DPUgID := configuration_group_id  
+FROM configuration_group where configuration_group_title = 'Dynamic Price Updater Config';  
+DELETE FROM configuration WHERE configuration_group_id = @DPUgID;
+DELETE FROM admin_pages WHERE page_key = 'configDynamicPriceUpdater';  
+DELETE FROM configuration_group WHERE configuration_group_id = @DPUgID;
+
 ## Settings
 The module is now set through the admin, more instructions to be added later.
 
