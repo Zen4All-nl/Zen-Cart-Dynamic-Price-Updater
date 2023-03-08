@@ -63,7 +63,7 @@ class zcDPU_Ajax extends base
     public function __construct()
     {
         //debugging
-        $this->DPUdebug = DPU_DEBUG === 'true'; // create a DPU_debug.log
+        $this->DPUdebug = DPU_DEBUG === 'true'; // create a DPU_debug.log AND output Javascript console logs. DPU_DEBUG set in class dynamic_price_updater.php
         $this->clearLog = true; // true: empties the log file prior to each change of attribute, so only last change is logged.
         if ($this->DPUdebug) {
             if ($this->clearLog) {
@@ -383,7 +383,7 @@ class zcDPU_Ajax extends base
                                    WHERE products_id = ' . (int)$_POST['products_id'] . '
                                    AND pa.attributes_display_only != 1
                                    AND pa.attributes_price_base_included = 1
-                                   ORDER BY pa.options_id, value";
+                                   ORDER BY pa.options_id, value';
 
             $query_handled = false;
             $GLOBALS['zco_notifier']->notify('DPU_NOTIFY_INSERT_PRODUCT_QUERY', (int)$_POST['products_id'], $query_handled);
