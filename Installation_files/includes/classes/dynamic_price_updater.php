@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+define('DPU_DEBUG', 'false'); //TODO: relocate
 /**
  * Dynamic Price Updater V5.0
  * @copyright Dan Parry (Chrome) / Erik Kerkhoven (Design75)
