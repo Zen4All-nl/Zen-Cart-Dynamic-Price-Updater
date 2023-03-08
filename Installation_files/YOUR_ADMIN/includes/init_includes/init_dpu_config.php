@@ -10,10 +10,10 @@ if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
 
-if (!empty($_SESSION['admin_id']) && $_SERVER['SCRIPT_NAME'] !== DIR_WS_ADMIN . (!strstr(FILENAME_LOGIN, '.php') ? FILENAME_LOGIN . '.php' : FILENAME_LOGIN) && $_SERVER['SCRIPT_NAME'] !== DIR_WS_ADMIN . (!strstr(FILENAME_LOGOFF, '.php') ? FILENAME_LOGOFF . '.php' : FILENAME_LOGOFF)) {
+if (!empty($_SESSION['admin_id']) && $_SERVER['SCRIPT_NAME'] !== DIR_WS_ADMIN . (!str_contains(FILENAME_LOGIN, '.php') ? FILENAME_LOGIN . '.php' : FILENAME_LOGIN) && $_SERVER['SCRIPT_NAME'] !== DIR_WS_ADMIN . (!str_contains(FILENAME_LOGOFF, '.php') ? FILENAME_LOGOFF . '.php' : FILENAME_LOGOFF)) {
 $module_constant = 'DPU'; // This should be a UNIQUE name followed by _VERSION for convention
 $module_installer_directory = DIR_FS_ADMIN . 'includes/installers/dpu'; // This is the directory your installer is in, usually this is lower case
-$module_name = "Dynamic Price Updater"; // This should be a plain English or Other in a user friendly way
+$module_name = "Dynamic Price Updater"; // This should be a plain English or Other in a user-friendly way
 $admin_page = 'DynamicPriceUpdater';
 $zencart_com_plugin_id = 1301; // from zencart.com plugins - Leave Zero not to check
 //Just change the stuff above... Nothing down here should need to change
@@ -37,7 +37,7 @@ if (defined($module_constant . '_VERSION')) {
     {
       // The configuration group does not exist, so add it to the database and establish the configuration_group_id.
       $db->Execute("INSERT INTO " . TABLE_CONFIGURATION_GROUP . " (configuration_group_title, configuration_group_description, sort_order, visible) VALUES ('" . $module_name . " Config', 'Set " . $module_name . " Configuration Options', '1', '1');");
-      $configuration_group_id = $db->Insert_ID();
+      $configuration_group_id = $db->insert_ID();
     } else {
       // Configuration group exists in database, so get the configuration_group_id.
       $configuration_group_id = $installed->fields['configuration_group_id'];
@@ -69,7 +69,7 @@ if (is_dir($module_installer_directory)) {
   $file_extension = substr($PHP_SELF, strrpos($PHP_SELF, '.'));
   $file_extension_len = strlen($file_extension); // Allow file extension to be "flexible"
 
-  // sequence the installer files to support stepping through them. (Already done by sort above.
+  // sequence the installer files to support stepping through them. (Already done by sort above)
 /*  if (sizeof($installers) > 0) {
     sort($installers);
   }*/
@@ -110,8 +110,14 @@ if (is_dir($module_installer_directory)) {
 }
 
 
-// Respect the admin setting for version checking to prevent checking this if the store is disabled. (typically set because the version checker may generate warnings/errors.
+// Respect the admin setting for version checking to prevent checking this if the store is disabled. (typically set because the version checker may generate warnings/errors).
 if (constant($module_constant . '_PLUGIN_CHECK') && !function_exists('this_plugin_version_check_for_updates')) {
+    /**
+     * @param $plugin_file_id
+     * @param $version_string_to_compare
+     * @param $strict_zc_version_compare
+     * @return false|mixed
+     */
     function this_plugin_version_check_for_updates($plugin_file_id = 0, $version_string_to_compare = '', $strict_zc_version_compare = false)
     {
         if ($plugin_file_id == 0) return false;
@@ -155,7 +161,7 @@ if (constant($module_constant . '_PLUGIN_CHECK') && !function_exists('this_plugi
         }
         if ($errno > 0 || $response == '') {
             trigger_error('CURL error checking plugin versions: ' . $errno . ':' . $error . "\nTrying file_get_contents() instead.");
-            $ctx = stream_context_create(array('http' => array('timeout' => 5)));
+            $ctx = stream_context_create(['http' => ['timeout' => 5]]);
             $response = file_get_contents($url1, null, $ctx);
             if ($response === false) {
                 trigger_error('file_get_contents() error checking plugin versions.' . "\nTrying http instead.");
@@ -180,11 +186,11 @@ if (constant($module_constant . '_PLUGIN_CHECK') && !function_exists('this_plugi
 }
 
 // Version Checking
-// Respect the admin setting for version checking to prevent checking this if the store is disabled. (typically set because the version checker may generate warnings/errors.
+// Respect the admin setting for version checking to prevent checking this if the store is disabled. (typically set because the version checker may generate warnings/errors).
 if ($zencart_com_plugin_id != 0 && isset($_GET['gID']) && $_GET['gID'] == $configuration_group_id && (!defined($module_constant . '_PLUGIN_CHECK') || constant($module_constant . '_PLUGIN_CHECK'))) {
     $new_version_details = this_plugin_version_check_for_updates($zencart_com_plugin_id, $current_version);
     if ($new_version_details != false) {
         $messageStack->add("Version ".$new_version_details['latest_plugin_version']." of " . $new_version_details['title'] . ' is available at <a href="' . $new_version_details['link'] . '" target="_blank">[Details]</a>', 'caution');
     }
 }
-} 
+}
