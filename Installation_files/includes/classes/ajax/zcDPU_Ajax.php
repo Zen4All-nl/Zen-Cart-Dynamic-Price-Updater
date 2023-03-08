@@ -191,10 +191,6 @@ class zcDPU_Ajax extends base
             $this->responseText['preDiscPriceTotal'] = $currencies->display_price($this->shoppingCart->show_total_before_discounts(), zen_get_tax_rate($product_check->fields['products_tax_class_id']));
         }
 
-        if (!defined('DPU_OUT_OF_STOCK_IMAGE')) {
-            define('DPU_OUT_OF_STOCK_IMAGE', '%s');
-        }
-
         $out_of_stock_image = '';
         $out_of_stock = false;
         if ((STOCK_CHECK === 'true') && (STOCK_ALLOW_CHECKOUT !== 'true')) {
