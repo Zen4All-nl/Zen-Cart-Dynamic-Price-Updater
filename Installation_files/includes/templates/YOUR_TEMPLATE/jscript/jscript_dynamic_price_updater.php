@@ -46,11 +46,12 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
   }
 
   if ($load) {
+      //TODO relocate this
     if (!defined('DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY')) {
       define('DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY', 'productDetailsList_product_info_quantity');
     }
     ?>
-    <script type="text/javascript">
+    <script type="text/javascript" title="DPU">
       // Set some global vars
       const theFormName = "<?php echo DPU_PRODUCT_FORM; ?>";
       let theForm = false;
@@ -66,7 +67,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 // left or right side box.
 //   May also be that this it is entirely unnecessary to create a sidebox when one could already exist based on the file structure.
 
-    if (DPU_SHOW_LOADING_IMAGE === 'true') { // create the JS object for the loading image 
+    if (DPU_SHOW_LOADING_IMAGE === 'true') { // create the JS object for the loading image
       ?>
         const imgLoc = "replace"; // Options are "replace" or , "" (empty)
 

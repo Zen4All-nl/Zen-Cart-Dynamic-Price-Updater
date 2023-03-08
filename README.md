@@ -1,12 +1,13 @@
 # Dynamic Price Updater v5 for Zen Cart
 
 ## Current Status March 2023
-This development branch "158" is working and has no functionality changes to the master branch at the moment.
-However, it is slowly being reviewed and due to the complexity/lack of time it is subject to increased debugging code and comments.
+This useful plugin has been somewhat neglected in recent years, I assume as it has been working for most people. I made many changes during that time which, due to multiple forks, were difficult to implement back into the plugin.  
+This I'm currently attempting to rectify with this fork.  
+The development branch "158" should be working while I gradually (or not) review/scrap/introduce my modifications to make it both php8.2+ compliant, more easily understandable and into a state fit for peer review/to go into the core codebase.  
 
-The readme below may be out of sync with the codebase/is also a work in progress, so as always, ALL testing should be done on a development installation and NOT the production site.
+The readme below may be out of sync with the codebase/is also a work in progress, so as always, ALL testing should be done on a development installation and NEVER a production site.
 
-Please try it out and raise issues as discovered at this repository
+At the moment I would not suggest you try this out yet, due to the multiple changes that will be introduced. But if you have an existing bug or problem, then yes please try to replicate it with this code and a vanilla ZC158 codebase before creating an Issue at this repository
 
 https://github.com/dbltoe/Zen-Cart-Dynamic-Price-Updater
 
@@ -23,36 +24,32 @@ NOTE: If your installed version of DPU is older than 3.0 please remove all those
 
 1. Rename the YOUR_ADMIN folder to match YOUR Admin folder name.
 2. Rename the YOUR_TEMPLATE folders to the name of your custom template folder names.
-3. Upload the files included in the "Installation files" folder (they are in the correct folder structure).
+3. Upload the files included in the "Installation_files" folder (they are in the correct folder structure).
  
  For reference the file paths are:
   - YOUR_ADMIN/includes/auto_loaders/config.dpu.php
   - YOUR_ADMIN/includes/init_includes/init_dpu_config.php
   - YOUR_ADMIN/includes/installers/dpu/ (all files in the folder)
-  -  YOUR_ADMIN/includes/languages/english/extra_definitions/dynamic_price_updater.php
-  - ajax.php
+  - YOUR_ADMIN/includes/languages/english/extra_definitions/dynamic_price_updater.php
   - images/ajax-loader.gif
   - includes/auto_loaders/config.dynamic_price_updater.php
+  - includes/classes/ajax/zcDPU_Ajax.php
   - includes/classes/dynamic_price_updater.php
   - includes/languages/english/extra_definitions/dynamic_price_updater.php
-  - includes/modules/pages/product_info/jscript_ajax_updater.php
-  - includes/modules/pages/product_music_info/jscript_ajax_updater.php
-  -  includes/modules/sideboxes/YOUR_TEMPLATE/dynamic_price_updater_sidebox.php
+  - includes/modules/pages/product_info/on_load_dpu.js
+  - includes/modules/pages/product_music_info/on_load_dpu.js
+  - includes/modules/sideboxes/YOUR_TEMPLATE/dynamic_price_updater_sidebox.php
+  - includes/templates/YOUR_TEMPLATE/jscript/jscript_dynamic_price_updater.php
   - includes/templates/YOUR_TEMPLATE/sideboxes/tpl_dynamic_price_updater_sidebox.php
-  - includes/templates/YOUR_TEMPLATE/jscript/jscript_jquery.min.dpu.php
 
-  dpu_ajax.php has been removed from the fileset as far as necessary code. After all files are in the place provided it may be removed from the server.
-  It is expected that to support use of the ZC zcJS ajax process, that includes/templates/YOUR_TEMPLATE/jscript/ contains the file jscript_framework.php that can be found in includes/templates/template_default/jscript/
-  It is also expected that your template loads a version of jQuery preferably 1.12.0 or above. jscript_jquery.min.dpu.php is provided to remotely load jQuery 1.12.4 if a form of jQuery has not yet been loaded when the file is executed.
-
-4. Log in to Admin and the module will install automatically (there are no separate sql files).
+4. Log in to Admin and the module will install automatically.
 5. By default DPU is disabled. Go to Configuration=>Dynamic Price Updater and set the status to true to enable DPU.
-6. To allow DPU to update the display of product quantity available (in particular if using Stock By Attributes):  
+6. Optional: to allow DPU to update the display of product quantity (stock) available (in particular if using Stock By Attributes):  
    6.a. edit includes/templates/YOUR_TEMPLATE/templates/tpl_product_info_display.php with a plain text editor.  
    6.b. find: 
 $products_quantity .  
-   6.c. and surround it by a span tag (replace with below) so that it will look like: 
-'<span id="productDetailsList_product_info_quantity">' . $products_quantity . '</span>' .  
+   6.c. and surround it by a span tag (replace with below) so that it will look like:
+`<span id="productDetailsList_product_info_quantity">' . $products_quantity . '</span>` 
    6.d. perform the same for each PRODUCT_TYPE file such as product_music_info, etc...
 
 ## Uninstall
@@ -66,10 +63,6 @@ DELETE FROM admin_pages WHERE page_key = 'configDynamicPriceUpdater';
 DELETE FROM configuration_group WHERE configuration_group_id = @DPUgID;
 
 ## Settings
-The module is now set through the admin, more instructions to be added later.
-
-As of Version 3.2.0 the settings include the following configuration options
-
 - Dynamic Price Updater Status 	true - Allow disabling DPU globally.
 - Dynamic Price Updater Version 	3.2.0 - Radio button style presentation of installed version
 - Dynamic Price Updater Version Check? 	true - Allow DPU to check for latest ZC issued version?
@@ -87,15 +80,18 @@ As of Version 3.2.0 the settings include the following configuration options
 - The id tag for product_quantity 	productDetailsList_product_info_quantity 	This is the ID where your product quantity is displayed.
 
 ## Support
-As always support is located on the Zen Cart forums at:
+Plugin Support: http://www.zen-cart.com/forum/showthread.php?t=70577
 
-http://www.zen-cart.com/forum/showthread.php?t=70577
+Reporting Bugs: https://github.com/dbltoe/Zen-Cart-Dynamic-Price-Updater/issues  
 
 ## Changelog:
 5.0:
+- addition of much debugging output for Javascript console and class processing
+- formatting of files, general IDE-recommended changes, strict comparisons...
+- relocated javascript to template jscript folder
 - support for php 8.2: added variable declarations
 - changed Installation_files/includes/classes/ajax/zcDPU_Ajax.php line 176 to change total_before_discounts to show_total_before_discounts.
-- Dropped Support for Zen Cart versions<1.5.8
+- Dropped support for Zen Cart versions<1.5.8
 
 4.0.0 Beta3:
 - moving the class code from ```includes/classes/dynamic_price_updater.php``` to ```includes/classes/ajax/zcDPU_Ajax.php```
