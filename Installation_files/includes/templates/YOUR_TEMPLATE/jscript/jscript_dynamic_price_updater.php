@@ -199,9 +199,10 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 let el;
                 let i;
                 let aName;
+                let aValue;
 
                 // parse the elements in the form 
-                for (i = 0; i < n; i += 1) {
+                for (i = 0; i < n; i++) {
                     el = theForm.elements[i];
                     //best tested with A Bug's Life "Multi Pak" Special 2003 Collectors Edition for varied attributes
                     switch (el.type) {
@@ -243,8 +244,8 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             option 1, attribute 30 selected: attributes=id[1]~30|
                             option 1, attribute 32 selected: attributes=id[1]~32|
                             */
-                            if (true === el.checked) { // get the radio that has been selected
-                                if (!(el.name in attributes) && el.name.startsWith("id[")) { // Ensure not to replace an existing value. I.e. drop a duplicate value.
+                            if (el.checked === true) { // get the radio that has been selected
+                                if (el.name.startsWith("id[") && el.value !== '') { // Ensure not to replace an existing value. i.e. drop a duplicate value.
                                     aName = el.name; // name is the option name
                                     attributes += aName + '~' + el.value + '|'; // value is the option value
                                 }
