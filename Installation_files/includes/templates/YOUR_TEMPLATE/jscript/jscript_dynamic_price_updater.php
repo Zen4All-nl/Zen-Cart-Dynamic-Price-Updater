@@ -31,10 +31,10 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
         // - quantity box in use
         $products_qty_box_status = zen_products_lookup($pid, 'products_qty_box_status');
-        
+
         // - quantity not limited to 1
         $products_quantity_order_max = zen_products_lookup($pid, 'products_quantity_order_max');
-        
+
          // - any attribute options that affect the price. Assign ONLY these option name ids to $optionIds, to subsequently attach events to ONLY these options.
         $optionIds = [];
         if ($load && !($optionIds = $dpu->getOptionPricedIds($pid)) && ($products_qty_box_status === 0 || $products_quantity_order_max === 1)) { // do not reorder this line or $optionIds will not be created
@@ -103,6 +103,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             let loadImg = document.createElement("img");
             loadImg.src = "<?php echo DIR_WS_IMAGES; ?>ajax-loader.gif";
             loadImg.id = "DPULoaderImage";
+            loadImg.alt = "<?php echo DPU_LOADING_IMAGE_ALT; ?>";
             // sidebox
             let loadImgSB = document.createElement("img");
             loadImgSB.src = "<?php echo DIR_WS_IMAGES; ?>ajax-loader.gif";
@@ -511,6 +512,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 if (_secondPrice !== false) { // second price is active
                     let centre = document.getElementById("productGeneral");
                     let temp = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: productPrices ?>");
+                    //TODO temp contains the loading image with id=DPULoaderImage: duplicate id. Removing the id completely does not appear to affect functionality.
                     let itemp = document.getElementById(_secondPrice);
                     flag = false;
 
