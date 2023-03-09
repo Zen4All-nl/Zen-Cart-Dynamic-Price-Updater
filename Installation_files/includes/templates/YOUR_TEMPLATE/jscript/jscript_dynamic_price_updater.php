@@ -149,7 +149,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     console.log('<?= __LINE__; ?>: num of spans b=' + b + ', ' + 'test.length=' + test.length);
                 }
                 // parse spans
-                for (a = 0; a < b; a += 1) {
+                for (a = 0; a < b; a++) {
                     if (test[a].className === "productSpecialPrice" || test[a].className === "productSalePrice" || test[a].className === "productSpecialPriceSale") {
                         psp = test[a];
                         if (DPUdebug) {
@@ -211,7 +211,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     el = theForm.elements[i];
                     //best tested with A Bug's Life "Multi Pak" Special 2003 Collectors Edition for varied attributes
                     switch (el.type) {
-                        /* I'm not sure this even needed as a switch; testing needed*/
+                        /* TODO is this even needed as a switch? */
                         case "select": //dropdown
                         /* example for Matrox G200. 3 is Model (Value/Premium), 4 is Memory (4/8/16MB)
                         select name="id[3]", option value="5"
@@ -266,7 +266,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     // Too complex to deal with it in the ajax class, so just clause it here.
                     // However, if loading graphic is used, it replaces/appends original before DPU call, then should be updated after DPU call...but this is not done now, so do not use the loading graphic.
                     // This needs a rethink like use the loading graphic just prior to the DPU call, inside this clause.
-                const products_id = <?php echo (int)$pid; ?>;
+                const products_id = <?php echo $pid; ?>;
                 let cartQuantity = $('input[name="cart_quantity"]').val();
                     // send data to DPU_Ajax, method=getDetails to process the change and return the new price data to handlePrice
                     if (DPUdebug) {
@@ -486,7 +486,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                                 break;
 
                             case "stock_quantity":
-                                var theStockQuantity = document.getElementById("<?php echo DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY; ?>");
+                                let theStockQuantity = document.getElementById("<?php echo DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY; ?>");
                                 if (theStockQuantity) {
                                     if (DPUdebug) {
                                         console.log('<?= __LINE__; ?>: case stock_quantity, storeVal=' + storeVal);
@@ -569,7 +569,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 let selectName;
                 let n = document.forms.length; // get the number of forms on the page
                 let i;
-                for (i = 0; i < n; i += 1) { // parse the forms to find which one is cart_quantity
+                for (i = 0; i < n; i++) { // parse the forms to find which one is cart_quantity
                     if (DPUdebug) {
                         console.log('<?= __LINE__; ?>: parsing forms: name ' + i + ' "' + document.forms[i].name + '"');
                     }
@@ -588,7 +588,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
                 n = theForm.elements.length;
                 //parse the elements that the form contains, and assign an appropriate event to be triggered on a change of the element
-                for (i = 0; i < n; i += 1) {
+                for (i = 0; i < n; i++) {
                    // TODO: identify and ignore attributes that do not affect the price. Currently all changes trigger the ajax call and the ignoring is done in zcDPU_Ajax.
                    // TODO: Here would be an area to potentially identify attribute related items to skip either combining PHP from top or some sort of script detect of the presented html.
                     if (DPUdebug) {
@@ -625,7 +625,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             if (DPUdebug) {
                                 console.log('<?= __LINE__; ?>: case text: selectName=' + selectName);
                             }
-                            if (<?php if (!empty($optionIds)) { ?>["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1 || <?php } ?>selectName == "<?php echo DPU_PRODUCT_FORM; ?>") {
+                            if (<?php if (!empty($optionIds)) { ?>["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1 || <?php } ?>selectName === theFormName) {
                                 theForm.elements[i].addEventListener("input", function () {
                                     getPrice();
                                 });
@@ -640,9 +640,9 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                                 console.log('<?= __LINE__; ?>: case radio');
                             }
                         <?php if (!empty($optionIds)) { ?>
-                            if (theForm.elements[i].type == "radio") {
+                            if (theForm.elements[i].type === "radio") {
                                 selectName = theForm.elements[i].getAttribute('name');
-                            } else if (theForm.elements[i].type == "checkbox") {
+                            } else if (theForm.elements[i].type === "checkbox") {
                                 selectName = theForm.elements[i].getAttribute('name');
                                 selectName = selectName.substring(0, selectName.indexOf("]") + 1);
                                 if (DPUdebug) {
