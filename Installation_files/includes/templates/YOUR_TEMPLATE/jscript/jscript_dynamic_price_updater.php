@@ -101,12 +101,13 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             let loadImg = document.createElement("img");
             loadImg.src = "<?php echo DIR_WS_IMAGES; ?>ajax-loader.gif";
             loadImg.id = "DPULoaderImage";
-
+            // sidebox
             let loadImgSB = document.createElement("img");
             loadImgSB.src = "<?php echo DIR_WS_IMAGES; ?>ajax-loader.gif";
             loadImgSB.id = "DPULoaderImageSB";
             loadImgSB.style.margin = "auto";
             <?php } ?>
+
             // called on initial page load / change of quantity / change of price-affecting-attribute
             function getPrice() {
                 if (DPUdebug) {
@@ -125,9 +126,9 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 }
 
                 let test = false;
-                //TODO wrap all code in this initial test  
+                // TODO wrap all code in this initial test
                 if (thePrice) {
-                     // get the price spans (modifiers/discounts) inside the productPrices block 
+                    // get the price spans (modifiers/discounts) inside the productPrices block
                     test = thePrice.getElementsByTagName("span");
                 }
                 if (DPUdebug) {
@@ -184,8 +185,9 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: productPrices ?>").appendChild(loadImg);
                 }
 //sidebox
-                let theSB;
+
                 if (document.getElementById("dynamicpriceupdatersidebox")) {
+                    let theSB;
                     theSB = document.getElementById("dynamicpriceupdatersideboxContent");
                     updateInnerHTML("", false, theSB, true); //TODO if first parameter is empty, function does nothing!
                     theSB.style.textAlign = "center";
@@ -200,7 +202,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 let aName;
                 let aValue;
 
-                // parse the elements in the form 
+                // parse the elements in the form
                 for (i = 0; i < n; i++) {
                     el = theForm.elements[i];
                     //best tested with A Bug's Life "Multi Pak" Special 2003 Collectors Edition for varied attributes
@@ -420,7 +422,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                                 if (pdpt) {
                                     // a normalprice/strikeout span exists
                                     // TODO check is it replace or in front of?
-                                    // this replaces the undiscounted/original price text inside the span normalprice strikeout     
+                                    // this replaces the undiscounted/original price text inside the span normalprice strikeout
                                     // this replaces any TEXT in front of the span normalprice: use the observer NOTIFY_DYNAMIC_PRICE_UPDATER_PREPARE_OUTPUT_PSP_CLASS to maintain any custom texts
                                     if (DPUdebug) {
                                         console.log('<?= __LINE__; ?>: case preDiscPriceTotal, storeVal=' + storeVal + "\npdpt=" + pdpt);
@@ -524,7 +526,8 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     objSP.innerHTML = temp.innerHTML;
                 }
             }
-             // create the sidebox for the attributes info display
+
+            // create the sidebox for the attributes info display
             function createSB() {
                 if (!(document.getElementById("dynamicpriceupdatersidebox")) && objSB) {
                     let tempC = document.createElement("div");
@@ -532,7 +535,6 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     tempC.className = "sideBoxContent";
                     tempC.innerHTML = "If you can read this Chrome has broken something";
                     objSB.appendChild(tempC);
-
                     temp.parentNode.insertBefore(objSB, temp);
                 }
             }
@@ -582,7 +584,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 n = theForm.elements.length;
                 //parse the elements that the form contains, and assign an appropriate event to be triggered on a change of the element
                 for (i = 0; i < n; i += 1) {
-                   // TODO: identify and ignore attributes that do not affect the price. Currently all changes trigger the ajax call and the ignoring is done in zcDPU_Ajax. 
+                   // TODO: identify and ignore attributes that do not affect the price. Currently all changes trigger the ajax call and the ignoring is done in zcDPU_Ajax.
                    // TODO: Here would be an area to potentially identify attribute related items to skip either combining PHP from top or some sort of script detect of the presented html.
                     if (DPUdebug) {
                         console.log('<?= __LINE__; ?>: parsing form element ' + i);
@@ -675,8 +677,9 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     } //eof switch
                 } //eof end of parse form elements
 
+               if (document.getElementById("dynamicpriceupdatersidebox") && typeof objSB === 'undefined') {
                 createSB();
-
+                }
                 getPrice();
             }
         </script>
