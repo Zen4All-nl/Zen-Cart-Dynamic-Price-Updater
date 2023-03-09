@@ -11,9 +11,9 @@ declare(strict_types=1);
 if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
     $load = true; // if any of the PHP conditions fail, set to false and prevent any DPU processing
     $pid = (!empty($_GET['products_id']) ? (int)$_GET['products_id'] : 0);
-    if ($pid == 0) {
+    if (!zen_products_id_valid($pid)) {
         $load = false;
-    } elseif (zen_get_products_price_is_call($pid) || (zen_get_products_price_is_free($pid) && empty($optionIds)) || STORE_STATUS > 0) {
+    } elseif (STORE_STATUS > 0 || zen_get_products_price_is_call($pid) || (zen_get_products_price_is_free($pid) && empty($optionIds))) { // TODO review $optionIds is created later!?!
         $load = false;
     } else {
         if (!class_exists('DPU')) {
@@ -106,7 +106,6 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             loadImgSB.src = "<?php echo DIR_WS_IMAGES; ?>ajax-loader.gif";
             loadImgSB.id = "DPULoaderImageSB";
             loadImgSB.style.margin = "auto";
-            // loadImg.style.display = 'none';
             <?php } ?>
             // called on initial page load / change of quantity / change of price-affecting-attribute
             function getPrice() {
