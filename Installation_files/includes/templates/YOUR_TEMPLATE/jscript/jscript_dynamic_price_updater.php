@@ -82,7 +82,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             // Set some global vars
             const theFormName = "<?php echo DPU_PRODUCT_FORM; // which form to watch? default: cart_quantity ?>";
             let theForm = false;
-            let _secondPrice = <?php echo(DPU_SECOND_PRICE !== '' ? '"' . DPU_SECOND_PRICE . '"' : 'false'); //default: cartAdd ?>;
+            let _secondPrice = "<?php echo(DPU_SECOND_PRICE !== '' ? DPU_SECOND_PRICE : 'false'); //default: cartAdd ?>";
             let objSP = false; // please don't adjust this
             // Updater sidebox settings
             let objSB = false;
@@ -108,6 +108,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             let loadImgSB = document.createElement("img");
             loadImgSB.src = "<?php echo DIR_WS_IMAGES; ?>ajax-loader.gif";
             loadImgSB.id = "DPULoaderImageSB";
+            loadImgSB.alt = "<?php echo DPU_LOADING_IMAGE_ALT; ?>";
             loadImgSB.style.margin = "auto";
             <?php } ?>
 
@@ -361,7 +362,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     console.log('<?= __LINE__; ?>: fn: handlePrice');
                 }
 
-                var thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: id productPrices contains all price spans ?>");
+                let thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: id productPrices contains all price spans ?>");
                 if (typeof (loadImg) !== "undefined" && loadImg.parentNode !== null && loadImg.parentNode.id === thePrice.id && imgLoc !== "replace") {
                     thePrice.removeChild(loadImg);
                 }
@@ -465,7 +466,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                                 break;
 
                             case "weight":
-                                var theWeight = document.getElementById("<?php echo DPU_WEIGHT_ELEMENT_ID; ?>");
+                                let theWeight = document.getElementById("<?php echo DPU_WEIGHT_ELEMENT_ID; ?>");
                                 if (theWeight) {
                                     if (DPUdebug) {
                                         console.log('<?= __LINE__; ?>: case weight, storeVal=' + storeVal);
@@ -565,7 +566,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 if (DPUdebug) {
                     console.log('<?= __LINE__; ?>: fn: init');
                 }
-                var selectName;
+                let selectName;
                 let n = document.forms.length; // get the number of forms on the page
                 let i;
                 for (i = 0; i < n; i += 1) { // parse the forms to find which one is cart_quantity
