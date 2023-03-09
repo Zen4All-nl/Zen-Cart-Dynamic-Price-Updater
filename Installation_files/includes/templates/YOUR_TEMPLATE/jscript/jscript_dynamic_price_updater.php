@@ -28,14 +28,16 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             $dpu = new DPU();
         }
 // Check for conditions that use DPU.
-        $optionIds = [];
 
         // - quantity box in use
         $products_qty_box_status = zen_products_lookup($pid, 'products_qty_box_status');
-// - quantity not limited to 1
+        
+        // - quantity not limited to 1
         $products_quantity_order_max = zen_products_lookup($pid, 'products_quantity_order_max');
-// - any attribute options that affect the price. Assign ONLY these option name ids to $optionIds, to subsequently attach events to ONLY these options.
-        if ($load && !($optionIds = $dpu->getOptionPricedIds($pid)) && ($products_qty_box_status == 0 || $products_quantity_order_max == 1)) {
+        
+         // - any attribute options that affect the price. Assign ONLY these option name ids to $optionIds, to subsequently attach events to ONLY these options.
+        $optionIds = [];
+        if ($load && !($optionIds = $dpu->getOptionPricedIds($pid)) && ($products_qty_box_status === 0 || $products_quantity_order_max === 1)) { // do not reorder this line or $optionIds will not be created
             // Checks for attributes that affect price including if text boxes.  If there are none that affect price and the quantity
             //   box is not shown, then go ahead and disable DPU as there is nothing available to adjust/modify price.
             $load = false;
