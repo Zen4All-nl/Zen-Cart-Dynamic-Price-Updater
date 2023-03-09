@@ -86,6 +86,7 @@ Reporting Bugs: https://github.com/dbltoe/Zen-Cart-Dynamic-Price-Updater/issues
 
 ## Changelog:
 5.0:
+- bugfixes: #16 test on ZC158a Hewlett Packard - by attributes with Special% no SALE: shows only loading graphic
 - addition of much debugging output for Javascript console and class processing
 - formatting of files, general IDE-recommended changes, strict comparisons...
 - relocated javascript to template jscript folder
