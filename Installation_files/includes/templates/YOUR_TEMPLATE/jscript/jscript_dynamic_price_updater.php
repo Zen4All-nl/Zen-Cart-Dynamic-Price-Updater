@@ -120,50 +120,60 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
                 <?php if (DPU_SHOW_LOADING_IMAGE === 'true') { ?>
                 //loadImg/loadImgSB object has already been created
-                let psp = false;
+                let psp = false;  // a product special price
                 let thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; // id of price block (normal/discount/sales...). default: productPrices ?>");
                 if (DPUdebug) {
-                    console.log('<?= __LINE__; ?>: thePrice=');
+                    console.log('<?= __LINE__; ?>: thePrice (object)=');
                     console.log(thePrice);
                 }
 
-                let test = false;
-                // TODO wrap all code in this initial test
+                let spanResults = false;
+
                 if (thePrice) {
-                    // get the price spans (modifiers/discounts) inside the productPrices block
-                    test = thePrice.getElementsByTagName("span");
-                }
-                if (DPUdebug) {
-                    console.log('<?= __LINE__; ?>: test=');
-                    console.log(test);
+                    // get any price spans (modifiers/discounts) inside the productPrices block.
+                    spanResults = thePrice.getElementsByTagName('span');
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: spanResults=');
+                        console.log(spanResults);
+                    }
+                } else {
+                    console.error('DPU_PRICE_ELEMENT_ID "' + '<?php echo DPU_PRICE_ELEMENT_ID; ?>' + '" not found!');
+                    return;
                 }
 
                 let a;
-                let b = test.length; // how many price spans are there ?
+                let spanCount = spanResults.length; // how many price spans are there ?
                 // On initial page load, the default ZC span+text is inside productPrices. eg. "Starting at: <span class="productBasePrice">&euro;14.99</span>
-                // so b = 1. But when this span subsequently gets replaced by DPU, the length property of the "test" live htmlcollection subsequently becomes 0. Confusing.
-                // Changes of attribute selection result in b = 0
+                // so spanCount = 1. But when this span subsequently gets replaced by DPU, the length property of the "spanResults" live htmlcollection subsequently becomes 0. Confusing.
+                // Changes of attribute selection result in spanCount = 0
                 if (DPUdebug) {
-                    console.log('<?= __LINE__; ?>: num of spans b=' + b + ', ' + 'test.length=' + test.length);
+                    console.log('<?= __LINE__; ?>: spanCount=' + spanCount);
                 }
+
                 // parse spans
-                for (a = 0; a < b; a++) {
-                    if (test[a].className === "productSpecialPrice" || test[a].className === "productSalePrice" || test[a].className === "productSpecialPriceSale") {
-                        psp = test[a];
+                for (a = 0; a < spanCount; a++) {
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: parsing span ' + (a+1) + '/' + spanCount);
+                    }
+                    if (spanResults[a].className === "productSpecialPrice" || spanResults[a].className === "productSalePrice" || spanResults[a].className === "productSpecialPriceSale") {
+                        psp = spanResults[a];
                         if (DPUdebug) {
                             console.log('<?= __LINE__; ?>: discount span psp=');
                             console.log(psp);
                         }
+                    } else {
+                        if (DPUdebug) {
+                            console.log('<?= __LINE__; ?>: no discount span found');
+                        }
                     }
                 }
 
-                //psp at this point may have a discount span in it. But if not, psp is loaded with the whole productPrices div containing the productBasePrice span...not the same thing....??
-
+                // psp at this point may have a discount span in it. But if not, psp is now loaded with the whole productPrices div containing the productBasePrice span...not the same thing....??
                 // no discount spans were found
                 if (!psp) {
                     psp = thePrice;
                     if (DPUdebug) {
-                        console.log('<?= __LINE__; ?>: psp=');
+                        console.log('<?= __LINE__; ?>: no discount spans found, psp=');
                         console.log(psp);
                     }
                 } else {
@@ -175,19 +185,20 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 }
 
                 if (psp && imgLoc === "replace") { // REPLACE price with loading image
-                    if (thePrice) {
                         loadImg.style.display = "inline"; //'block';
-                        let pspStyle = psp.currentStyle || window.getComputedStyle(psp);
+                        let pspStyle = window.getComputedStyle(psp);
+                        if (DPUdebug) {
+                            console.log('<?= __LINE__; ?>: pspStyle=');
+                            console.log(pspStyle);
+                        }
                         loadImg.style.height = pspStyle.lineHeight; // Maintains the height so that there is not a vertical shift of the content.
                         origPrice = psp.innerHTML;
                         updateInnerHTML(loadImg.outerHTML, false, psp, true);
-                    }
-
                 } else { // APPEND price with loading image
                     document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: productPrices ?>").appendChild(loadImg);
                 }
-//sidebox
 
+ //sidebox
                 if (document.getElementById("dynamicpriceupdatersidebox")) {
                     let theSB;
                     theSB = document.getElementById("dynamicpriceupdatersideboxContent");
@@ -290,14 +301,14 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
                     <?php if (DPU_SHOW_LOADING_IMAGE === 'true') { ?>
                     const thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: productPrices ?>");
-                    let test = thePrice.getElementsByTagName("span");
+                    let spanResults = thePrice.getElementsByTagName("span");
                     let psp = false;
                     let a;
-                    let b = test.length;
+                    let spanCount = spanResults.length;
 
-                    for (a = 0; a < b; a += 1) {
-                        if (test[a].className === "productSpecialPrice" || test[a].className === "productSalePrice" || test[a].className === "productSpecialPriceSale") {
-                            psp = test[a];
+                    for (a = 0; a < spanCount; a += 1) {
+                        if (spanResults[a].className === "productSpecialPrice" || spanResults[a].className === "productSalePrice" || spanResults[a].className === "productSpecialPriceSale") {
+                            psp = spanResults[a];
                         }
                     }
 
@@ -373,22 +384,22 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 }
 
                 // use the spans to see if there is a discount
-                let test = thePrice.getElementsByTagName("span");
+                let spanResults = thePrice.getElementsByTagName("span");
                 let psp = false;
                 let a;
-                let b = test.length;
+                let spanCount = spanResults.length;
                 let pdpt = false;
 
-                for (a = 0; a < b; a += 1) {
-                    if (test[a].className === "normalprice") {//normalprice is a strikeout, shown when there is another span with a discount
-                        pdpt = test[a];
+                for (a = 0; a < spanCount; a += 1) {
+                    if (spanResults[a].className === "normalprice") {//normalprice is a strikeout, shown when there is another span with a discount
+                        pdpt = spanResults[a];
                         if (DPUdebug) {
                             console.log('<?= __LINE__; ?>: found normalprice, pdpt=');
                             console.log(pdpt);
                         }
                     }
-                    if (test[a].className === "productSpecialPrice" || test[a].className === "productSalePrice" || test[a].className === "productSpecialPriceSale") {
-                        psp = test[a];
+                    if (spanResults[a].className === "productSpecialPrice" || spanResults[a].className === "productSalePrice" || spanResults[a].className === "productSpecialPriceSale") {
+                        psp = spanResults[a];
                         if (DPUdebug) {
                             console.log('<?= __LINE__; ?>: found discounts, psp=');
                             console.log(psp);
