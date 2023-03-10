@@ -1,11 +1,12 @@
 <?php
+
+declare(strict_types=1);
 /**
- * dynamic price updater sidebox
- *
- * @package templateSystem
- * @copyright 2007 Kuroi Web Design
- * @copyright Portions Copyright 2003-2007 Zen Cart Development Team
+ * Dynamic Price Updater V5.0
+ * @copyright Dan Parry (Chrome) / Erik Kerkhoven (Design75) / mc12345678 / torvista
+ * @original author Dan Parry (Chrome)
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
+ * @version $Id: 2023 Mar 10
  */
 
   $content = '';

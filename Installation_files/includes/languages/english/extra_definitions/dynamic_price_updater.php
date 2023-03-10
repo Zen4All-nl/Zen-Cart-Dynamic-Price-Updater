@@ -1,9 +1,12 @@
 <?php
+
+declare(strict_types=1);
 /**
- * @package Dynamic Price Updater
- * @author Design75
- * @version 5.0
- * @licence This module is released under the GNU/GPL licence
+ * Dynamic Price Updater V5.0
+ * @copyright Dan Parry (Chrome) / Erik Kerkhoven (Design75) / mc12345678 / torvista
+ * @original author Dan Parry (Chrome)
+ * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
+ * @version $Id: 2023 Mar 10
  */
 
 define('BOX_HEADING_DYNAMIC_PRICE_UPDATER_SIDEBOX', 'Price Breakdown'); // the heading that shows in the Updater sidebox

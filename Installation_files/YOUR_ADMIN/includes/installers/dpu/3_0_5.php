@@ -1,6 +1,8 @@
 <?php
+
+declare(strict_types=1);
 /**
- * @package functions
+ * @package functions Dynamic Price Updater
  * @copyright Copyright 2003-2017 Zen Cart Development Team
  * @copyright Portions Copyright 2003 osCommerce
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
@@ -353,7 +355,7 @@ if ($zc150) { // continue Zen Cart 1.5.0
                 'type' => 'string'
             ],
             'configuration_description' => [
-                'value' => '',
+                'value' => 'Default is cartAdd',
                 'type' => 'string'
             ],
             'date_added' => [
