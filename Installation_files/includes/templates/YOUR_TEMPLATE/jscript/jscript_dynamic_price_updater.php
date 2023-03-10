@@ -683,25 +683,16 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             if (DPUdebug) {
                                 console.log('<?= __LINE__; ?>: case match "checkbox"');
                             }
-                        case "radio":    // e.g.    radio: name="id[1]"
+                        case "radio": // e.g. radio: name="id[1]"
                             if (DPUdebug) {
                                 console.log('<?= __LINE__; ?>: case match "radio"');
                             }
                         <?php if (!empty($optionIds)) { ?>
-                            if (theForm.elements[i].type === "radio") {
-                                selectName = theForm.elements[i].getAttribute('name');
-                            } else if (theForm.elements[i].type === "checkbox") {
-                                selectName = theForm.elements[i].getAttribute('name');
+                            selectName = theForm.elements[i].getAttribute('name');
+                            if (theForm.elements[i].type === "checkbox") {
                                 selectName = selectName.substring(0, selectName.indexOf("]") + 1);
-                                if (DPUdebug) {
-                                    console.log('<?= __LINE__; ?>: case checkbox: selectName=' + selectName);
-                                }
-                            } else {
-                                if (DPUdebug) {
-                                    console.log('<?= __LINE__; ?>: case radio: selectName not coded');
-                                }
                             }
-                            if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) {//e.g. if (["id[1]"].indexOf(selectName) !== -1
+                            if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) { // e.g. if (["id[1]"].indexOf(selectName) !== -1
                                 theForm.elements[i].addEventListener("click", function () {
                                     getPrice();
                                 });
@@ -742,7 +733,6 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             }
                     } //eof switch
                 } //eof end of parse form elements
-
 
                 createSB();
 
