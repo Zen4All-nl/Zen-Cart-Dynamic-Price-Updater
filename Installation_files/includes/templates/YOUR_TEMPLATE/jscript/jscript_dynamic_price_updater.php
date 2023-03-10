@@ -87,6 +87,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             let objSP = false; // please don't adjust this
             // Updater sidebox settings
             let objSB = false;
+            let tmp = ''; // debugging, for multiple reuse
             <?php
             // this holds the sidebox object
             // i.e. Left sidebox false should become document.getElementById('leftBoxContainer');
@@ -116,7 +117,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             // called on initial page load / change of quantity / change of price-affecting-attribute
             function getPrice() {
                 if (DPUdebug) {
-                    console.log('<?= __LINE__; ?>: fn: getPrice');
+                    console.group('<?= __LINE__; ?>: fn: getPrice');
                 }
 
                 let pspClass = false;
@@ -320,11 +321,15 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     <?php } ?>
                     //alert("Status returned - " + textStatus);
                 });
+                if (DPUdebug) {
+                    console.groupEnd();
+                }
             }
 
             function updateInnerHTML(storeVal, psp, obj, replace) {
                 if (DPUdebug) {
-                    console.log("<?= __LINE__; ?>: fn: updateInnerHtml:\n" + storeVal);
+                    console.group("<?= __LINE__; ?>: fn: updateInnerHtml");
+                    console.log("storeVal=" + storeVal);
                 }
                 if (typeof (replace) === "undefined") {
                     replace = true;
@@ -342,7 +347,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                         }
                     } else {
                         if (DPUdebug) {
-                            console.log('<?= __LINE__; ?>: obj=NEED TO SHOW LOG LEVEL');
+                            console.log('<?= __LINE__; ?>: obj=');
                             console.log(obj);
                         }
                         if (replace) {
@@ -356,11 +361,14 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                         updSP();
                     }
                 }
+                if (DPUdebug) {
+                    console.groupEnd();
+                }
             }
 
             function handlePrice(results) {
                 if (DPUdebug) {
-                    console.log('<?= __LINE__; ?>: fn: handlePrice');
+                    console.group('<?= __LINE__; ?>: fn: handlePrice');
                 }
 
                 let thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: id productPrices contains all price spans ?>");
@@ -505,13 +513,21 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                         console.log('<?= __LINE__; ?>: END fn handlePrice');
                     }
                 }
+                if (DPUdebug) {
+                    console.groupEnd();
+                }
             }
-
+            // adjust the second price display; create the div if necessary
             function updSP() {
-                // adjust the second price display; create the div if necessary
-                let flag = false; // error tracking flag
+                if (DPUdebug) {
+                    console.group('<?= __LINE__; ?>: fn: updSP');
+                }
 
+                let flag = false; // error tracking flag
                 if (_secondPrice !== false) { // second price is active
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: parsing secondPrice');
+                    }
                     let centre = document.getElementById("productGeneral");
                     let temp = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: productPrices ?>");
                     //TODO temp contains the loading image with id=DPULoaderImage: duplicate id. Removing the id completely does not appear to affect functionality.
@@ -522,7 +538,6 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                         if (!temp || !itemp) {
                             flag = true;
                         }
-
                         if (!flag) {
                             objSP = temp.cloneNode(true);
                             objSP.id = temp.id + "Second";
@@ -530,18 +545,38 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                         }
                     }
                     objSP.innerHTML = temp.innerHTML;
+                } else {
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: parsing secondPrice skipped');
+                    }
+                }
+                if (DPUdebug) {
+                    console.groupEnd();
                 }
             }
 
             // create the sidebox for the attributes info display
             function createSB() {
+                if (DPUdebug) {
+                    console.group('<?= __LINE__; ?>: fn: createSB');
+                }
                 if (!(document.getElementById("dynamicpriceupdatersidebox")) && objSB) {
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: creating sidebox');
+                    }
                     let tempC = document.createElement("div");
                     tempC.id = "dynamicpriceupdatersideboxContent";
                     tempC.className = "sideBoxContent";
                     tempC.innerHTML = "If you can read this Chrome has broken something";
                     objSB.appendChild(tempC);
                     temp.parentNode.insertBefore(objSB, temp);
+                } else {
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: sidebox creation skipped');
+                    }
+                }
+                if (DPUdebug) {
+                    console.groupEnd();
                 }
             }
 
@@ -565,80 +600,91 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
             function init() { // called by on_load_dpu.js
                 if (DPUdebug) {
-                    console.log('<?= __LINE__; ?>: fn: init');
+                    console.group('<?= __LINE__; ?>: fn: init');
+                    console.log('search for form name "' + theFormName + '"');
                 }
                 let selectName;
                 let n = document.forms.length; // get the number of forms on the page
                 let i;
                 for (i = 0; i < n; i++) { // parse the forms to find which one is cart_quantity
                     if (DPUdebug) {
-                        console.log('<?= __LINE__; ?>: parsing forms: name ' + i + ' "' + document.forms[i].name + '"');
+                        console.log('<?= __LINE__; ?>: parsing form ' + (i+1) + '/' + n + ', name "' + document.forms[i].name + '"');
                     }
-
-                    if (document.forms[i].name === theFormName) { // matches
+                    // matching form name found
+                    if (document.forms[i].name === theFormName) {
                         theForm = document.forms[i]; // get the cart_quantity form data
                         if (DPUdebug) {
                             console.log('<?= __LINE__; ?>: theFormName "' + theFormName + '" FOUND:');
                             console.log(theForm);
                         }
-                    } // TODO what if form not found??
-                    if (DPUdebug) {
-                        console.log('<?= __LINE__; ?>: theFormName "' + theFormName + '" NOT FOUND')
                     }
+                }
+                // NO matching form name found
+                if (theForm === false) {
+                        console.error('<?= __LINE__; ?>: theFormName "' + theFormName + '" NOT FOUND')
                 }
 
                 n = theForm.elements.length;
-                //parse the elements that the form contains, and assign an appropriate event to be triggered on a change of the element
+                // parse the elements that the form contains, assign an appropriate event to the element to be triggered on a change of that element
                 for (i = 0; i < n; i++) {
-                   // TODO: identify and ignore attributes that do not affect the price. Currently all changes trigger the ajax call and the ignoring is done in zcDPU_Ajax.
-                   // TODO: Here would be an area to potentially identify attribute related items to skip either combining PHP from top or some sort of script detect of the presented html.
+                   // TODO: identify and ignore attributes that do not affect the price. Currently ANY change triggers the ajax call and the ignoring is done in zcDPU_Ajax. It would be more performant to do the filtering here.
                     if (DPUdebug) {
-                        console.log('<?= __LINE__; ?>: parsing form element ' + i);
+                        console.log('<?= __LINE__; ?>: parsing form "' + theFormName + '", element ' + i + ', type="' + theForm.elements[i].type + '"');
                     }
 
                     switch (theForm.elements[i].type) {
-                        case "select":
+                        //TODO: add type "select-multiple"
+                        case "select": // TODO does this type "select" exist?: https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement/type
                             if (DPUdebug) {
-                                console.log('<?= __LINE__; ?>: case select');
+                                console.log('<?= __LINE__; ?>: case match "select"');
                             }
                         case "select-one":
+                            // Drop-down: only one value may be selected
                             if (DPUdebug) {
-                                console.log('<?= __LINE__; ?>: case select-one');
+                                console.log('<?= __LINE__; ?>: case match "select-one"');
                             }
                         <?php if (!empty($optionIds)) { ?>
                             selectName = theForm.elements[i].getAttribute('name');
-                            if (DPUdebug) {
-                                console.log('<?= __LINE__; ?>: case select/select-one: selectName=' + selectName + "\nattach to" + theForm.elements[i]);
-                            }
                             if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) {
                                 theForm.elements[i].addEventListener("change", function () {
                                     getPrice();
                                 });
+                                if (DPUdebug) {
+                                    tmp = $('label[for="' + theForm.elements[i].getAttribute('id') + '"]').html();
+                                    console.log('<?= __LINE__; ?>: added EventListener to name="' + selectName + '", label="' + tmp + '"');
+                                }
                             }
                         <?php } ?>
                             break;
+
                         case "textarea":
                             if (DPUdebug) {
-                                console.log('<?= __LINE__; ?>: case textarea');
+                                console.log('<?= __LINE__; ?>: case match "textarea"');
                             }
                         case "text":
-                            selectName = theForm.elements[i].getAttribute('name');
+                            // Text-field e.g. quantity for Add to Cart
                             if (DPUdebug) {
-                                console.log('<?= __LINE__; ?>: case text: selectName=' + selectName);
+                                console.log('<?= __LINE__; ?>: case match "text"');
                             }
+                            selectName = theForm.elements[i].getAttribute('name');
                             if (<?php if (!empty($optionIds)) { ?>["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1 || <?php } ?>selectName === theFormName) {
                                 theForm.elements[i].addEventListener("input", function () {
                                     getPrice();
                                 });
+                                if (DPUdebug) {
+                                    tmp = $('label[for="' + theForm.elements[i].getAttribute('id') + '"]').html();
+                                    console.log('<?= __LINE__; ?>: added EventListener to name="' + selectName + '", label="' + tmp + '"');
+                                }
                             }
                             break;
+
                         case "checkbox": // e.g. checkbox: name="id[1][15]"
                             if (DPUdebug) {
-                                console.log('<?= __LINE__; ?>: case checkbox');
+                                console.log('<?= __LINE__; ?>: case match "checkbox"');
                             }
                         case "radio":    // e.g.    radio: name="id[1]"
                             if (DPUdebug) {
-                                console.log('<?= __LINE__; ?>: case radio');
+                                console.log('<?= __LINE__; ?>: case match "radio"');
                             }
                         <?php if (!empty($optionIds)) { ?>
                             if (theForm.elements[i].type === "radio") {
@@ -654,17 +700,21 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                                     console.log('<?= __LINE__; ?>: case radio: selectName not coded');
                                 }
                             }
-
                             if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) {//e.g. if (["id[1]"].indexOf(selectName) !== -1
                                 theForm.elements[i].addEventListener("click", function () {
                                     getPrice();
                                 });
+                                if (DPUdebug) {
+                                    tmp = $('label[for="' + theForm.elements[i].getAttribute('id') + '"]').html();
+                                    console.log('<?= __LINE__; ?>: added EventListener to name="' + selectName + '", label="' + tmp + '"');
+                                }
                             }
                         <?php } ?>
                             break;
+
                         case "number":
                             if (DPUdebug) {
-                                console.log('<?= __LINE__; ?>: case number');
+                                console.log('<?= __LINE__; ?>: case match "number"');
                             }
                         <?php if (!empty($optionIds)) { ?>
                             if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) {
@@ -677,16 +727,29 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                                 theForm.elements[i].addEventListener("input", function () {
                                     getPrice();
                                 });
+                                if (DPUdebug) {
+                                    tmp = $('label[for="' + theForm.elements[i].getAttribute('id') + '"]').html();
+                                    console.log('<?= __LINE__; ?>: added EventListener to name="' + selectName + '", label="' + tmp + '"');
+                                }
                             }
                         <?php } ?>
                             break;
+
+                        default:
+                            if (DPUdebug) {
+                                console.log('<?= __LINE__; ?>: switch default, no match for "' + theForm.elements[i].type + '"');
+                            }
                     } //eof switch
                 } //eof end of parse form elements
 
-               if (document.getElementById("dynamicpriceupdatersidebox") && typeof objSB === 'undefined') {
+
                 createSB();
-                }
+
+               // getPrice on initial page load
                 getPrice();
+                if (DPUdebug) {
+                    console.groupEnd();
+                }
             }
         </script>
         <?php
