@@ -28,8 +28,8 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
         if (class_exists('DPU')) {
             $dpu = new DPU();
         }
-// Check for conditions that use DPU.
 
+// Check for conditions that use DPU.
         // - quantity box in use
         $products_qty_box_status = zen_products_lookup($pid, 'products_qty_box_status');
 
@@ -38,20 +38,16 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
          // - any attribute options that affect the price. Assign ONLY these option name ids to $optionIds, to subsequently attach events to ONLY these options.
         $optionIds = [];
+        // getOptionPricedIds Checks for attributes that affect price including text boxes.
         if ($load && !($optionIds = $dpu->getOptionPricedIds($pid)) && ($products_qty_box_status === 0 || $products_quantity_order_max === 1)) { // do not reorder this line or $optionIds will not be created
-            // Checks for attributes that affect price including if text boxes.  If there are none that affect price and the quantity
-            //   box is not shown, then go ahead and disable DPU as there is nothing available to adjust/modify price.
+            // If there are none that affect price and the quantity box is not shown, then disable DPU as there is no reason to refresh the price display.
             $load = false;
         }
-        /* example $optionIds
-        Array
-        (
-            [3] => id[3]
-            [4] => id[4]
-         )
-       */
+        /* example array $optionIds
+        ([3] => id[3]
+         [4] => id[4]) */
     }
-// get the display price html, which could be composed of various spans: $show_normal_price . $show_special_price . $show_sale_price . $show_sale_discount. $free_tag . $call_tag;
+    // get the display price html, which could be composed of various spans: $show_normal_price . $show_special_price . $show_sale_price . $show_sale_discount. $free_tag . $call_tag;
     $pidp = zen_get_products_display_price($pid);
     if (empty($pidp) && empty($optionIds)) {
         $load = false;
@@ -114,7 +110,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             loadImgSB.style.margin = "auto";
             <?php } ?>
 
-            // called on initial page load / change of quantity / change of price-affecting-attribute
+            // called on initial page load / change of quantity / change of a price-affecting-attribute
             function getPrice() {
                 if (DPUdebug) {
                     console.group('<?= __LINE__; ?>: fn: getPrice');
@@ -401,7 +397,6 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 }
 
                 let updateSidebox;
-                let type = results.responseType;
                 let sbContent = "";
                 let theSB;
 
@@ -412,35 +407,56 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 } else {
                     updateSidebox = false;
                 }
+
                 //example: ajax resultArray{
                 // "responseType":"success",
                 // "data":{
-                // "sideboxContent":"<span class=\"DPUSideBoxName\"></span><span class=\"DPUSideboxQuantity\">&nbsp;x&nbsp;2</span>&nbsp;(19,90&euro;)<br><hr><span class=\"DPUSideboxTotalText\">Total: </span><span class=\"DPUSideboxTotalDisplay\">19,90&euro;</span>",
-                // "priceTotal":"19,90&euro;","preDiscPriceTotalText":"","preDiscPriceTotal":"19,90&euro;","stock_quantity":"4 Units in Stock","weight":"0.5"}
+                //   "sideboxContent":"<span class=\"DPUSideBoxName\"></span><span class=\"DPUSideboxQuantity\">&nbsp;x&nbsp;2</span>&nbsp;(19,90&euro;)<br><hr><span class=\"DPUSideboxTotalText\">Total:</span><span class=\"DPUSideboxTotalDisplay\">19,90&euro;</span>",
+                //   "priceTotal":"19,90&euro;",
+                //   "preDiscPriceTotalText":"",
+                //   "preDiscPriceTotal":"19,90&euro;",
+                //   "stock_quantity":"4 Units in Stock",
+                //   "weight":"0.5"
+                //   }
                 // }
-                if (type === "error") {
+                if (results.responseType === "error") {
                     showErrors();
-                } else {//results.responseType === "success"
-                    let temp;
-                    temp = results.data;
+                } else {
+                    //results.responseType === "success"
+                    let type;     // key of property
+                    let storeVal; // value of property
+                    let length;   // size of properties array
+                    if (DPUdebug) {
+                        length = Object.keys(results.data).length;
+                        tmp = 1; // debugging iteration count
+                    }
+                    for (type of Object.keys(results.data)) {
+                        storeVal = results.data[type];
+                        if (DPUdebug) {
+                            console.log('<?= __LINE__; ?>: parsing responseType.data ' + tmp + '/' + length + ', type="' + type + '"');
+                            tmp++;
+                        }
 
-                    let storeVal;
-                    let i;
-                    for (i in temp) {
-                        type = i;
-                        storeVal = temp[i];
-                        switch (type) {// the 'type' attribute defines what type of information is being provided
+                        // The 'type' (array key) attribute defines what type of information is being returned
+                        switch (type) {
 
                             case "preDiscPriceTotal":
+                                if (DPUdebug) {
+                                    console.log('<?= __LINE__; ?>: case match "preDiscPriceTotal"' + "\n" + 'storeVal=' + storeVal);
+                                }
                                 if (pdpt) {
+                                    if (DPUdebug) {
+                                        console.log('<?= __LINE__; ?>: pdpt=' + pdpt);
+                                    }
                                     // a normalprice/strikeout span exists
                                     // TODO check is it replace or in front of?
                                     // this replaces the undiscounted/original price text inside the span normalprice strikeout
                                     // this replaces any TEXT in front of the span normalprice: use the observer NOTIFY_DYNAMIC_PRICE_UPDATER_PREPARE_OUTPUT_PSP_CLASS to maintain any custom texts
-                                    if (DPUdebug) {
-                                        console.log('<?= __LINE__; ?>: case preDiscPriceTotal, storeVal=' + storeVal + "\npdpt=" + pdpt);
-                                    }
                                     updateInnerHTML(storeVal, pdpt, thePrice, true);
+                                } else {
+                                    if (DPUdebug) {
+                                        console.log('<?= __LINE__; ?>: pdpt="' + pdpt + '", no update');
+                                    }
                                 }
                                 break;
 
@@ -451,7 +467,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                                     // this replaces the undiscounted/original price text inside the span normalprice strikeout
                                     // this replaces any TEXT in front of the span normalprice: use the observer NOTIFY_DYNAMIC_PRICE_UPDATER_PREPARE_OUTPUT_PSP_CLASS to maintain any custom texts
                                     if (DPUdebug) {
-                                        console.log('<?= __LINE__; ?>: case preDiscPriceTotalText (normalprice), storeVal=' + storeVal + ', node replacement');
+                                        console.log('<?= __LINE__; ?>: case match "preDiscPriceTotalText" (normalprice)' + "\n" + 'storeVal=' + storeVal + ', node replacement');
                                     }
                                     if (thePrice.firstChild.nodeType === 3) {//3 is text
                                         thePrice.firstChild.nodeValue = storeVal;
@@ -461,7 +477,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
                             case "priceTotal": //the final/actual/total price located in span "productSpecialPrice"/ "productSalePrice"/ "productSpecialPriceSale"
                                 if (DPUdebug) {
-                                    console.log('<?= __LINE__; ?>: case priceTotal, storeVal=' + storeVal + "\npsp=");
+                                    console.log('<?= __LINE__; ?>: case match "priceTotal"' + "\n" + 'storeVal=' + storeVal + "\npsp=");
                                     console.log(psp);
                                 }
                                 updateInnerHTML(storeVal, psp, thePrice, true);
@@ -469,7 +485,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
                             case "quantity":
                                 if (DPUdebug) {
-                                    console.log('<?= __LINE__; ?>: case quantity, storeVal=' + storeVal);
+                                    console.log('<?= __LINE__; ?>: case match "quantity"' + "\n" + 'storeVal=' + storeVal);
                                 }
                                 updateInnerHTML(storeVal, psp, thePrice, false);
                                 break;
@@ -478,19 +494,29 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                                 let theWeight = document.getElementById("<?php echo DPU_WEIGHT_ELEMENT_ID; ?>");
                                 if (theWeight) {
                                     if (DPUdebug) {
-                                        console.log('<?= __LINE__; ?>: case weight, storeVal=' + storeVal);
+                                        console.log('<?= __LINE__; ?>: case match "weight"' + "\n" + 'storeVal=' + storeVal);
                                     }
                                     updateInnerHTML(storeVal, false, theWeight, true);
+                                } else {
+                                    if (DPUdebug) {
+                                        console.log('<?= __LINE__; ?>: no weight displayed, no update');
+                                    }
                                 }
                                 break;
 
-
                             case "sideboxContent":
                                 if (DPUdebug) {
-                                    console.log('<?= __LINE__; ?>: case sideboxContent, storeVal=' + storeVal);
+                                    console.log('<?= __LINE__; ?>: case match "sideboxContent"'+ "\n" + 'storeVal=' + storeVal);
                                 }
                                 if (updateSidebox) {
                                     sbContent += storeVal;
+                                    if (DPUdebug) {
+                                        console.log('<?= __LINE__; ?>: updateSidebox=true, storeVal appended to sbContent');
+                                    }
+                                } else {
+                                    if (DPUdebug) {
+                                        console.log('<?= __LINE__; ?>: updateSidebox=false, no action');
+                                    }
                                 }
                                 break;
 
@@ -498,25 +524,34 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                                 let theStockQuantity = document.getElementById("<?php echo DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY; ?>");
                                 if (theStockQuantity) {
                                     if (DPUdebug) {
-                                        console.log('<?= __LINE__; ?>: case stock_quantity, storeVal=' + storeVal);
+                                        console.log('<?= __LINE__; ?>: case match "stock_quantity"'+ "\n" + 'storeVal=' + storeVal);
                                     }
                                     updateInnerHTML(storeVal, false, theStockQuantity, true);
+                                } else {
+                                    if (DPUdebug) {
+                                        console.log('<?= __LINE__; ?>: no stock quantity displayed, no update');
+                                    }
                                 }
                                 break;
+
+                            default:
+                                if (DPUdebug) {
+                                    console.log('<?= __LINE__; ?>: switch default, no match for type="' + type + '"');
+                                }
                         }
                     }
-
-                if (updateSidebox) {//TODO why is this not in the switch above?
+                }
+                //TODO why is this not in the test above?
+                if (updateSidebox) {
                     updateInnerHTML(sbContent, false, theSB, true);
                     }
-                    if (DPUdebug) {
-                        console.log('<?= __LINE__; ?>: END fn handlePrice');
-                    }
-                }
+
                 if (DPUdebug) {
+                    console.log('<?= __LINE__; ?>: END fn handlePrice');
                     console.groupEnd();
                 }
             }
+
             // adjust the second price display; create the div if necessary
             function updSP() {
                 if (DPUdebug) {
