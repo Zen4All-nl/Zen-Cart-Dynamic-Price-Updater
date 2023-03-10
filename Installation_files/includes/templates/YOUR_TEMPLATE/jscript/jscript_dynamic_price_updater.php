@@ -617,6 +617,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             console.log('<?= __LINE__; ?>: theFormName "' + theFormName + '" FOUND:');
                             console.log(theForm);
                         }
+                        break;
                     }
                 }
                 // NO matching form name found
