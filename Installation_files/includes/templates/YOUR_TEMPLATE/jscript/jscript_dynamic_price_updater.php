@@ -1,4 +1,5 @@
 <?php
+//torvista: 158 branch, work in progress
 
 declare(strict_types=1);
 /**
@@ -36,7 +37,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
         // - quantity not limited to 1
         $products_quantity_order_max = zen_products_lookup($pid, 'products_quantity_order_max');
 
-         // - any attribute options that affect the price. Assign ONLY these option name ids to $optionIds, to subsequently attach events to ONLY these options.
+        // - any attribute options that affect the price. Assign ONLY these option name ids to $optionIds, to subsequently attach events to ONLY these options.
         $optionIds = [];
         // getOptionPricedIds Checks for attributes that affect price including text boxes.
         if ($load && !($optionIds = $dpu->getOptionPricedIds($pid)) && ($products_qty_box_status === 0 || $products_quantity_order_max === 1)) { // do not reorder this line or $optionIds will not be created
@@ -95,7 +96,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
             if (DPU_SHOW_LOADING_IMAGE === 'true') { // create the JS object for the loading image
             ?>
-            const imgLoc = "replace"; // Options are "replace" or , "" (empty)
+            const imgLoc = 'replace'; // Options are 'replace' or '' (empty)
 
             let origPrice;
             let loadImg = document.createElement("img");
@@ -143,32 +144,43 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
                 let a;
                 let spanCount = spanResults.length; // how many price spans are there ?
-                // On initial page load, the default ZC span+text is inside productPrices. eg. "Starting at: <span class="productBasePrice">&euro;14.99</span>
+                // On initial page load, the default ZC span+text is inside productPrices. eg. <h2 id="productPrices" class="productGeneral">Starting at: <span class="productBasePrice">€329.99</span></h2>
                 // so spanCount = 1. But when this span subsequently gets replaced by DPU, the length property of the "spanResults" live htmlcollection subsequently becomes 0. Confusing.
                 // Changes of attribute selection result in spanCount = 0
-                if (DPUdebug) {
-                    console.log('<?= __LINE__; ?>: spanCount=' + spanCount);
-                }
 
                 // parse spans
                 for (a = 0; a < spanCount; a++) {
                     if (DPUdebug) {
-                        console.log('<?= __LINE__; ?>: parsing span ' + (a+1) + '/' + spanCount);
+                        console.log('<?= __LINE__; ?>: parsing span ' + (a + 1) + '/' + spanCount);
                     }
                     if (spanResults[a].className === "productSpecialPrice" || spanResults[a].className === "productSalePrice" || spanResults[a].className === "productSpecialPriceSale") {
                         psp = spanResults[a];
                         if (DPUdebug) {
-                            console.log('<?= __LINE__; ?>: discount span psp=');
+                            console.log('<?= __LINE__; ?>: discount span found, psp=');
                             console.log(psp);
                         }
                     } else {
                         if (DPUdebug) {
-                            console.log('<?= __LINE__; ?>: no discount span found');
+                            console.log('<?= __LINE__; ?>: no discount spans found');
                         }
+                        //torvista TODO this clause may be necessary
+                        /*
+                        if (spanResults[a].className === "productBasePrice") {
+                            psp = spanResults[a];
+                            if (DPUdebug) {
+                                console.log('<?= __LINE__; ?>: span "productBasePrice" found, psp=');
+                                console.log(psp);
+                            }
+                        }*/
                     }
                 }
 
                 // psp at this point may have a discount span in it. But if not, psp is now loaded with the whole productPrices div containing the productBasePrice span...not the same thing....??
+                /*info
+                           Core: <h2 id="productPrices" class="productGeneral">Starting at: <span class="productBasePrice">€329.99</span></h2>
+                 DPU changes to: <h2 id="productPrices" class="productGeneral">Your price: €329.99</h2>
+                */
+
                 // no discount spans were found
                 if (!psp) {
                     psp = thePrice;
@@ -185,20 +197,20 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 }
 
                 if (psp && imgLoc === "replace") { // REPLACE price with loading image
-                        loadImg.style.display = "inline"; //'block';
-                        let pspStyle = window.getComputedStyle(psp);
-                        if (DPUdebug) {
-                            console.log('<?= __LINE__; ?>: pspStyle=');
+                    loadImg.style.display = "inline"; //'block';
+                    let pspStyle = window.getComputedStyle(psp);
+                    loadImg.style.height = pspStyle.lineHeight; // Maintains the height so that there is not a vertical shift of the content.
+                    /*if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: pspStyle.lineHeight=' + pspStyle.lineHeight + ', pspStyle=');
                             console.log(pspStyle);
-                        }
-                        loadImg.style.height = pspStyle.lineHeight; // Maintains the height so that there is not a vertical shift of the content.
-                        origPrice = psp.innerHTML;
-                        updateInnerHTML(loadImg.outerHTML, false, psp, true);
+                        }*/
+                    origPrice = psp.innerHTML;
+                    updateInnerHTML(loadImg.outerHTML, false, psp, true);//TODO these parameters correct?
                 } else { // APPEND price with loading image
                     document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: productPrices ?>").appendChild(loadImg);
                 }
 
- //sidebox
+                //sidebox
                 if (document.getElementById("dynamicpriceupdatersidebox")) {
                     let theSB;
                     theSB = document.getElementById("dynamicpriceupdatersideboxContent");
@@ -213,11 +225,18 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 let el;
                 let i;
                 let aName;
-                let aValue;
+                let aValue; //TODO aValue never used
 
                 // parse the elements in the form
+                if (DPUdebug) {
+                    console.log('<?= __LINE__; ?>: parse theForm="' + theForm.name + '"');
+                }
                 for (i = 0; i < n; i++) {
                     el = theForm.elements[i];
+                    if (DPUdebug) {
+                        tmp = $('label[for="' + theForm.elements[i].getAttribute('id') + '"]').html();
+                        console.log('<?= __LINE__; ?>: parse element ' + (i + 1) + '/' + n + ' type="' + el.type + '", name="' + el.name + '", label="' + tmp + '"');
+                    }
                     //best tested with A Bug's Life "Multi Pak" Special 2003 Collectors Edition for varied attributes
                     switch (el.type) {
                         /* TODO is this even needed as a switch? */
@@ -234,22 +253,47 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                         case "text": // e.g. "id[txt_10]"
                         case "number":
                         case "hidden":
-                            if (el.name.startsWith("id[")) { // Ensure not to replace an existing value. I.e. drop a duplicate value.
+                            if (DPUdebug) {
+                                console.log('<?= __LINE__; ?>: case match "select/select-one/textarea/text/number/hidden" for el.type="' + el.type + '"');
+                            }
+                            //torvista TODO mod to next line may be necessary
+                            //if (el.name.startsWith("id[") && el.value !== '') {
+                            if (el.name.startsWith("id[")) { // Ensure not to replace an existing value. i.e. drop a duplicate value.
                                 aName = el.name;
                                 attributes += aName + '~' + el.value + '|';
+                                if (DPUdebug) {
+                                    console.log('<?= __LINE__; ?>: added attributes="' + attributes + '"');
+                                }
+                            } else {
+                                if (DPUdebug) {
+                                    console.log('<?= __LINE__; ?>: skipped for name="' + el.name + '"');
+                                }
                             }
                             break;
 
                         case "checkbox":
-                            /* e.g.
-                            form input for checkbox name="id[1][29]" value="[29]"
-                            The code below produces these for checkbox selections:
-                            option 1, attribute 29 selected:       attributes=id[1][29]~29|
-                            option 1, attribute 29 + 30 selected:  attributes=id[1][29]~29|id[1][30]~30|
-                            option 1, attribute 29 + 32 selected:  attributes=id[1][32]~32|id[1][29]~29|
-                            option 1, attribute 30 + 32 selected:  attributes=id[1][32]~32|id[1][30]~30|
-                            option 1, attribute 29+30+32 selected: attributes=id[1][32]~32|id[1][29]~29|id[1][30]~30|
-                            */
+                        /* e.g.
+                        form input for checkbox name="id[1][29]" value="[29]"
+                        The code below produces these for checkbox selections:
+                        option 1, attribute 29 selected:       attributes=id[1][29]~29|
+                        option 1, attribute 29 + 30 selected:  attributes=id[1][29]~29|id[1][30]~30|
+                        option 1, attribute 29 + 32 selected:  attributes=id[1][32]~32|id[1][29]~29|
+                        option 1, attribute 30 + 32 selected:  attributes=id[1][32]~32|id[1][30]~30|
+                        option 1, attribute 29+30+32 selected: attributes=id[1][32]~32|id[1][29]~29|id[1][30]~30|
+                        */
+                        //torvista TODO: this may be necessary
+                        /*
+                        if (el.checked === true) { // get the radio that has been selected steve reversed comparison
+                            if (el.name.startsWith("id[") && el.value !== '') { // Ensure not to replace an existing value. i.e. drop a duplicate value.
+                                aName = el.name; // name is the option name
+                                aValue = el.value;
+                                aName = aName.replace("[" + el.value + "]", "");
+                                attributes += aName + '~' + el.value + '|'; // value is the option value
+                            }
+                        }
+                        break;
+                       */
+                        //TODO when none selected, aName is undefined
 
                         case "radio":
                             /* e.g. form input for each radio name="id[1]" value="29"
@@ -258,29 +302,47 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             option 1, attribute 30 selected: attributes=id[1]~30|
                             option 1, attribute 32 selected: attributes=id[1]~32|
                             */
-                            if (el.checked === true) { // get the radio that has been selected
+                            if (DPUdebug) {
+                                console.log('<?= __LINE__; ?>: case match "checkbox/radio" for el.type="' + el.type + '"');
+                            }
+                            if (el.checked === true) { // ensure this checkbox/radio is selected
                                 if (el.name.startsWith("id[") && el.value !== '') { // Ensure not to replace an existing value. i.e. drop a duplicate value.
                                     aName = el.name; // name is the option name
                                     attributes += aName + '~' + el.value + '|'; // value is the option value
+                                    if (DPUdebug) {
+                                        console.log('<?= __LINE__; ?>: added attributes="' + attributes + '"');
+                                    }
+                                } else {
+                                    if (DPUdebug) {
+                                        console.log('<?= __LINE__; ?>: skipped for name="' + el.name + '"');
+                                    }
+                                }
+                            } else {
+                                if (DPUdebug) {
+                                    console.log('<?= __LINE__; ?>: skipped (unchecked) for name="' + el.name + '", label="' + tmp + '"');
                                 }
                             }
                             break;
+                        default:
+                            if (DPUdebug) {
+                                console.log('<?= __LINE__; ?>: switch default, no match for el.type="' + el.type + '"');
+                            }
                     }
                 }
                 if (DPUdebug) {
-                    console.log('<?= __LINE__; ?>: attributes=' + (attributes === '' ? 'not set' : attributes));
+                    console.log('<?= __LINE__; ?>: final attributes="' + attributes + '"');
                 }
 
-                    // If no default set, on first page load attributes ==='', so DPU call returns 0.
-                    // Too complex to deal with it in the ajax class, so just clause it here.
-                    // However, if loading graphic is used, it replaces/appends original before DPU call, then should be updated after DPU call...but this is not done now, so do not use the loading graphic.
-                    // This needs a rethink like use the loading graphic just prior to the DPU call, inside this clause.
+                // If no default set, on first page load attributes ==='', so DPU call returns 0.
+                // Too complex to deal with it in the ajax class, so just clause it here.
+                // However, if loading graphic is used, it replaces/appends original before DPU call, then should be updated after DPU call...but this is not done now, so do not use the loading graphic.
+                // This needs a rethink like use the loading graphic just prior to the DPU call, inside this clause.
                 const products_id = <?php echo $pid; ?>;
                 let cartQuantity = $('input[name="cart_quantity"]').val();
-                    // send data to DPU_Ajax, method=getDetails to process the change and return the new price data to handlePrice
-                    if (DPUdebug) {
-                        console.log('<?= __LINE__; ?>: ajax DPU_Ajax&method=getDetails');
-                    }
+                // send data to DPU_Ajax, method=getDetails to process the change and return the new price data to handlePrice
+                if (DPUdebug) {
+                    console.log('<?= __LINE__; ?>: ajax DPU_Ajax&method=getDetails');
+                }
                 zcJS.ajax({
                     url: 'ajax.php?act=DPU_Ajax&method=getDetails',
                     data: {
@@ -290,14 +352,14 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                         cart_quantity: cartQuantity
                     }
                 }).done(function (resultArray) {
-                        if (DPUdebug) {
-                            console.log('<?= __LINE__; ?>: ajax resultArray ' + JSON.stringify(resultArray));
-                        }
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: ajax resultArray ' + JSON.stringify(resultArray));
+                    }
                     handlePrice(resultArray);
                 }).fail(function () {
-                        if (DPUdebug) {
-                            console.log('<?= __LINE__; ?>: ajax call FAIL');
-                        }
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: ajax call FAIL');
+                    }
 
                     <?php if (DPU_SHOW_LOADING_IMAGE === 'true') { ?>
                     const thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: productPrices ?>");
@@ -311,7 +373,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             psp = spanResults[a];
                         }
                     }
-
+                    //TODO loadImg.parentNode.id exists?
                     if (typeof (loadImg) !== "undefined" && loadImg.parentNode !== null && loadImg.parentNode.id === thePrice.id && imgLoc !== "replace") {
                         if (psp) {
                             psp.removeChild(loadImg);
@@ -324,9 +386,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     if (_secondPrice !== false) {
                         updSP();
                     }
-
                     <?php } ?>
-                    //alert("Status returned - " + textStatus);
                 });
                 if (DPUdebug) {
                     console.groupEnd();
@@ -379,6 +439,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 }
 
                 let thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: id productPrices contains all price spans ?>");
+                //TODO loadImg.parentNode.id exists?
                 if (typeof (loadImg) !== "undefined" && loadImg.parentNode !== null && loadImg.parentNode.id === thePrice.id && imgLoc !== "replace") {
                     thePrice.removeChild(loadImg);
                 }
@@ -517,7 +578,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
                             case "sideboxContent":
                                 if (DPUdebug) {
-                                    console.log('<?= __LINE__; ?>: case match "sideboxContent"'+ "\n" + 'storeVal=' + storeVal);
+                                    console.log('<?= __LINE__; ?>: case match "sideboxContent"' + "\n" + 'storeVal=' + storeVal);
                                 }
                                 if (updateSidebox) {
                                     sbContent += storeVal;
@@ -535,7 +596,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                                 let theStockQuantity = document.getElementById("<?php echo DPU_PRODUCTDETAILSLIST_PRODUCT_INFO_QUANTITY; ?>");
                                 if (theStockQuantity) {
                                     if (DPUdebug) {
-                                        console.log('<?= __LINE__; ?>: case match "stock_quantity"'+ "\n" + 'storeVal=' + storeVal);
+                                        console.log('<?= __LINE__; ?>: case match "stock_quantity"' + "\n" + 'storeVal=' + storeVal);
                                     }
                                     updateInnerHTML(storeVal, false, theStockQuantity, true);
                                 } else {
@@ -555,7 +616,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 //TODO why is this not in the test above?
                 if (updateSidebox) {
                     updateInnerHTML(sbContent, false, theSB, true);
-                    }
+                }
 
                 if (DPUdebug) {
                     console.log('<?= __LINE__; ?>: END fn handlePrice');
@@ -574,6 +635,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     if (DPUdebug) {
                         console.log('<?= __LINE__; ?>: parsing secondPrice');
                     }
+                    //TODO centre never used?
                     let centre = document.getElementById("productGeneral");
                     let temp = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: productPrices ?>");
                     //TODO temp contains the loading image with id=DPULoaderImage: duplicate id. Removing the id completely does not appear to affect functionality.
@@ -615,6 +677,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     tempC.className = "sideBoxContent";
                     tempC.innerHTML = "If you can read this Chrome has broken something";
                     objSB.appendChild(tempC);
+                    //TODO review temp/tempC error on next line
                     temp.parentNode.insertBefore(objSB, temp);
                 } else {
                     if (DPUdebug) {
@@ -627,11 +690,11 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             }
 
             function showErrors() {
-                let alertText = "";
+                let alertText = '';
                 let errVal;
                 let errorText;
                 let i;
-
+                //TODO check responseJSON available?
                 errorText = this.responseJSON.responseText;
 
                 for (i in errorText) {
@@ -647,14 +710,14 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             function init() { // called by on_load_dpu.js
                 if (DPUdebug) {
                     console.group('<?= __LINE__; ?>: fn: init');
-                    console.log('search for form name "' + theFormName + '"');
+                    console.log('searching for form name "' + theFormName + '"');
                 }
                 let selectName;
                 let n = document.forms.length; // get the number of forms on the page
                 let i;
                 for (i = 0; i < n; i++) { // parse the forms to find which one is cart_quantity
                     if (DPUdebug) {
-                        console.log('<?= __LINE__; ?>: parsing form ' + (i+1) + '/' + n + ', name "' + document.forms[i].name + '"');
+                        console.log('<?= __LINE__; ?>: parsing form ' + (i + 1) + '/' + n + ', name "' + document.forms[i].name + '"');
                     }
                     // matching form name found
                     if (document.forms[i].name === theFormName) {
@@ -668,13 +731,13 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 }
                 // NO matching form name found
                 if (theForm === false) {
-                        console.error('<?= __LINE__; ?>: theFormName "' + theFormName + '" NOT FOUND')
+                    console.error('<?= __LINE__; ?>: theFormName "' + theFormName + '" NOT FOUND')
                 }
 
                 n = theForm.elements.length;
                 // parse the elements that the form contains, assign an appropriate event to the element to be triggered on a change of that element
                 for (i = 0; i < n; i++) {
-                   // TODO: identify and ignore attributes that do not affect the price. Currently ANY change triggers the ajax call and the ignoring is done in zcDPU_Ajax. It would be more performant to do the filtering here.
+                    // TODO: identify and ignore attributes that do not affect the price. Currently ANY change triggers the ajax call and the ignoring is done in zcDPU_Ajax. It would be more performant to do the filtering here.
                     if (DPUdebug) {
                         console.log('<?= __LINE__; ?>: parsing form "' + theFormName + '", element ' + i + ', type="' + theForm.elements[i].type + '"');
                     }
@@ -755,6 +818,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                                 console.log('<?= __LINE__; ?>: case match "number"');
                             }
                         <?php if (!empty($optionIds)) { ?>
+                            //TODO selectName exists/assigment missing?
                             if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) {
                                 theForm.elements[i].addEventListener("change", function () {
                                     getPrice();
@@ -779,10 +843,11 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             }
                     } //eof switch
                 } //eof end of parse form elements
-
+                //torvista TODO review (unnecessary?) sidebox creation
+                //if (document.getElementById("dynamicpriceupdatersidebox") && typeof objSB === 'undefined') {
                 createSB();
-
-               // getPrice on initial page load
+                //}
+                // getPrice on initial page load
                 getPrice();
                 if (DPUdebug) {
                     console.groupEnd();
