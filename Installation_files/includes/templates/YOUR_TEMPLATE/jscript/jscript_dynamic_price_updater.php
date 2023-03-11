@@ -19,18 +19,17 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
         $load = false;
     } else {
         if (!class_exists('DPU')) {
-            if (is_file(DIR_FS_CATALOG . DIR_WS_CLASSES . 'dynamic_price_updater.php')) {
-                require DIR_FS_CATALOG . DIR_WS_CLASSES . 'dynamic_price_updater.php';
+            $dpu_classfile = DIR_FS_CATALOG . DIR_WS_CLASSES . 'dynamic_price_updater.php';
+            if (is_file($dpu_classfile)) {
+                require $dpu_classfile;
             } else {
+                error_log('DPU class file not found: ' . $dpu_classfile);
                 $load = false;
             }
-        }
-
-        if (class_exists('DPU')) {
+        } else {
             $dpu = new DPU();
         }
-
-// Check for conditions that use DPU.
+// Check for conditions that use DPU
         // - quantity box in use
         $products_qty_box_status = zen_products_lookup($pid, 'products_qty_box_status');
 
@@ -39,7 +38,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
         // - any attribute options that affect the price. Assign ONLY these option name ids to $optionIds, to subsequently attach events to ONLY these options.
         $optionIds = [];
-        // getOptionPricedIds Checks for attributes that affect price including text boxes.
+        // getOptionPricedIds retrieves the attributes that affect price including text boxes.
         if ($load && !($optionIds = $dpu->getOptionPricedIds($pid)) && ($products_qty_box_status === 0 || $products_quantity_order_max === 1)) { // do not reorder this line or $optionIds will not be created
             // If there are none that affect price and the quantity box is not shown, then disable DPU as there is no reason to refresh the price display.
             $load = false;
