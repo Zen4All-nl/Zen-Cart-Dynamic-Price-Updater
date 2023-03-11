@@ -1,17 +1,20 @@
 # Dynamic Price Updater v5 for Zen Cart
 
 ## Current Status March 2023
-This useful plugin has been somewhat neglected in recent years, I assume as it has been working for most people. I made many changes during that time which, due to multiple forks, were difficult to implement back into the plugin.  
-This I'm currently attempting to rectify with this fork.  
-The development branch "158" should be working while I gradually (or not) review/scrap/introduce my modifications to make it both php8.2+ compliant, more easily understandable and into a state fit for peer review/to go into the core codebase.  
+This useful plugin has been somewhat neglected in recent years, I assume as it has been working for most people. I made many changes during that time which, due to multiple forks, were difficult to implement back into the plugin. This I'm currently attempting to rectify with this fork.
+
+This development branch "158" should be working while I gradually review/scrap/introduce my modifications to make it both php8.2+ compliant, more easily understandable and maybe into a state fit for peer review/to go into the core codebase.
+
+Due to the complexity of testing this plugin, for the moment I've added a ridiculous amount of debugging information for almost every step of the processing to aid with the testing and to help others even more javascript-challenged than me to figure out what's going on.
 
 The readme below may be out of sync with the codebase/is also a work in progress, so as always, ALL testing should be done on a development installation and NEVER a production site.
 
-At the moment I would not suggest you try this out yet, due to the multiple changes that will be introduced. But if you have an existing bug or problem, then yes please try to replicate it with this code and a vanilla ZC158 codebase before creating an Issue at this repository
+At the moment I would not suggest you try this out yet, due to the multiple changes that are being introduced, unless you want to have a go at one of open Issues.  
+But if you have an existing bug or problem, then yes please try to replicate it with this code and a vanilla ZC158 codebase before creating an Issue at this repository
 
 https://github.com/dbltoe/Zen-Cart-Dynamic-Price-Updater
 
-torvista
+Steve (torvista)
 
 ## Compatibility
 Compatible with Zen Cart v.1.5.8+ and php 8.1+.
@@ -86,12 +89,12 @@ Reporting Bugs: https://github.com/dbltoe/Zen-Cart-Dynamic-Price-Updater/issues
 
 ## Changelog:
 5.0:
-- bugfixes: #16 test on ZC158a Hewlett Packard - by attributes with Special% no SALE: shows only loading graphic
-- addition of much debugging output for Javascript console and class processing
-- formatting of files, general IDE-recommended changes, strict comparisons...
-- relocated javascript to template jscript folder
-- support for php 8.2: added variable declarations
-- changed Installation_files/includes/classes/ajax/zcDPU_Ajax.php line 176 to change total_before_discounts to show_total_before_discounts.
+- Bugfixes: #16 test on ZC158a Hewlett Packard - by attributes with Special% no SALE: shows only loading graphic
+- Addition of extensive debugging output for Javascript console and class processing
+- Formatting of files, general IDE-recommended changes, strict comparisons...
+- Relocated javascript to template jscript folder so a single file is in use
+- Support for php 8.2: added variable declarations
+- Changed Installation_files/includes/classes/ajax/zcDPU_Ajax.php line 176 to change total_before_discounts to show_total_before_discounts.
 - Dropped support for Zen Cart versions<1.5.8
 
 4.0.0 Beta3:
@@ -102,7 +105,7 @@ Reporting Bugs: https://github.com/dbltoe/Zen-Cart-Dynamic-Price-Updater/issues
 - Updated optional jquery version to 3.4.1
 - fixed missing cart_quantity from ```$_POST```
 - Removed ajax.php, as this is included from ZC1.5.6
-- Added updates form [Torvista](https://github.com/torvista), [mc12345678](https://github.com/mc12345678), and [Zen4all](https://github.com/Zen4All)
+- Added updates from [torvista](https://github.com/torvista), [mc12345678](https://github.com/mc12345678), and [Zen4all](https://github.com/Zen4All)
 
 3.2.0:
 - Identified this version as 3.2.0 because 1) this update provided significant new functionality and modified/provided
