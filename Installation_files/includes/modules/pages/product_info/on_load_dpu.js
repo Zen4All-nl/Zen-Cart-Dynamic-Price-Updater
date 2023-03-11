@@ -6,7 +6,7 @@
  * @version $Id: 2023 Mar 10
  */
 try {
-  init();
-} catch(dpu_err) {
-  console.log('DPU catch error:', dpu_err.stack);
+  init(); // DPU javascript function
+} catch(dpu_err) { // error log
+  console.error('DPU catch error (javascript error/init not found):', dpu_err.stack);
 }
