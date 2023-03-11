@@ -15,7 +15,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
     $pid = (!empty($_GET['products_id']) ? (int)$_GET['products_id'] : 0);
     if (!zen_products_id_valid($pid)) {
         $load = false;
-    } elseif (STORE_STATUS > 0 || zen_get_products_price_is_call($pid) || (zen_get_products_price_is_free($pid) && empty($optionIds))) { // TODO review $optionIds is created later!?!
+    } elseif (STORE_STATUS > 0 || zen_get_products_price_is_call($pid) || (zen_get_products_price_is_free($pid))) {
         $load = false;
     } else {
         if (!class_exists('DPU')) {
@@ -73,11 +73,12 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             }
             const DPUdebug = ('<?php echo DPU_DEBUG; ?>' === 'true'); // DPU_DEBUG set in class dynamic_price_updater.php
             if (DPUdebug) {
-                console.log("DPUdebug: jscript_dynamic_price_updater.php (set in class)");
+                console.group('DPU_DEBUG on: jscript_dynamic_price_updater.php (set in class)');
             }
 
             // Set some global vars
             const theFormName = "<?php echo DPU_PRODUCT_FORM; // which form to watch? default: cart_quantity ?>";
+            const optionIdsPriced = '"<?php echo implode('", "', $optionIds); ?>"';
             let theForm = false;
             let _secondPrice = "<?php echo(DPU_SECOND_PRICE !== '' ? DPU_SECOND_PRICE : 'false'); //default: cartAdd ?>";
             let objSP = false; // please don't adjust this
@@ -742,19 +743,15 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     }
 
                     switch (theForm.elements[i].type) {
-                        //TODO: add type "select-multiple"
+                        //TODO: add type "select-multiple"?
                         case "select": // TODO does this type "select" exist?: https://developer.mozilla.org/en-US/docs/Web/API/HTMLSelectElement/type
-                            if (DPUdebug) {
-                                console.log('<?= __LINE__; ?>: case match "select"');
-                            }
                         case "select-one":
                             // Drop-down: only one value may be selected
                             if (DPUdebug) {
-                                console.log('<?= __LINE__; ?>: case match "select-one"');
+                                console.log('<?= __LINE__; ?>: case match "select/select-one"');
                             }
-                        <?php if (!empty($optionIds)) { ?>
                             selectName = theForm.elements[i].getAttribute('name');
-                            if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) {
+                            if (optionIdsPriced.indexOf(selectName) !== -1) {
                                 theForm.elements[i].addEventListener("change", function () {
                                     getPrice();
                                 });
@@ -763,20 +760,17 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                                     console.log('<?= __LINE__; ?>: added EventListener to name="' + selectName + '", label="' + tmp + '"');
                                 }
                             }
-                        <?php } ?>
                             break;
 
                         case "textarea":
-                            if (DPUdebug) {
-                                console.log('<?= __LINE__; ?>: case match "textarea"');
-                            }
                         case "text":
                             // Text-field e.g. quantity for Add to Cart
                             if (DPUdebug) {
-                                console.log('<?= __LINE__; ?>: case match "text"');
+                                console.log('<?= __LINE__; ?>: case match "textarea/text"');
                             }
                             selectName = theForm.elements[i].getAttribute('name');
-                            if (<?php if (!empty($optionIds)) { ?>["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1 || <?php } ?>selectName === theFormName) {
+                            //TODO test this simplification against main branch...was a devious mixed php/js clause
+                            if (optionIdsPriced.indexOf(selectName) !== -1 || selectName === theFormName) {
                                 theForm.elements[i].addEventListener("input", function () {
                                     getPrice();
                                 });
@@ -788,19 +782,15 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             break;
 
                         case "checkbox": // e.g. checkbox: name="id[1][15]"
+                        case "radio":    // e.g.    radio: name="id[1]"
                             if (DPUdebug) {
-                                console.log('<?= __LINE__; ?>: case match "checkbox"');
+                                console.log('<?= __LINE__; ?>: case match "checkbox/radio"');
                             }
-                        case "radio": // e.g. radio: name="id[1]"
-                            if (DPUdebug) {
-                                console.log('<?= __LINE__; ?>: case match "radio"');
-                            }
-                        <?php if (!empty($optionIds)) { ?>
                             selectName = theForm.elements[i].getAttribute('name');
                             if (theForm.elements[i].type === "checkbox") {
                                 selectName = selectName.substring(0, selectName.indexOf("]") + 1);
                             }
-                            if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) { // e.g. if (["id[1]"].indexOf(selectName) !== -1
+                            if (optionIdsPriced.indexOf(selectName) !== -1) { // e.g. if (["id[1]"].indexOf(selectName) !== -1
                                 theForm.elements[i].addEventListener("click", function () {
                                     getPrice();
                                 });
@@ -809,16 +799,15 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                                     console.log('<?= __LINE__; ?>: added EventListener to name="' + selectName + '", label="' + tmp + '"');
                                 }
                             }
-                        <?php } ?>
                             break;
 
                         case "number":
                             if (DPUdebug) {
                                 console.log('<?= __LINE__; ?>: case match "number"');
                             }
-                        <?php if (!empty($optionIds)) { ?>
-                            //TODO selectName exists/assigment missing?
-                            if (["<?php echo implode('", "', $optionIds); ?>"].indexOf(selectName) !== -1) {
+                            //TODO selectName assigment was missing: bugfix
+                            selectName = theForm.elements[i].getAttribute('name');
+                            if (optionIdsPriced.indexOf(selectName) !== -1) {
                                 theForm.elements[i].addEventListener("change", function () {
                                     getPrice();
                                 });
@@ -833,7 +822,6 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                                     console.log('<?= __LINE__; ?>: added EventListener to name="' + selectName + '", label="' + tmp + '"');
                                 }
                             }
-                        <?php } ?>
                             break;
 
                         default:
