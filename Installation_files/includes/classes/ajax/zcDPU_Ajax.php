@@ -11,29 +11,12 @@ declare(strict_types=1);
 
 class zcDPU_Ajax extends base
 {
-
+    protected bool $clearLog;
     /**
-     * Local instantiation of the shopping cart
-     *
-     * @var object
+     * @var int
      */
-    protected $shoppingCart;
-
-    /**
-     * The type of message being sent (error or success)
-     *
-     * @var string
-     */
-    protected string $responseType = 'success';
-
-    /**
-     * Array of lines to be sent back.  The key of the array provides the attribute to identify it at the client side
-     * The array value is the text to be inserted into the node
-     *
-     * @var array
-     */
-    public array $responseText = [];
-
+    protected bool $display_only_value;
+    protected bool $DPUdebug;
     /**
      * Array of attributes that could be associated with the product but have not been added by the customer to support
      *   identifying the minimum price of a product from the point of having selected an attribute when other attributes have not
@@ -41,23 +24,41 @@ class zcDPU_Ajax extends base
      * @var array
      */
     protected array $new_attributes = [];
-
     /**
      * Array of temporary attributes.
      * @var array
      */
     protected array $new_temp_attributes = [];
-
+    protected int $num_options;
+    protected string $preDiscPrefix;
+    protected string $prefix;
+    protected string $priceDisplay;
     /**
      * SQL query (string that is executed/becomes an object) to be stored with class, usable in observers with older Zen Cart versions.
+     * * @var string
      */
-    protected $product_attr_query;
+    protected string $product_attr_query;
+    protected int $product_stock;
     /**
-     * @var int
+     * Array of lines to be sent back.  The key of the array provides the attribute to identify it at the client side
+     * The array value is the text to be inserted into the node
+     *
+     * @var array
      */
-    protected $product_stock;
-
-    protected $clearLog, $display_only_value, $DPUdebug, $num_options, $preDiscPrefix, $prefix, $priceDisplay, $unused;
+    public array $responseText = [];
+    /**
+     * The type of message being sent (error or success)
+     *
+     * @var string
+     */
+    protected string $responseType = 'success';
+    /**
+     * Local instantiation of the shopping cart
+     *
+     * @var object
+     */
+    protected $shoppingCart;
+    protected int $unused;
 
     /**
      * Constructor
@@ -123,7 +124,7 @@ class zcDPU_Ajax extends base
         global $db, $currencies;
         $this->prefix = '';
         $this->preDiscPrefix = '';
-
+//TODO relocate
         if (!defined('DPU_ATTRIBUTES_MULTI_PRICE_TEXT')) {
             define('DPU_ATTRIBUTES_MULTI_PRICE_TEXT', 'start_at_least');
         }
@@ -212,11 +213,11 @@ class zcDPU_Ajax extends base
                 }
             //todo break here??
             case ($out_of_stock && $this->num_options === $this->unused && !empty($this->new_temp_attributes)):
-                // No selections made yet, stock is 0 or less and not allowed to checkout.
+                // No selections made yet, stock is 0 or less and not allowed to check out.
                 $out_of_stock_image = sprintf(DPU_OUT_OF_STOCK_IMAGE, zen_image_button(BUTTON_IMAGE_SOLD_OUT_SMALL, BUTTON_SOLD_OUT_SMALL_ALT));
                 break;
             case ($out_of_stock && ($this->num_options > $this->unused) && !empty($this->unused)):
-                // Not all selections have been made, stock is 0 or less and not allowed to checkout.
+                // Not all selections have been made, stock is 0 or less and not allowed to check out.
                 $out_of_stock_image = sprintf(DPU_OUT_OF_STOCK_IMAGE, zen_image_button(BUTTON_IMAGE_SOLD_OUT_SMALL, BUTTON_SOLD_OUT_SMALL_ALT));
                 break;
             default:
