@@ -267,7 +267,7 @@ class zcDPU_Ajax extends base
                         //CLR 030228 add htmlspecialchars processing.  This handles quotes and other special chars in the user input.
                         $attr_value = null;
                         $blank_value = false;
-                        if (strpos((string)$option, TEXT_PREFIX) !== false) { //TEXT_PREFIX is a hidden (gID=6) db constant, default value "txt_". Prefix used to differentiate between text option values and other option values.
+                        if (str_contains((string)$option, TEXT_PREFIX)) { //TEXT_PREFIX is a hidden (gID=6) db constant, default value "txt_". Prefix used to differentiate between text option values and other option values.
                             if (trim($value) === null) {
                                 $blank_value = true;
                             } else {
@@ -430,7 +430,7 @@ class zcDPU_Ajax extends base
 
                     // If this is the first parse of this option id, assign the first option value defined in the database with this option id as either
                     // it is the selected ajax POST value (by coincidence) or,
-                    // it is the default value or
+                    // it is the default value, or
                     // it will be overwritten on a subsequent pass with the ACTUAL selected ajax POST value
                     // note: option type "file" and "text" have only one option_value_id = 0. This is dealt with later.
                     if ($the_options_id !== $item['options_id']) {
@@ -509,7 +509,7 @@ class zcDPU_Ajax extends base
                     }
 
                     //note: zen_get_attributes_valid returns false for display_only
-                    $this->display_only_value = isset($attributes[$options_id]) ? !zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id]) : true;
+                    $this->display_only_value = !isset($attributes[$options_id]) || !zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id]);
 
                     if (isset($attributes[$options_id]) && $attributes[$options_id] === 0 && !zen_option_name_base_expects_no_values($options_id)) {
                         $this->display_only_value = true;
@@ -570,7 +570,7 @@ class zcDPU_Ajax extends base
                 //CLR 030228 add htmlspecialchars processing.  This handles quotes and other special chars in the user input.
                 $attr_value = null;
                 $blank_value = false;
-                if (strpos((string)$option, TEXT_PREFIX) !== false) {
+                if (str_contains((string)$option, TEXT_PREFIX)) {
                     if (trim($value) === null) {
                         $blank_value = true;
                     } else {
@@ -686,6 +686,7 @@ class zcDPU_Ajax extends base
                             } else {
                                 $total -= $qty * zen_add_tax($attribute_price->fields['options_values_price'], $products_tax);
                             }
+                            //TODO eh?
                             $total = $total;
                         } else {
                             // appears to confuse products priced by attributes
