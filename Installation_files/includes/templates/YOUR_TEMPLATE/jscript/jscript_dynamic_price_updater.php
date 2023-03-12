@@ -153,7 +153,10 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     if (DPUdebug) {
                         console.log('<?= __LINE__; ?>: parsing span ' + (a + 1) + '/' + spanCount);
                     }
-                    if (spanResults[a].className === "productSpecialPrice" || spanResults[a].className === "productSalePrice" || spanResults[a].className === "productSpecialPriceSale") {
+                    //TODO ZC158 product "TEST $120 Special $90" also has span "productPriceDiscount" containing "<br> Save: 25% off"
+                    //if (spanResults[a].className === "productSpecialPrice" || spanResults[a].className === "productSalePrice" || spanResults[a].className === "productSpecialPriceSale") {
+                    const discountSpans = ['productSalePrice', 'productSpecialPrice', 'productSpecialPriceSale'];
+                    if (discountSpans.includes(spanResults[a].className)) {
                         psp = spanResults[a];
                         if (DPUdebug) {
                             console.log('<?= __LINE__; ?>: discount span found, psp=');
@@ -828,8 +831,8 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             if (DPUdebug) {
                                 console.log('<?= __LINE__; ?>: switch default, no match for "' + theForm.elements[i].type + '"');
                             }
-                    } //eof switch
-                } //eof end of parse form elements
+                    }
+                }
                 //torvista TODO review (unnecessary?) sidebox creation
                 //if (document.getElementById("dynamicpriceupdatersidebox") && typeof objSB === 'undefined') {
                 createSB();
