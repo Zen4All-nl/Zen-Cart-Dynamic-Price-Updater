@@ -121,12 +121,7 @@ class zcDPU_Ajax extends base
         global $db, $currencies;
         $this->prefix = '';
         $this->preDiscPrefix = '';
-//TODO relocate
-        if (!defined('DPU_ATTRIBUTES_MULTI_PRICE_TEXT')) {
-            define('DPU_ATTRIBUTES_MULTI_PRICE_TEXT', 'start_at_least');
-        }
-
-        $this->priceDisplay = DPU_ATTRIBUTES_MULTI_PRICE_TEXT;
+        $this->priceDisplay = DPU_ATTRIBUTES_MULTI_PRICE_TEXT; // default:"start_at_least"
         $this->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_PREPARE_PRICE_DISPLAY');
 
         switch (true) {
