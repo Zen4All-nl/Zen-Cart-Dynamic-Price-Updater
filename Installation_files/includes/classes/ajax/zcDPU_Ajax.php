@@ -12,9 +12,6 @@ declare(strict_types=1);
 class zcDPU_Ajax extends base
 {
     protected bool $clearLog;
-    /**
-     * @var int
-     */
     protected bool $display_only_value;
     protected bool $DPUdebug;
     /**
@@ -40,20 +37,20 @@ class zcDPU_Ajax extends base
     protected string $product_attr_query;
     protected int $product_stock;
     /**
-     * Array of lines to be sent back.  The key of the array provides the attribute to identify it at the client side
-     * The array value is the text to be inserted into the node
+     * Array of lines to be sent back. The key of the array provides the attribute to identify it at the client side
+     * The array value is the text to be inserted into the node.
      *
      * @var array
      */
     public array $responseText = [];
     /**
-     * The type of message being sent (error or success)
+     * The type of message being sent (error or success).
      *
      * @var string
      */
     protected string $responseType = 'success';
     /**
-     * Local instantiation of the shopping cart
+     * Local instantiation of the shopping cart.
      *
      * @var object
      */
@@ -96,7 +93,7 @@ class zcDPU_Ajax extends base
         $this->insertProduct();
         $this->shoppingCart->calculate();
         $this->removeExtraSelections();
-        $show_dynamic_price_updater_sidebox = true;//todo why no check?
+        $show_dynamic_price_updater_sidebox = true;//TODO why no check?
         if ($show_dynamic_price_updater_sidebox === true) {
             $this->getSideboxContent();
         }
