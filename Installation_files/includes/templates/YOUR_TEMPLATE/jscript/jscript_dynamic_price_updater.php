@@ -82,7 +82,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             let theForm = false;
             let _mainPrice = "<?php echo DPU_PRICE_ELEMENT_ID; ?>" // id of main price block (normal/discount/sales...), default: productPrices
             let _secondPrice = "<?php echo(DPU_SECOND_PRICE !== '' ? DPU_SECOND_PRICE : 'false'); // insert a second price text after this node, default: cartAdd ?>";
-            let objSP = false; // please don't adjust this
+            let objSecondPrice = false; // secondPrice object node
             // Updater sidebox settings
             let objSB = false;
             let tmp = ''; // debugging, for multiple reuse
@@ -388,7 +388,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                         updateInnerHTML(origPrice, psp, thePrice);
                     }
                     if (_secondPrice !== false) {
-                        updSP();
+                        updateSecondPrice();
                     }
                     <?php } ?>
                 });
@@ -430,7 +430,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     }
 
                     if (_secondPrice !== false) {
-                        updSP();
+                        updateSecondPrice();
                     }
                 }
                 if (DPUdebug) {
@@ -629,38 +629,37 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 }
             }
 
-            // adjust the second price display; create the div if necessary
-            function updSP() {
+            // insert the second price display text
+            function updateSecondPrice() {
                 if (DPUdebug) {
-                    console.group('<?= __LINE__; ?>: fn: updSP');
+                    console.group('<?= __LINE__; ?>: fn: updateSecondPrice');
                 }
-
-                let flag = false; // error tracking flag
                 if (_secondPrice !== false) { // second price is active
                     if (DPUdebug) {
-                        console.log('<?= __LINE__; ?>: parsing secondPrice');
+                        console.log('<?= __LINE__; ?>: secondPrice active');
                     }
-                    //TODO centre never used?
-                    let centre = document.getElementById("productGeneral");
+                    //let centre = document.getElementById("productGeneral"); // TODO centre was never used, to remove
                     let temp = document.getElementById(_mainPrice);
-                    //TODO temp contains the loading image with id=DPULoaderImage: duplicate id. Removing the id completely does not appear to affect functionality.
                     let itemp = document.getElementById(_secondPrice);
-                    flag = false;
-
-                    if (objSP === false) { // create the second price object
-                        if (!temp || !itemp) {
-                            flag = true;
-                        }
-                        if (!flag) {
-                            objSP = temp.cloneNode(true);
-                            objSP.id = temp.id + "Second";
-                            itemp.parentNode.insertBefore(objSP, itemp.nextSibling);
+                    if (objSecondPrice === false) { // create the second price object
+                        if (temp && itemp) {
+                            objSecondPrice = temp.cloneNode(true);  // duplicate productPrices
+                            objSecondPrice.id = temp.id + "Second"; // add suffix to id: productPricesSecond
+                            itemp.parentNode.insertBefore(objSecondPrice, itemp.nextSibling); // insert the secondPrice div before the node after cartAdd (yes, this is the way to do "after")
+                            if (DPUdebug) {
+                                console.log('<?= __LINE__; ?>: create secondPrice object, after "' + _secondPrice + '"');
+                            }
+                        } else {
+                            console.error('DPU: secondPrice skipped, a node was not found');
                         }
                     }
-                    objSP.innerHTML = temp.innerHTML;
+                    objSecondPrice.innerHTML = temp.innerHTML;
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: insert text into secondPrice object');
+                    }
                 } else {
                     if (DPUdebug) {
-                        console.log('<?= __LINE__; ?>: parsing secondPrice skipped');
+                        console.log('<?= __LINE__; ?>: secondPrice skipped');
                     }
                 }
                 if (DPUdebug) {
