@@ -77,10 +77,11 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             }
 
             // Set some global vars
-            const theFormName = "<?php echo DPU_PRODUCT_FORM; // which form to watch? default: cart_quantity ?>";
+            const theFormName = "<?php echo DPU_PRODUCT_FORM; ?>" // which form to parse for prices, default: cart_quantity
             const optionIdsPriced = '"<?php echo implode('", "', $optionIds); ?>"';
             let theForm = false;
-            let _secondPrice = "<?php echo(DPU_SECOND_PRICE !== '' ? DPU_SECOND_PRICE : 'false'); //default: cartAdd ?>";
+            let _mainPrice = "<?php echo DPU_PRICE_ELEMENT_ID; ?>" // id of main price block (normal/discount/sales...), default: productPrices
+            let _secondPrice = "<?php echo(DPU_SECOND_PRICE !== '' ? DPU_SECOND_PRICE : 'false'); // insert a second price text after this node, default: cartAdd ?>";
             let objSP = false; // please don't adjust this
             // Updater sidebox settings
             let objSB = false;
@@ -122,7 +123,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 <?php if (DPU_SHOW_LOADING_IMAGE === 'true') { ?>
                 //loadImg/loadImgSB object has already been created
                 let psp = false;  // a product special price
-                let thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; // id of price block (normal/discount/sales...). default: productPrices ?>");
+                let thePrice = document.getElementById(_mainPrice);
                 if (DPUdebug) {
                     console.log('<?= __LINE__; ?>: thePrice (object)=');
                     console.log(thePrice);
@@ -199,8 +200,8 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     }
                 }
 
-                if (psp && imgLoc === "replace") { // REPLACE price with loading image
-                    loadImg.style.display = "inline"; //'block';
+                if (psp && imgLoc === 'replace') { // REPLACE price with loading image
+                    loadImg.style.display = 'inline';
                     let pspStyle = window.getComputedStyle(psp);
                     loadImg.style.height = pspStyle.lineHeight; // Maintains the height so that there is not a vertical shift of the content.
                     /*if (DPUdebug) {
@@ -208,9 +209,9 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             console.log(pspStyle);
                         }*/
                     origPrice = psp.innerHTML;
-                    updateInnerHTML(loadImg.outerHTML, false, psp, true);//TODO these parameters correct?
+                    updateInnerHTML(loadImg.outerHTML, false, psp, true);//TODO review function, parameters 2/3 are processed the same
                 } else { // APPEND price with loading image
-                    document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: productPrices ?>").appendChild(loadImg);
+                    document.getElementById(_mainPrice).appendChild(loadImg);
                 }
 
                 //sidebox
@@ -365,7 +366,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     }
 
                     <?php if (DPU_SHOW_LOADING_IMAGE === 'true') { ?>
-                    const thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: productPrices ?>");
+                    const thePrice = document.getElementById(_mainPrice);
                     let spanResults = thePrice.getElementsByTagName("span");
                     let psp = false;
                     let a;
@@ -405,6 +406,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     replace = true;
                 }
                 if (storeVal !== "") {
+                    //TODO why separate clauses for psp and obj when code is identical?
                     if (psp) {
                         if (DPUdebug) {
                             console.log('<?= __LINE__; ?>: psp=');
@@ -441,7 +443,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     console.group('<?= __LINE__; ?>: fn: handlePrice');
                 }
 
-                let thePrice = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: id productPrices contains all price spans ?>");
+                let thePrice = document.getElementById(_mainPrice);
                 //TODO loadImg.parentNode.id exists?
                 if (typeof (loadImg) !== "undefined" && loadImg.parentNode !== null && loadImg.parentNode.id === thePrice.id && imgLoc !== "replace") {
                     thePrice.removeChild(loadImg);
@@ -640,7 +642,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     }
                     //TODO centre never used?
                     let centre = document.getElementById("productGeneral");
-                    let temp = document.getElementById("<?php echo DPU_PRICE_ELEMENT_ID; //default: productPrices ?>");
+                    let temp = document.getElementById(_mainPrice);
                     //TODO temp contains the loading image with id=DPULoaderImage: duplicate id. Removing the id completely does not appear to affect functionality.
                     let itemp = document.getElementById(_secondPrice);
                     flag = false;
