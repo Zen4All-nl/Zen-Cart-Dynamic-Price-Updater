@@ -328,19 +328,24 @@ class zcDPU_Ajax extends base
 //e.g.
 // checkboxes attribute 29+30+32 selected: attributes=id[1][32]~32|id[1][29]~29|id[1][30]~30|
 // todo this code does not work for multiple checkboxes...only gets the last one
-// radio: attributes=id[1]~29|
+//    radio: id[1]~29|
+// checkbox :id[16]~61~53|
         $temp = array_filter(explode('|', $_POST['attributes'])); //removes '', 0, false, null
 
         if ($this->DPUdebug) {
-            $tmp = __LINE__ . ': $temp=' . print_r($temp, true);
+            $tmp = __LINE__ . ': exploded POST $temp=' . print_r($temp, true);
             $this->logDPU($tmp);
         }
 
         foreach ($temp as $item) {
-            $tempArray = explode('~', $item);
-
             if ($this->DPUdebug) {
-                $tmp = __LINE__ . ': $tempArray=' . print_r($tempArray, true);
+                $tmp = __LINE__ . ': parsing $temp, $item=' . print_r($item, true);
+                $this->logDPU($tmp);
+            }
+
+            $tempArray = explode('~', $item);
+            if ($this->DPUdebug) {
+                $tmp = __LINE__ . ': exploded $item->$tempArray=' . print_r($tempArray, true);
                 $this->logDPU($tmp);
             }
 
@@ -348,18 +353,23 @@ class zcDPU_Ajax extends base
                 $temp1 = str_replace('id[', '', $tempArray[0]); //remove "[id"
                 $temp2 = str_replace(']', '', $temp1); //remove "]", leaving id_number (and prefix txt_ for text/file)
                 $attributes[$temp2] = $tempArray[1]; //index may be integer
+                if ($this->DPUdebug) {
+                    $tmp = __LINE__ . ': PARTIAL $attributes=' . print_r($attributes, true);
+                    $this->logDPU($tmp);
+                }
+            } else {
+                if ($this->DPUdebug) {
+                    $tmp = __LINE__ . ': skipping this $item';
+                    $this->logDPU($tmp);
+                }
             }
         }
 
         if ($this->DPUdebug) {
-            $this->logDPU(__LINE__ . ': $attributes=' . print_r($attributes, true));
+            $this->logDPU(__LINE__ . ': COMPLETE $attributes=' . print_r($attributes, true));
         }
 
-        //checkbox, 1 selection: [1] => 29
-        //mv_printVar($attributes);
-
-// $attributes e.g. [1] => 29 //
-//todo what about multiple checkboxes: cannot have the same option name [1] as key, so elements need to be arrays/array processing needs to be changed!
+       //todo what about multiple checkboxes: cannot have the same option name [1] as key, so elements need to be arrays/array processing needs to be changed!
 
         if (!empty($attributes) || zen_has_product_attributes_values($_POST['products_id'])) { // zen function returns true if any option value price is a price modifier (<> 0)
             // If product is priced by attribute then determine which attributes have not been added,
@@ -367,7 +377,9 @@ class zcDPU_Ajax extends base
             //  at the moment seems that similar would be needed even for not priced by attribute possibly... Will see... Maybe someone will report if an issue.
 
             // Get all this product's attributes but NOT the "display-only" attributes and DO select when attributes_price_base_included is true
-            $this->product_attr_query = 'SELECT pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type,
+
+            // query is ordered by value so when loading $new_attributes, the first value for an option id is the cheapest. This will either remain as the default or be overwritten by the selected/ajax value
+             $this->product_attr_query = 'SELECT pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type,
                                    ROUND(CONCAT(pa.price_prefix, pa.options_values_price), 5) AS value
                                    FROM ' . TABLE_PRODUCTS_ATTRIBUTES . ' pa
                                    LEFT JOIN ' . TABLE_PRODUCTS_OPTIONS . ' po ON (po.products_options_id = pa.options_id)
@@ -381,8 +393,7 @@ class zcDPU_Ajax extends base
 
             $product_att_query = $db->Execute($this->product_attr_query);
 
-// add attributes that are price-dependent and in or not in the page's submission
-// Support price determination for product that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
+            // Support price determination for products that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
 
             if (!defined('DPU_PROCESS_ATTRIBUTES')) { // constant should already be defined in Admin
                 define('DPU_PROCESS_ATTRIBUTES', 'all'); //process all products that have attributes, whether priced by attribute or not
@@ -390,31 +401,29 @@ class zcDPU_Ajax extends base
             $process_price_attributes = DPU_PROCESS_ATTRIBUTES === 'all' || zen_get_products_price_is_priced_by_attributes((int)$_POST['products_id']);
             $product_att_query_count = $product_att_query->RecordCount();
             if ($this->DPUdebug) {
-                $tmp = '';
+                $tmp = __LINE__ . ': DPU_PROCESS_ATTRIBUTES="' . DPU_PROCESS_ATTRIBUTES . '", $process_price_attributes=' . $process_price_attributes . ', product_att_query->RecordCount()=' . $product_att_query_count . "\n";
                 if ($this->clearLog) {
-                    $tmp .= "product_att_query results, ordered by options_id, options_values_price (value)\n";
+                    $tmp .= "Results of product_att_query, ordered by options_id, options_values_price (value)\n";
                     foreach ($product_att_query as $key => $array) {
                         $tmp .= "key=$key/" . $product_att_query_count - 1 . ' ' . print_r($array, true) . "\n";
                     }
                 } else {
-                    $tmp = '(product_att_query results not shown for cumulative DPU log)';
+                    $tmp .= '(product_att_query results not shown for a cumulative DPU log)';
                 }
-                $this->logDPU(__LINE__ . ': DPU_PROCESS_ATTRIBUTES="' . DPU_PROCESS_ATTRIBUTES . '", $process_price_attributes=' . $process_price_attributes . ', product_att_query->RecordCount()=' . $product_att_query_count . "\n" . $tmp);
+                $this->logDPU($tmp);
             }
 
 // Note:
 // If product IS priced_by_attribute: each attribute displays the base price+attribute price
 // If product is NOT priced_by_attribute: each attribute displays the attribute price as a modification (addition/subtraction) of the displayed base price
 
-// This section produces an array "$new_attributes" containing all the product's attributes: both the selected options+values from the ajax call and default/unselected option/values attributes
-
+// This section produces an array "$new_attributes" containing ALL the product's attributes: both the selected options+values from the ajax call and if unselected, the default option+value attributes
             if ($process_price_attributes && $product_att_query_count > 0) {
-                if ($this->DPUdebug) {
-                    $this->logDPU(__LINE__ . ": parsing $product_att_query_count option value id results...");
-                }
                 $the_options_id = 'x';
                 $new_attributes = [];
-                // loop through all the values for each product option
+                if ($this->DPUdebug) {
+                    $this->logDPU(__LINE__ . ': parse $product_att_query results (' . $product_att_query_count . '), create $new_attributes array of default and/or selected options+value for all options');
+                }
                 foreach ($product_att_query as $item) {
                     if ($this->DPUdebug) {
                         $this->logDPU(__LINE__ . ': $the_options_id=' . $the_options_id . "\n" . '$item=' . print_r($item, true));
@@ -428,10 +437,9 @@ class zcDPU_Ajax extends base
                     if ($the_options_id !== $item['options_id']) {
                         $the_options_id = $item['options_id'];
                         $new_attributes[$the_options_id] = $item['options_values_id'];
-                        $this->num_options++; // the number of unique option ids
-
+                        $this->num_options++; // count unique option ids in array
                         if ($this->DPUdebug) {
-                            $this->logDPU(__LINE__ . ': next option_id, $new_attributes PARTIAL=' . print_r($new_attributes, true));
+                            $this->logDPU(__LINE__ . ': new option_id+value ' . $item['options_id'] . '/' . $item['options_values_id'] . " added\n$new_attributes PARTIAL=" . print_r($new_attributes, true));
                         }
 
                         // If this option id is already in the array, overwrite its option value with the SELECTED value, or continue.
@@ -442,13 +450,15 @@ class zcDPU_Ajax extends base
                         $new_attributes[$the_options_id] = $item['options_values_id'];
 
                         if ($this->DPUdebug) {
-                            $this->logDPU(__LINE__ . ': option id+value found in ajax POST' . "\n" . '$new_attributes PARTIAL=' . print_r($new_attributes, true));
+                            $this->logDPU(__LINE__ . ': matching option id+value '  . $item['options_id'] . '/' . $item['options_values_id'] . ' found in ajax POST' . "\n" . '$new_attributes PARTIAL=' . print_r($new_attributes, true));
                         }
+                    } elseif ($this->DPUdebug) {
+                            $this->logDPU(__LINE__ . ': option id already in array, id/value ' . $item['options_id'] . '/' . $item['options_values_id'] . ' skipped');
                     }
                 }
 
                 if ($this->DPUdebug) {
-                    $this->logDPU(__LINE__ . ': $this->num_options=' . $this->num_options . "\n" . '$new_attributes COMPLETE=' . print_r($new_attributes, true));
+                    $this->logDPU(__LINE__ . ': options loaded=' . $this->num_options . "\n" . '$new_attributes COMPLETE=' . print_r($new_attributes, true));
                 }
 
                 // set the sort order
@@ -589,7 +599,11 @@ class zcDPU_Ajax extends base
                         }
                     }
                 }
-
+                /* example for two golf clubs in shopping cart object
+                 attributes (array):
+                  16_chk61 (string) => 61
+                  16_chk53 (string) => 53
+                 */
                 if (!$blank_value && $value !== false) {
                     if (is_array($value)) {
                         foreach ($value as $opt => $val) {
