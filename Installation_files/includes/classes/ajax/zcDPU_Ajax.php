@@ -435,7 +435,7 @@ class zcDPU_Ajax extends base
                         $new_attributes[$the_options_id] = $item['options_values_id'];
                         $this->num_options++; // count unique option ids in array
                         if ($this->DPUdebug) {
-                            $this->logDPU(__LINE__ . ': new option_id+value ' . $item['options_id'] . '/' . $item['options_values_id'] . " added\n$new_attributes PARTIAL=" . print_r($new_attributes, true));
+                            $this->logDPU(__LINE__ . ': new option_id+value ' . $item['options_id'] . '/' . $item['options_values_id'] . "\n" . 'added $new_attributes PARTIAL=' . print_r($new_attributes, true));
                         }
 
                         // If this option id is already in the array, overwrite its option value with the SELECTED value, or continue.
