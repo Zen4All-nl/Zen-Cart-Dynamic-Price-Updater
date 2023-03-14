@@ -688,8 +688,6 @@ class zcDPU_Ajax extends base
                             } else {
                                 $total -= $qty * zen_add_tax($attribute_price->fields['options_values_price'], $products_tax);
                             }
-                            //TODO eh?
-                            $total = $total;
                         } else {
                             // appears to confuse products priced by attributes
                             if ($product->fields['product_is_always_free_shipping'] === '1' || $product->fields['products_virtual'] === '1') {
