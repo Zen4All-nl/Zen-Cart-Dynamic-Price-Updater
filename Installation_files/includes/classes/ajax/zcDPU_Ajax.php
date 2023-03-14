@@ -198,6 +198,7 @@ class zcDPU_Ajax extends base
             case ($this->product_stock > 0): // No consideration made yet on allowing quantity to go less than 0.
 //        $this->responseText['stock_quantity'] = $this->product_stock;
                 break;
+                //TODO review this
             case (false):
                 $out_of_stock = false;
                 if ((STOCK_CHECK === 'true') && (STOCK_ALLOW_CHECKOUT !== 'true')) {
@@ -349,7 +350,7 @@ class zcDPU_Ajax extends base
                 $this->logDPU($tmp);
             }
 
-            if ($tempArray !== false && is_array($tempArray)) {
+            if (is_array($tempArray)) {
                 $temp1 = str_replace('id[', '', $tempArray[0]); //remove "[id"
                 $temp2 = str_replace(']', '', $temp1); //remove "]", leaving id_number (and prefix txt_ for text/file)
                 $attributes[$temp2] = $tempArray[1]; //index may be integer
