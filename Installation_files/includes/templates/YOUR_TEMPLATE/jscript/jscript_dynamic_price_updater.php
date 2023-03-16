@@ -81,7 +81,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             const optionIdsPriced = '"<?php echo implode('", "', $optionIds); ?>"';
             let theForm = false;
             let _mainPrice = "<?php echo DPU_PRICE_ELEMENT_ID; ?>" // id of main price block (normal/discount/sales...), default: productPrices
-            let _secondPrice = "<?php echo(DPU_SECOND_PRICE !== '' ? DPU_SECOND_PRICE : 'false'); // insert a second price text after this node, default: cartAdd ?>";
+            let _secondPrice = <?php echo (DPU_SECOND_PRICE !== '' ? '"' . DPU_SECOND_PRICE . '"' : 'false'); // insert a second price text after this node, default: cartAdd ?>;
             let objSecondPrice = false; // secondPrice object node
             // Updater sidebox settings
             let objSB = false;
