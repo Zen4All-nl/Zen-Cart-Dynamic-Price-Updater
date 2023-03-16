@@ -1,16 +1,17 @@
 # Dynamic Price Updater v5 for Zen Cart
 
-## Current Status March 2023
+## Branch "158" Current Status March 2023
 This useful plugin has been somewhat neglected in recent years, I assume as it has been working for most people. I made many changes during that time which, due to multiple forks, were difficult to implement back into the plugin. This I'm currently attempting to rectify with this fork.
 
-This development branch "158" should be working while I gradually review/scrap/introduce my modifications to make it both php8.2+ compliant, more easily understandable and maybe into a state fit for peer review/to go into the core codebase.
+This development branch "158" should be working, and while it appears to have a mass of changes, they are mostly code-tightening and debugging: in reality there should be no change in functionality from the main branch. I've introduced my modifications to make it both php8.2+ compliant, more easily understandable and maybe into a state fit for peer review/to go into the core codebase.
 
-Due to the complexity of testing this plugin, for the moment I've added a ridiculous amount of debugging information for almost every step of the processing to aid with the testing and to help others even more javascript-challenged than me to figure out what's going on.
+Currently I'm working on adding the long-missing functionality to handle multiple checkboxes, which is proving time-consuming...
+
+Due to the complexity of testing this plugin, for the moment I've added a ridiculous amount of debugging information for almost every step of the processing to aid with development and to help others even more javascript-challenged than me to figure out what's going on.
 
 The readme below may be out of sync with the codebase/is also a work in progress, so as always, ALL testing should be done on a development installation and NEVER a production site.
 
-At the moment I would not suggest you try this out yet, due to the multiple changes that are being introduced, unless you want to have a go at one of open Issues.  
-But if you have an existing bug or problem, then yes please try to replicate it with this code and a vanilla ZC158 codebase before creating an Issue at this repository
+At the moment I would not suggest you try this branch out unless you have a problem with current code. In that case, yes please try to replicate it with this 158 code in a vanilla ZC158 codebase and subsequently open an Issue at this repository
 
 https://github.com/dbltoe/Zen-Cart-Dynamic-Price-Updater
 
