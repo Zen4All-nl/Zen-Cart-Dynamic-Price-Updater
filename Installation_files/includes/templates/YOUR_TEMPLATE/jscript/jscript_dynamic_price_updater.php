@@ -145,7 +145,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
                 let a;
                 let spanCount = spanResults.length; // how many price spans are there ?
-                // On initial page load, the default ZC span+text is inside productPrices. eg. <h2 id="productPrices" class="productGeneral">Starting at: <span class="productBasePrice">€329.99</span></h2>
+                // On initial page load, the default ZC span+text is inside productPrices. eg. <h2 id="productPrices" class="productGeneral">Starting at: <span class="productBasePrice">â‚¬329.99</span></h2>
                 // so spanCount = 1. But when this span subsequently gets replaced by DPU, the length property of the "spanResults" live htmlcollection subsequently becomes 0. Confusing.
                 // Changes of attribute selection result in spanCount = 0
 
@@ -181,8 +181,8 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
 
                 // psp at this point may have a discount span in it. But if not, psp is now loaded with the whole productPrices div containing the productBasePrice span...not the same thing....??
                 /*info
-                           Core: <h2 id="productPrices" class="productGeneral">Starting at: <span class="productBasePrice">€329.99</span></h2>
-                 DPU changes to: <h2 id="productPrices" class="productGeneral">Your price: €329.99</h2>
+                           Core: <h2 id="productPrices" class="productGeneral">Starting at: <span class="productBasePrice">â‚¬329.99</span></h2>
+                 DPU changes to: <h2 id="productPrices" class="productGeneral">Your price: â‚¬329.99</h2>
                 */
 
                 // no discount spans were found
