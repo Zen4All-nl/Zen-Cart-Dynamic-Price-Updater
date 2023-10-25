@@ -383,7 +383,7 @@ class zcDPU_Ajax extends base
             // Get all this product's attributes but NOT the "display-only" attributes and DO select when attributes_price_base_included is true
 
             // query is ordered by value so when loading $new_attributes, the first value for an option id is the cheapest. This will either remain as the default or be overwritten by the selected/ajax value
-             $this->product_attr_query = 'SELECT pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type,
+             $this->product_attr_query = 'SELECT DISTINCT pa.options_id, pa.options_values_id, pa.attributes_display_only, pa.attributes_price_base_included, po.products_options_type,
                                    ROUND(CONCAT(pa.price_prefix, pa.options_values_price), 5) AS value
                                    FROM ' . TABLE_PRODUCTS_ATTRIBUTES . ' pa
                                    LEFT JOIN ' . TABLE_PRODUCTS_OPTIONS . ' po ON (po.products_options_id = pa.options_id)
