@@ -517,13 +517,13 @@ class zcDPU_Ajax extends base
                             $this->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_DEFAULT_INSERT_PRODUCT_TYPE', $options_type, $options_id);
                             break;
                     }
+                    // Is the options_id value valid or display-only?
+                    $this->display_only_value =
+                        isset($attributes[$options_id]) &&
+                        (!zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id]) // zen_get_attributes_valid returns false for a display_only attribute value
+                        || $attributes[$options_id] == '0' //TODO when would $attributes[$options_id] == '0'? leave as loose comparison until determined
+                        || zen_option_name_base_expects_no_values($options_id)); // zen_option_name_base_expects_no_values returns true for text field, or File upload field.
 
-                    //note: zen_get_attributes_valid returns false for display_only
-                    $this->display_only_value = !isset($attributes[$options_id]) || !zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id]);
-
-                    if (isset($attributes[$options_id]) && $attributes[$options_id] === 0 && !zen_option_name_base_expects_no_values($options_id)) {
-                        $this->display_only_value = true;
-                    }
                     if ($this->DPUdebug) {
                         $this->logDPU(__LINE__ . ': $options_id=' . $options_id . ' (selected value=' . (!empty($attributes[$options_id]) ? '' . $attributes[$options_id] : 'NOT SET') . ') $this->display_only_value=' . ($this->display_only_value ? 'true' : 'false'));
                     }
