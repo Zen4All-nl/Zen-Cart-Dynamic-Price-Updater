@@ -1,5 +1,4 @@
 <?php
-//torvista: 158 branch, work in progress
 
 declare(strict_types=1);
 /**
@@ -7,17 +6,21 @@ declare(strict_types=1);
  * @copyright Dan Parry (Chrome) / Erik Kerkhoven (Design75) / mc12345678 / torvista
  * @original author Dan Parry (Chrome)
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
- * @version $Id: 2023 Mar 10
+ * @version $Id: 2023 Oct 24
  */
 
 if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
-    $load = true; // if any of the PHP conditions fail, set to false and prevent any DPU processing
-    $pid = (!empty($_GET['products_id']) ? (int)$_GET['products_id'] : 0);
+    $load = true; // if any of the multiple tests fail, set to false and prevent any subsequent DPU processing
+    $pid = !empty($_GET['products_id']) ? (int)$_GET['products_id'] : 0;
+
+    //check validity of product
     if (!zen_products_id_valid($pid)) {
         $load = false;
-    } elseif (STORE_STATUS > 0 || zen_get_products_price_is_call($pid) || (zen_get_products_price_is_free($pid))) {
+        //check conditions that prevent the price being displayed
+    } elseif (STORE_STATUS > 0 || zen_get_products_price_is_call($pid) || zen_get_products_price_is_free($pid)) {
         $load = false;
     } else {
+        // load DPU class
         if (!class_exists('DPU')) {
             $dpu_classfile = DIR_FS_CATALOG . DIR_WS_CLASSES . 'dynamic_price_updater.php';
             if (is_file($dpu_classfile)) {
@@ -30,22 +33,23 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
             $dpu = new DPU();
         }
 // Check for conditions that use DPU
-        // - quantity box in use
+        // - is the quantity box in use?
         $products_qty_box_status = zen_products_lookup($pid, 'products_qty_box_status');
 
-        // - quantity not limited to 1
+        // - is quantity not limited to 1?
         $products_quantity_order_max = zen_products_lookup($pid, 'products_quantity_order_max');
 
-        // - any attribute options that affect the price. Assign ONLY these option name ids to $optionIds, to subsequently attach events to ONLY these options.
+        // - are there any attribute options that modify the price? Assign ONLY these option name ids to $optionIds, to subsequently attach events to ONLY these options.
         $optionIds = [];
         // getOptionPricedIds retrieves the attributes that affect price including text boxes.
         if ($load && !($optionIds = $dpu->getOptionPricedIds($pid)) && ($products_qty_box_status === 0 || $products_quantity_order_max === 1)) { // do not reorder this line or $optionIds will not be created
-            // If there are none that affect price and the quantity box is not shown, then disable DPU as there is no reason to refresh the price display.
+            // If there are no options that affect price and the quantity box is not used, then disable DPU as there is no reason to refresh the price display.
             $load = false;
         }
         /* example array $optionIds
         ([3] => id[3]
-         [4] => id[4]) */
+         [4] => id[4])
+        */
     }
     // get the display price html, which could be composed of various spans: $show_normal_price . $show_special_price . $show_sale_price . $show_sale_discount. $free_tag . $call_tag;
     $pidp = zen_get_products_display_price($pid);
@@ -711,7 +715,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 alert("Error! Message reads:\n\n" + alertText);
             }
 
-            function init() { // called by on_load_dpu.js
+            function init() {
                 if (DPUdebug) {
                     console.group('<?= __LINE__; ?>: fn: init');
                     console.log('searching for form name "' + theFormName + '"');

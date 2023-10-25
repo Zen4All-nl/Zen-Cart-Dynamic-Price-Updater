@@ -6,13 +6,17 @@ declare(strict_types=1);
  * @copyright Dan Parry (Chrome) / Erik Kerkhoven (Design75) / mc12345678 / torvista
  * @original author Dan Parry (Chrome)
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
- * @version $Id: 2023 Mar 10
+ * @version $Id: 2023 Oct 24
  */
 
 class zcDPU_Ajax extends base
 {
     protected bool $clearLog;
     protected bool $display_only_value;
+    /**
+     * Set in \includes\classes\dynamic_price_updater.php
+     * @var bool
+     */
     protected bool $DPUdebug;
     /**
      * Array of attributes that could be associated with the product but have not been added by the customer to support
@@ -64,7 +68,7 @@ class zcDPU_Ajax extends base
     {
         //debugging
         $this->DPUdebug = DPU_DEBUG === 'true'; // create a DPU_debug.log AND output Javascript console logs. DPU_DEBUG set in class dynamic_price_updater.php
-        $this->clearLog = true; // true: empties the log file prior to each change of attribute, so only last change is logged.
+        $this->clearLog = true; // true: empties the log file prior to each change of attribute, so only last change is logged. Set to false to append results.
         if ($this->DPUdebug) {
             if ($this->clearLog) {
                 $this->logDPU("logging last attribute change only\n", true);
@@ -399,6 +403,7 @@ class zcDPU_Ajax extends base
             $product_att_query_count = $product_att_query->RecordCount();
             if ($this->DPUdebug) {
                 $tmp = __LINE__ . ': DPU_PROCESS_ATTRIBUTES="' . DPU_PROCESS_ATTRIBUTES . '", $process_price_attributes=' . $process_price_attributes . ', product_att_query->RecordCount()=' . $product_att_query_count . "\n";
+                //$product_att_query results not shown for a concatenated DPU log
                 if ($this->clearLog) {
                     $tmp .= "Results of product_att_query, ordered by options_id, options_values_price (value)\n";
                     foreach ($product_att_query as $key => $array) {
@@ -421,6 +426,7 @@ class zcDPU_Ajax extends base
                 if ($this->DPUdebug) {
                     $this->logDPU(__LINE__ . ': parse $product_att_query results (' . $product_att_query_count . '), create $new_attributes array of default and/or selected options+value for all options');
                 }
+                //TODO prevent parsing when all options have been identified as either selected or unselected+default or unselected+cheapest
                 foreach ($product_att_query as $item) {
                     if ($this->DPUdebug) {
                         $this->logDPU(__LINE__ . ': $the_options_id=' . $the_options_id . "\n" . '$item=' . print_r($item, true));
@@ -443,12 +449,14 @@ class zcDPU_Ajax extends base
                         // So only ONE option id + option value is stored...no multiple checkboxes/values
 
                         // This option id+value is the ajax POST: it is the selected option value. So keep it.
+                        // TODO parse this first and then skip all subsequent values for this option
                     } elseif (array_key_exists($the_options_id, $attributes) && $attributes[$the_options_id] === $item['options_values_id']) {
                         $new_attributes[$the_options_id] = $item['options_values_id'];
 
                         if ($this->DPUdebug) {
                             $this->logDPU(__LINE__ . ': matching option id+value '  . $item['options_id'] . '/' . $item['options_values_id'] . ' found in ajax POST' . "\n" . '$new_attributes PARTIAL=' . print_r($new_attributes, true));
                         }
+
                     } elseif ($this->DPUdebug) {
                             $this->logDPU(__LINE__ . ': option id already in array, id/value ' . $item['options_id'] . '/' . $item['options_values_id'] . ' skipped');
                     }
@@ -473,9 +481,10 @@ class zcDPU_Ajax extends base
                         ' . $options_order_by;
                 $products_options_names = $db->Execute($sql);
 
+
                 $new_temp_attributes = [];
                 $this->new_temp_attributes = [];
-//        $this->unused = 0;
+                //  $this->unused = 0;
                 //  To appear in the cart, $new_temp_attributes[$options_id]
                 // must contain either the selection or the lowest priced selection
                 // if an "invalid" selection had been made.
@@ -519,19 +528,21 @@ class zcDPU_Ajax extends base
 
                     $this->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_DISPLAY_ONLY');
 
+                    // If the SELECTED options_id is valid (price-related), then use it in the calculation
                     if (array_key_exists($options_id, $attributes) && !$this->display_only_value) {
-                        // If the options_id selected is a valid attribute then add it to be part of the calculation
                         $new_temp_attributes[$options_id] = $attributes[$options_id];
+
+                    // If the SELECTED options_id is not valid (display-only), then use another, valid (non-display-only) option for this option_id (cheapest attribute value as determined above) in the calculation,
+                    // but mark it for deletion from the shopping cart after the price calculation. This allows the calculation using the cheapest option value.
                     } elseif (array_key_exists($options_id, $attributes) && $this->display_only_value) {
-                        // If the options_id selected is not a valid attribute, then add a valid attribute determined above and mark it
-                        //   to be deleted from the shopping cart after the price has been determined.
                         $this->new_temp_attributes[$options_id] = $attributes[$options_id];
                         $new_temp_attributes[$options_id] = $new_attributes[$options_id];
                         $this->unused++;
-//TODO how does it ever get here?
+
+
                     } elseif (array_key_exists($options_id, $new_attributes)) {
                         // if it is not already in the $attributes, then it is something that needs to be added for "removal"
-                        //   and by adding it, makes the software consider how many files need to be edited.
+                        //   and by adding it, makes the software consider how many files need to be edited. //TODO steve: What does this mean??
                         $this->new_temp_attributes[$options_id] = $new_attributes[$options_id];
                         $new_temp_attributes[$options_id] = false; //$new_attributes[$options_id];
 //TODO test on Home ::  New v1.2 ::  Real ::  Golf Clubs pageload gives error as $this->unused is not defined...there are no checkbox attributes selected
@@ -555,14 +566,17 @@ class zcDPU_Ajax extends base
                 $this->logDPU(__LINE__ . ': DPU_PROCESS_ATTRIBUTES="' . DPU_PROCESS_ATTRIBUTES . '", $process_price_attributes=' . $process_price_attributes . ', product_att_query->RecordCount()=' . $product_att_query->RecordCount());
             }
 
+            //md5 hash of product_id and attributes
             $products_id = zen_get_uprid((int)$_POST['products_id'], $attributes);
 
+            //TODO for POSM Stock
             $this->product_stock = (int)zen_get_products_stock($_POST['products_id']);
 
             $this->new_attributes[$products_id] = $this->new_temp_attributes;
             $cart_quantity = !empty($_POST['cart_quantity']) ? $_POST['cart_quantity'] : 0;
             $this->shoppingCart->contents[$products_id] = ['qty' => (convertToFloat($cart_quantity) <= 0 ? zen_get_buy_now_qty($products_id) : convertToFloat($cart_quantity))];
 
+            //$attributes is now a complete set of non-display options
             foreach ($attributes as $option => $value) {
                 //CLR 020606 check if input was from text box.  If so, store additional attribute information
                 //CLR 020708 check if text input is blank, if so do not add to attribute lists
@@ -690,7 +704,7 @@ class zcDPU_Ajax extends base
                                 $total -= $qty * zen_add_tax($attribute_price->fields['options_values_price'], $products_tax);
                             }
                         } else {
-                            // appears to confuse products priced by attributes
+                            // TODO appears to confuse products priced by attributes
                             if ($product->fields['product_is_always_free_shipping'] === '1' || $product->fields['products_virtual'] === '1') {
                                 $shipping_attributes_price = zen_get_discount_calc($product->fields['products_id'], $attribute_price->fields['products_attributes_id'], $attribute_price->fields['options_values_price'], $qty);
                                 $this->free_shipping_price += $qty * zen_add_tax(($shipping_attributes_price), $products_tax);

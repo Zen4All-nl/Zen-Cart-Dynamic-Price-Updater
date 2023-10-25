@@ -6,13 +6,13 @@ declare(strict_types=1);
  * @copyright Dan Parry (Chrome) / Erik Kerkhoven (Design75) / mc12345678 / torvista
  * @original author Dan Parry (Chrome)
  * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
- * @version $Id: 2023 Mar 10
+ * @version $Id: 2023 Oct 24
  */
 
   // test if box should display
 if (DPU_STATUS == 'true'){
 
-  $sbload = true; // if any of the PHP conditions fail this will be set to false and DPU won't be fired up
+  $sbload = true; // if any of the PHP conditions fail, set to false and prevent any DPU processing
   $sbpid = (!empty($_GET['products_id']) ? (int)$_GET['products_id'] : 0);
   if (0==$sbpid)
   {
