@@ -1,17 +1,13 @@
 # Dynamic Price Updater v5 for Zen Cart
 
-## Branch "158" Current Status March 2023
-This useful plugin has been somewhat neglected in recent years, I assume as it has been working for most people. I made many changes during that time which, due to multiple forks, were difficult to implement back into the plugin. This I'm currently attempting to rectify with this fork.
+## Branch "158" Current Status October 2023
+This useful plugin was somewhat neglected in recent years. I made many changes during that time which, due to multiple forks, were difficult to implement back into the plugin. This I'm currently attempting to rectify with this fork which is fit for the current ZC200 codebase and php8.2+.
 
-This development branch "158" should be working, and while it appears to have a mass of changes, they are mostly code-tightening and debugging: in reality there should be no change in functionality from the main branch. I've introduced my modifications to make it both php8.2+ compliant, more easily understandable and maybe into a state fit for peer review/to go into the core codebase.
-
-Currently I'm working on adding the long-missing functionality to handle multiple checkboxes, which is proving time-consuming...
-
-Due to the complexity of testing this plugin, for the moment I've added a ridiculous amount of debugging information for almost every step of the processing to aid with development and to help others even more javascript-challenged than me to figure out what's going on.
+This is a VERY complicated mod to understand (for me at least), and I've needed to add mass of debugging code and comments for each step to help me (and theoretically others) to figure out what's going on as I think there is still a way to go before this can go into the core codebase.
 
 The readme below may be out of sync with the codebase/is also a work in progress, so as always, ALL testing should be done on a development installation and NEVER a production site.
 
-At the moment I would not suggest you try this branch out unless you have a problem with current code. In that case, yes please try to replicate it with this 158 code in a vanilla ZC158 codebase and subsequently open an Issue at this repository
+Please try it out. If you find a problem, try and replicate it with in a vanilla ZC200 codebase and subsequently open an Issue at this repository
 
 https://github.com/dbltoe/Zen-Cart-Dynamic-Price-Updater
 
@@ -40,8 +36,6 @@ NOTE: If your installed version of DPU is older than 3.0 please remove all those
   - includes/classes/ajax/zcDPU_Ajax.php
   - includes/classes/dynamic_price_updater.php
   - includes/languages/english/extra_definitions/dynamic_price_updater.php
-  - includes/modules/pages/product_info/on_load_dpu.js
-  - includes/modules/pages/product_music_info/on_load_dpu.js
   - includes/modules/sideboxes/YOUR_TEMPLATE/dynamic_price_updater_sidebox.php
   - includes/templates/YOUR_TEMPLATE/jscript/jscript_dynamic_price_updater.php
   - includes/templates/YOUR_TEMPLATE/sideboxes/tpl_dynamic_price_updater_sidebox.php
@@ -89,6 +83,10 @@ Plugin Support: http://www.zen-cart.com/forum/showthread.php?t=70577
 Reporting Bugs: https://github.com/dbltoe/Zen-Cart-Dynamic-Price-Updater/issues  
 
 ## Changelog:
+5.1 beta as per this 158 branch
+- restricted loading of js to those pages where DPU is actually required
+- remove onload from pages as javascript is not loaded when not necessary: displayed console errors from try/catch
+
 5.0:
 - Bugfixes: #16 test on ZC158a Hewlett Packard - by attributes with Special% no SALE: shows only loading graphic
 - Addition of extensive debugging output for Javascript console and class processing

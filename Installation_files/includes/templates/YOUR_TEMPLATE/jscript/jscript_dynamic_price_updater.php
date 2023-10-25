@@ -848,6 +848,11 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     console.groupEnd();
                 }
             }
+
+            window.addEventListener('load', function() {
+                init();
+            })
+
         </script>
         <?php
     }
