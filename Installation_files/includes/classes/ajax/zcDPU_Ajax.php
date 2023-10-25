@@ -18,6 +18,7 @@ class zcDPU_Ajax extends base
      * @var bool
      */
     protected bool $DPUdebug;
+    protected float $free_shipping_price;
     /**
      * Array of attributes that could be associated with the product but have not been added by the customer to support
      *   identifying the minimum price of a product from the point of having selected an attribute when other attributes have not
@@ -58,7 +59,7 @@ class zcDPU_Ajax extends base
      *
      * @var object
      */
-    protected $shoppingCart;
+    protected object $shoppingCart;
     protected int $unused;
 
     /**
