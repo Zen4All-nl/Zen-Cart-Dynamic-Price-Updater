@@ -42,7 +42,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
         // - are there any attribute options that modify the price? Assign ONLY these option name ids to $optionIds, to subsequently attach events to ONLY these options.
         $optionIds = [];
         // getOptionPricedIds retrieves the attributes that affect price including text boxes.
-        if ($load && !($optionIds = $dpu->getOptionPricedIds($pid)) && ($products_qty_box_status === 0 || $products_quantity_order_max === 1)) { // do not reorder this line or $optionIds will not be created
+        if ($load && !($optionIds = $dpu->getOptionPricedIds($pid)) && ($products_qty_box_status === '0' || $products_quantity_order_max === '1')) {
             // If there are no options that affect price and the quantity box is not used, then disable DPU as there is no reason to refresh the price display.
             $load = false;
         }
