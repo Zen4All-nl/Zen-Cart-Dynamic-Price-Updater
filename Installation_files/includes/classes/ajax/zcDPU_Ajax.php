@@ -72,14 +72,17 @@ class zcDPU_Ajax extends base
         $this->clearLog = true; // true: empties the log file prior to each change of attribute, so only last change is logged. Set to false to append results.
         if ($this->DPUdebug) {
             if ($this->clearLog) {
-                $this->logDPU("logging last attribute change only\n", true);
+                $this->logDPU('', true);
             }
-            $url_request = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+            $_model = zen_get_products_model($_POST['products_id']);
             $this->logDPU(
-                "------------------------------------------------------------------\n" .
-                date('Y-m-d H:i:s') . ": $url_request\n" .
-                $_SERVER['REMOTE_ADDR'] . ' | ' .
-                '$_POST[\'products_id\']=' . $_POST['products_id'] . ' | ' . zen_get_products_model($_POST['products_id']) . "\n"
+                '-----' . ($this->clearLog ? ' logging last attribute change only ' : '') . '-----' . "\n" .
+                date('Y-m-d H:i:s') . "\n" .
+                '$_SERVER[\'HTTP_REFERER\']=' . $_SERVER['HTTP_REFERER'] . "\n" .
+                '$_SERVER[\'REQUEST_URI\']=' . $_SERVER['REQUEST_URI'] . "\n" .
+                ($_model !== '' ? 'model=' . $_model : '') . "\n" .
+                '$_POST[\'products_id\']=' . $_POST['products_id'] . "\n" .
+                '$_POST[\'attributes\']=' . print_r($_POST['attributes'], true) . "\n"
             );
         }
         $this->unused = 0;
@@ -329,7 +332,7 @@ class zcDPU_Ajax extends base
 
         $attributes = [];
         if ($this->DPUdebug) {
-            $this->logDPU('fn insertproduct: product_id=' . $_POST['products_id'] . ', $_POST[\'attributes\']=' . $_POST['attributes']);
+            $this->logDPU('fn insertProduct: product_id=' . $_POST['products_id'] . ', $_POST[\'attributes\']=' . $_POST['attributes']);
         }
 //e.g.
 // checkboxes attribute 29+30+32 selected: attributes=id[1][32]~32|id[1][29]~29|id[1][30]~30|
@@ -339,20 +342,17 @@ class zcDPU_Ajax extends base
         $temp = array_filter(explode('|', $_POST['attributes'])); //removes '', 0, false, null
 
         if ($this->DPUdebug) {
-            $tmp = __LINE__ . ': exploded POST $temp=' . print_r($temp, true);
-            $this->logDPU($tmp);
+            $this->logDPU(__LINE__ . ': exploded $_POST[\'attributes\']->$temp=' . print_r($temp, true));
         }
 
         foreach ($temp as $item) {
             if ($this->DPUdebug) {
-                $tmp = __LINE__ . ': parsing $temp, $item=' . print_r($item, true);
-                $this->logDPU($tmp);
+                $this->logDPU(__LINE__ . ': parsing $temp as $item=' . print_r($item, true));
             }
 
             $tempArray = explode('~', $item);
             if ($this->DPUdebug) {
-                $tmp = __LINE__ . ': exploded $item->$tempArray=' . print_r($tempArray, true);
-                $this->logDPU($tmp);
+                $this->logDPU(__LINE__ . ': exploded $item->$tempArray=' . print_r($tempArray, true));
             }
 
             if (is_array($tempArray)) {
@@ -360,19 +360,17 @@ class zcDPU_Ajax extends base
                 $temp2 = str_replace(']', '', $temp1); //remove "]", leaving id_number (and prefix txt_ for text/file)
                 $attributes[$temp2] = $tempArray[1]; //index may be integer
                 if ($this->DPUdebug) {
-                    $tmp = __LINE__ . ': PARTIAL $attributes=' . print_r($attributes, true);
-                    $this->logDPU($tmp);
+                    $this->logDPU(__LINE__ . ': $attributes PARTIAL =' . print_r($attributes, true));
                 }
             } else {
                 if ($this->DPUdebug) {
-                    $tmp = __LINE__ . ': skipping this $item';
-                    $this->logDPU($tmp);
+                    $this->logDPU(__LINE__ . ': skipping this $item');
                 }
             }
         }
 
         if ($this->DPUdebug) {
-            $this->logDPU(__LINE__ . ': COMPLETE $attributes=' . print_r($attributes, true));
+            $this->logDPU(__LINE__ . ': $attributes COMPLETE =' . print_r($attributes, true));
         }
 
        //todo what about multiple checkboxes: cannot have the same option name [1] as key, so elements need to be arrays/array processing needs to be changed!
@@ -401,17 +399,16 @@ class zcDPU_Ajax extends base
 
             // Support price determination for products that are modified by attribute's price and are priced by attribute or just modified by the attribute's price.
             $process_price_attributes = DPU_PROCESS_ATTRIBUTES === 'all' || zen_get_products_price_is_priced_by_attributes((int)$_POST['products_id']);
-            $product_att_query_count = $product_att_query->RecordCount();
             if ($this->DPUdebug) {
-                $tmp = __LINE__ . ': DPU_PROCESS_ATTRIBUTES="' . DPU_PROCESS_ATTRIBUTES . '", $process_price_attributes=' . $process_price_attributes . ', product_att_query->RecordCount()=' . $product_att_query_count . "\n";
+                $tmp = __LINE__ . ': DPU_PROCESS_ATTRIBUTES="' . DPU_PROCESS_ATTRIBUTES . '", $process_price_attributes=' . $process_price_attributes . ', product_att_query->RecordCount()=' . $product_att_query->RecordCount() . "\n";
                 //$product_att_query results not shown for a concatenated DPU log
                 if ($this->clearLog) {
-                    $tmp .= "Results of product_att_query, ordered by options_id, options_values_price (value)\n";
+                    $tmp .= "Results of product_att_query, ordered by options_id, options_values_price (value), cheapest first. So, for an option that has not been selected (i.e. is not in POST), the first/cheapest value will be stored in the array \n";
                     foreach ($product_att_query as $key => $array) {
-                        $tmp .= "key=$key/" . $product_att_query_count - 1 . ' ' . print_r($array, true) . "\n";
+                        $tmp .= "key=$key/" . $product_att_query->RecordCount() - 1 . ' ' . print_r($array, true) . "\n";
                     }
                 } else {
-                    $tmp .= '(product_att_query results not shown for a cumulative DPU log)';
+                    $tmp .= '($product_att_query results not shown for a concatenated DPU log)';
                 }
                 $this->logDPU($tmp);
             }
@@ -421,16 +418,16 @@ class zcDPU_Ajax extends base
 // If product is NOT priced_by_attribute: each attribute displays the attribute price as a modification (addition/subtraction) of the displayed base price
 
 // This section produces an array "$new_attributes" containing ALL the product's attributes: both the selected options+values from the ajax call and if unselected, the default option+value attributes
-            if ($process_price_attributes && $product_att_query_count > 0) {
+            if ($process_price_attributes && $product_att_query->RecordCount() > 0) {
                 $the_options_id = 'x';
                 $new_attributes = [];
                 if ($this->DPUdebug) {
-                    $this->logDPU(__LINE__ . ': parse $product_att_query results (' . $product_att_query_count . '), create $new_attributes array of default and/or selected options+value for all options');
+                    $this->logDPU(__LINE__ . ': $product_att_query (' . $product_att_query->RecordCount() . ' results) contains all the product options and values ordered by option and value ASC. Create array $new_attributes of the selected option+value and unselected/default option+value for each option');
                 }
                 //TODO prevent parsing when all options have been identified as either selected or unselected+default or unselected+cheapest
-                foreach ($product_att_query as $item) {
+                foreach ($product_att_query as $key => $item) {
                     if ($this->DPUdebug) {
-                        $this->logDPU(__LINE__ . ': $the_options_id=' . $the_options_id . "\n" . '$item=' . print_r($item, true));
+                        $this->logDPU(__LINE__ . ': $the_options_id=' . $the_options_id . "\n" . 'parsing $product_att_query result ' . $key . '/' . $product_att_query->RecordCount()-1 . ' as $item=' . print_r($item, true));
                     }
 
                     // If this is the first parse of this option id, assign the first option value defined in the database with this option id as either
@@ -443,7 +440,7 @@ class zcDPU_Ajax extends base
                         $new_attributes[$the_options_id] = $item['options_values_id'];
                         $this->num_options++; // count unique option ids in array
                         if ($this->DPUdebug) {
-                            $this->logDPU(__LINE__ . ': new option_id+value ' . $item['options_id'] . '/' . $item['options_values_id'] . "\n" . 'added $new_attributes PARTIAL=' . print_r($new_attributes, true));
+                            $this->logDPU(__LINE__ . ': new option_id+value added, ' . $item['options_id'] . '+' . $item['options_values_id'] . "\n" . 'added to $new_attributes PARTIAL=' . print_r($new_attributes, true));
                         }
 
                         // If this option id is already in the array, overwrite its option value with the SELECTED value, or continue.
@@ -453,18 +450,17 @@ class zcDPU_Ajax extends base
                         // TODO parse this first and then skip all subsequent values for this option
                     } elseif (array_key_exists($the_options_id, $attributes) && $attributes[$the_options_id] === $item['options_values_id']) {
                         $new_attributes[$the_options_id] = $item['options_values_id'];
-
                         if ($this->DPUdebug) {
-                            $this->logDPU(__LINE__ . ': matching option id+value '  . $item['options_id'] . '/' . $item['options_values_id'] . ' found in ajax POST' . "\n" . '$new_attributes PARTIAL=' . print_r($new_attributes, true));
+                            $this->logDPU(__LINE__ . ': option id+value matches existing '  . $item['options_id'] . '+' . $item['options_values_id'] . ' found in ajax POST (so is a selected combination)' . "\n" . 'retained in $new_attributes PARTIAL=' . print_r($new_attributes, true));
                         }
 
                     } elseif ($this->DPUdebug) {
-                            $this->logDPU(__LINE__ . ': option id already in array, id/value ' . $item['options_id'] . '/' . $item['options_values_id'] . ' skipped');
+                            $this->logDPU(__LINE__ . ': option id is already in array but with a different value, id+value ' . $item['options_id'] . '+' . $item['options_values_id'] . ' skipped');
                     }
                 }
 
                 if ($this->DPUdebug) {
-                    $this->logDPU(__LINE__ . ': options loaded=' . $this->num_options . "\n" . '$new_attributes COMPLETE=' . print_r($new_attributes, true));
+                    $this->logDPU(__LINE__ . ": $this->num_options option+value stored in \n" . '$new_attributes COMPLETE=' . print_r($new_attributes, true));
                 }
 
                 // set the sort order
@@ -482,6 +478,18 @@ class zcDPU_Ajax extends base
                         ' . $options_order_by;
                 $products_options_names = $db->Execute($sql);
 
+                if ($this->DPUdebug) {
+                    //$products_options_names result not shown for a concatenated DPU log
+                    $tmp = __LINE__ .': $products_options_names result (' . $products_options_names->RecordCount() . '), ("' . $options_order_by . '")' . "\n";
+                    if ($this->clearLog) {
+                        foreach ($products_options_names as $key => $array) {
+                            $tmp .= "key=$key/" . $products_options_names->RecordCount() - 1 . ' ' . print_r($array, true) . "\n";
+                        }
+                    } else {
+                        $tmp .= '($products_options_names results not shown for a concatenated DPU log)';
+                    }
+                    $this->logDPU($tmp);
+                }
 
                 $new_temp_attributes = [];
                 $this->new_temp_attributes = [];
@@ -491,16 +499,9 @@ class zcDPU_Ajax extends base
                 // if an "invalid" selection had been made.
                 // To get removed from the cart for display purposes the $options_id must be added to $this->new_temp_attributes
 
-                if ($this->DPUdebug) {
-                    $this->logDPU(__LINE__ . ': parse $products_options_names as $item');
-                    $products_options_names_count = $products_options_names->RecordCount();
-                    $key = 0;
-                }
-
-                foreach ($products_options_names as $item) {
+                foreach ($products_options_names as $key => $item) {
                     if ($this->DPUdebug) {
-                        $this->logDPU(__LINE__ . ': key=' . $key . '/' . ($products_options_names_count-1) . ' $item=' . print_r($item, true));
-                        $key++;
+                        $this->logDPU(__LINE__ . ': key=' . $key . '/' . ($products_options_names->RecordCount()-1) . ', parsing $products_options_names as $item=' . print_r($item, true));
                     }
 
                     $options_id = $item['products_options_id'];
@@ -524,7 +525,7 @@ class zcDPU_Ajax extends base
                         $this->display_only_value = true;
                     }
                     if ($this->DPUdebug) {
-                        $this->logDPU(__LINE__ . ': $options_id=' . $options_id . ', $attributes[$options_id] (value)=' . (!empty($attributes[$options_id]) ? $attributes[$options_id] : 'NOT SET') . ', $this->display_only_value=' . ($this->display_only_value ? 'true' : 'false'));
+                        $this->logDPU(__LINE__ . ': $options_id=' . $options_id . ' (selected value=' . (!empty($attributes[$options_id]) ? '' . $attributes[$options_id] : 'NOT SET') . ') $this->display_only_value=' . ($this->display_only_value ? 'true' : 'false'));
                     }
 
                     $this->notify('NOTIFY_DYNAMIC_PRICE_UPDATER_DISPLAY_ONLY');
@@ -532,6 +533,9 @@ class zcDPU_Ajax extends base
                     // If the SELECTED options_id is valid (price-related), then use it in the calculation
                     if (array_key_exists($options_id, $attributes) && !$this->display_only_value) {
                         $new_temp_attributes[$options_id] = $attributes[$options_id];
+                        if ($this->DPUdebug) {
+                            $this->logDPU(__LINE__ . ": selected option+value ($options_id+$attributes[$options_id]) to be used in calculation");
+                        }
 
                     // If the SELECTED options_id is not valid (display-only), then use another, valid (non-display-only) option for this option_id (cheapest attribute value as determined above) in the calculation,
                     // but mark it for deletion from the shopping cart after the price calculation. This allows the calculation using the cheapest option value.
@@ -539,7 +543,9 @@ class zcDPU_Ajax extends base
                         $this->new_temp_attributes[$options_id] = $attributes[$options_id];
                         $new_temp_attributes[$options_id] = $new_attributes[$options_id];
                         $this->unused++;
-
+                        if ($this->DPUdebug) {
+                            $this->logDPU(__LINE__ . ": selected display-only option+value ($options_id+$attributes[$options_id]) substituted with alternative valid pair ($options_id+$new_attributes[$options_id]) to be used in calculation");
+                        }
 
                     } elseif (array_key_exists($options_id, $new_attributes)) {
                         // if it is not already in the $attributes, then it is something that needs to be added for "removal"
@@ -548,6 +554,9 @@ class zcDPU_Ajax extends base
                         $new_temp_attributes[$options_id] = false; //$new_attributes[$options_id];
 //TODO test on Home ::  New v1.2 ::  Real ::  Golf Clubs pageload gives error as $this->unused is not defined...there are no checkbox attributes selected
                         $this->unused++;
+                        if ($this->DPUdebug) {
+                            $this->logDPU(__LINE__ . ": UNselected option ($options_id) substituted with alternative valid pair ($options_id+$new_attributes[$options_id]) to be used in calculation");
+                        }
                     }
                     /* elseif (array_key_exists($options_id, $attributes) && array_key_exists($options_id, $new_attributes) && !zen_get_attributes_valid($_POST['products_id'], $options_id, $attributes[$options_id])) {
                       } elseif (array_key_exists($options_id, $new_attributes)) {
@@ -561,14 +570,18 @@ class zcDPU_Ajax extends base
                         $this->logDPU(__LINE__ . ': $new_temp_attributes PARTIAL=' . print_r($new_temp_attributes, true));
                     }
                 }
+                if ($this->DPUdebug) {
+                    $this->logDPU(__LINE__ . ': $new_temp_attributes COMPLETE=' . print_r($new_temp_attributes, true));
+                }
 
                 $attributes = $new_temp_attributes;
-            } elseif ($this->DPUdebug) {
-                $this->logDPU(__LINE__ . ': DPU_PROCESS_ATTRIBUTES="' . DPU_PROCESS_ATTRIBUTES . '", $process_price_attributes=' . $process_price_attributes . ', product_att_query->RecordCount()=' . $product_att_query->RecordCount());
             }
 
             //md5 hash of product_id and attributes
             $products_id = zen_get_uprid((int)$_POST['products_id'], $attributes);
+            if ($this->DPUdebug) {
+                $this->logDPU(__LINE__ . ': $products_id (hashed)=' . $products_id);
+            }
 
             //TODO for POSM Stock
             $this->product_stock = (int)zen_get_products_stock($_POST['products_id']);
@@ -645,7 +658,9 @@ class zcDPU_Ajax extends base
     protected function getSideboxContent(): void
     {
         global $currencies, $db;
-
+        if ($this->DPUdebug) {
+            $this->logDPU(__LINE__ . ': fn getSideboxContent');
+        }
         $out = [];
         $global_total = 0;
         $products = $this->shoppingCart->get_products();
@@ -717,9 +732,7 @@ class zcDPU_Ajax extends base
 
                                 if ($this->DPUdebug) {
                                     $tmp = convertToFloat(zen_add_tax(($new_attributes_price), $products_tax));
-                                    $tmp = __LINE__ . ': $option=' . $option . ' ' . gettype($option) . "\n" . '$value=' . $value . ' ' . gettype($value) . ', $total=' . $total . ' ' . gettype($total) . ', $qty=' . $qty . ' ' . gettype(
-                                            $qty
-                                        ) . ', $new_attributes_price=' . $new_attributes_price . ' ' . gettype($new_attributes_price) . ', $products_tax=' . $products_tax . ' ' . gettype($products_tax) . ', fn zen_add_tax=' . $tmp . ' ' . gettype($tmp) . ', $total=' . $total;
+                                    $tmp = __LINE__ . ': $option=' . $option . ' (' . gettype($option) . '), $value=' . $value . ' (' . gettype($value) . '), $total=' . $total . ' (' . gettype($total) . '), $qty=' . $qty . '(' . gettype($qty) . '), $new_attributes_price=' . $new_attributes_price . ' (' . gettype($new_attributes_price) . '), $products_tax=' . $products_tax . ' (' . gettype($products_tax) . '), fn zen_add_tax=' . $tmp . ' (' . gettype($tmp) . '), $total=' . $total;
                                     $this->logDPU($tmp);
                                 }
                             } else {
