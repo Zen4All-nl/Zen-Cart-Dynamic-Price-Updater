@@ -551,7 +551,7 @@ class zcDPU_Ajax extends base
                         // if it is not already in the $attributes, then it is something that needs to be added for "removal"
                         //   and by adding it, makes the software consider how many files need to be edited. //TODO steve: What does this mean??
                         $this->new_temp_attributes[$options_id] = $new_attributes[$options_id];
-                        $new_temp_attributes[$options_id] = false; //$new_attributes[$options_id];
+                        $new_temp_attributes[$options_id] = $new_attributes[$options_id]; // TODO this was originally false...why???; Passing false in the array element causes a strict error. https://github.com/Zen4All-nl/Zen-Cart-Dynamic-Price-Updater/issues/27
 //TODO test on Home ::  New v1.2 ::  Real ::  Golf Clubs pageload gives error as $this->unused is not defined...there are no checkbox attributes selected
                         $this->unused++;
                         if ($this->DPUdebug) {
