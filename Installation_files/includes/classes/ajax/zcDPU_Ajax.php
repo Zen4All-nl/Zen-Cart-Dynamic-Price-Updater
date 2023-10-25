@@ -60,6 +60,7 @@ class zcDPU_Ajax extends base
      * @var object
      */
     protected object $shoppingCart;
+    protected object $dpu;
     protected int $unused;
 
     /**
@@ -67,7 +68,7 @@ class zcDPU_Ajax extends base
      */
     public function __construct()
     {
-        //debugging
+        // debugging
         $this->DPUdebug = DPU_DEBUG === 'true'; // create a DPU_debug.log AND output Javascript console logs. DPU_DEBUG set in class dynamic_price_updater.php
         $this->clearLog = true; // true: empties the log file prior to each change of attribute, so only last change is logged. Set to false to append results.
         if ($this->DPUdebug) {
@@ -98,13 +99,23 @@ class zcDPU_Ajax extends base
      */
     public function getDetails(): array
     {
+        if ($this->DPUdebug) {
+            $this->logDPU(__LINE__ . ': fn getDetails');
+        }
         $this->insertProduct();
         $this->shoppingCart->calculate();
         $this->removeExtraSelections();
-        $show_dynamic_price_updater_sidebox = true;//TODO why no check?
-        if ($show_dynamic_price_updater_sidebox === true) {
+        // is sidebox active? Use method in DPU class despite it being already initialised. //TODO a better way?
+        $this->dpu = new DPU();
+        if ($this->dpu->sideboxActive) {
             $this->getSideboxContent();
+            if ($this->DPUdebug) {
+                $this->logDPU(__LINE__ . ': sidebox active');
+            }
+        } elseif ($this->DPUdebug) {
+            $this->logDPU(__LINE__ . ': sidebox INactive');
         }
+
         $this->prepareOutput();
 
         $data = [];
@@ -807,5 +818,6 @@ class zcDPU_Ajax extends base
         }
         return $logfilename;
     }
+
 }
 
