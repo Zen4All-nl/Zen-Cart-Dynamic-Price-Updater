@@ -578,7 +578,7 @@ class zcDPU_Ajax extends base
             }
 
             //md5 hash of product_id and attributes
-            $products_id = zen_get_uprid((int)$_POST['products_id'], $attributes);
+            $products_id = zen_get_uprid($_POST['products_id'], $attributes);
             if ($this->DPUdebug) {
                 $this->logDPU(__LINE__ . ': $products_id (hashed)=' . $products_id);
             }
