@@ -76,6 +76,8 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 };
             }
             const DPUdebug = ('<?php echo DPU_DEBUG; ?>' === 'true'); // DPU_DEBUG set in class dynamic_price_updater.php
+            const DPUsideboxActive = ('<?php echo $dpu->sideboxActive; ?>' === '1');
+
             if (DPUdebug) {
                 console.group('DPU_DEBUG on: jscript_dynamic_price_updater.php (set in class)');
             }
@@ -678,7 +680,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                 }
                 if (!(document.getElementById("dynamicpriceupdatersidebox")) && objSB) {
                     if (DPUdebug) {
-                        console.log('<?= __LINE__; ?>: creating sidebox');
+                        console.log('<?= __LINE__; ?>: creating DPU sidebox content');
                     }
                     let tempC = document.createElement("div");
                     tempC.id = "dynamicpriceupdatersideboxContent";
@@ -689,7 +691,7 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                     temp.parentNode.insertBefore(objSB, temp);
                 } else {
                     if (DPUdebug) {
-                        console.log('<?= __LINE__; ?>: sidebox creation skipped');
+                        console.log('<?= __LINE__; ?>: sidebox creation skipped, element not found/objSB false!');
                     }
                 }
                 if (DPUdebug) {
@@ -838,10 +840,17 @@ if (defined('DPU_STATUS') && DPU_STATUS === 'true') {
                             }
                     }
                 }
-                //torvista TODO review (unnecessary?) sidebox creation
-                //if (document.getElementById("dynamicpriceupdatersidebox") && typeof objSB === 'undefined') {
-                createSB();
-                //}
+               if (DPUsideboxActive) {
+                    createSB();
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: DPUsidebox active');
+                    }
+                } else {
+                    if (DPUdebug) {
+                        console.log('<?= __LINE__; ?>: DPUsidebox INactive');
+                    }
+                }
+
                 // getPrice on initial page load
                 getPrice();
                 if (DPUdebug) {
