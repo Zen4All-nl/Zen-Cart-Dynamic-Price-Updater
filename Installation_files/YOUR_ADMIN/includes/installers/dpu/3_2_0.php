@@ -318,4 +318,4 @@ $oldcount_sort = $db->Execute($oldcount_sort_sql);
         $db->Execute($sql);
     }
         $messageStack->add('Inserted configuration for ' . $module_name . ' (3_2_0)', 'success');
-} // END OF VERSION 1.5.x INSTALL
+// END OF VERSION 1.5.x INSTALL
